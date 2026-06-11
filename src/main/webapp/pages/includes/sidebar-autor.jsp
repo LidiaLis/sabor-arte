@@ -1,0 +1,224 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="br.com.saborearte.model.Usuario" %>
+<%
+    Usuario _u    = (Usuario) session.getAttribute("usuarioLogado");
+    String  _nome = (_u != null) ? _u.getNome_usuario() : "Autor";
+    String  _ini  = _nome.substring(0, 1).toUpperCase();
+    String  _ctx  = request.getContextPath();
+
+    Integer _naoLidas   = (Integer) session.getAttribute("notifNaoLidas");
+    int     _notifNr    = (_naoLidas != null) ? _naoLidas : 0;
+
+    Integer _pendComent = (Integer) session.getAttribute("comentariosPendentes");
+    int     _comentNr   = (_pendComent != null) ? _pendComent : 0;
+
+    String currentPage = (String) request.getAttribute("currentPage");
+    if (currentPage == null) {
+        String sp = request.getServletPath();
+        if      (sp.contains("dashboard"))   currentPage = "dashboard";
+        else if (sp.contains("minharece"))   currentPage = "minhasReceitas";
+        else if (sp.contains("criar"))       currentPage = "criarReceita";
+        else if (sp.contains("comentario"))  currentPage = "comentarios";
+        else if (sp.contains("perfil"))      currentPage = "perfil";
+        else if (sp.contains("configuraca")) currentPage = "configuracoes";
+        else                                 currentPage = "dashboard";
+    }
+%>
+
+<!-- ===== OVERLAY MOBILE ===== -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- ===== SIDEBAR AUTOR ===== -->
+<aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-brand">
+        <div class="brand-row">
+            <div class="brand-badge">🌿</div>
+            <div>
+                <span class="brand-title">Sabor &amp; Arte</span>
+                <span class="brand-sub">Área do Autor</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-user" onclick="irParaPerfil()" style="cursor:pointer;" title="Meu perfil">
+        <div class="user-avatar" style="background: linear-gradient(135deg,#5a8a6a,#7ab890);">
+            <%= _ini %>
+        </div>
+        <div class="user-info">
+            <div class="user-name"><%= _nome %></div>
+            <div class="user-role-badge">✍️ Autor</div>
+        </div>
+        <span class="user-arrow">›</span>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">Visão Geral</div>
+
+        <a href="<%= _ctx %>/DashboardAutorController"
+           class="nav-item <%= "dashboard".equals(currentPage) ? "active" : "" %>">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </a>
+
+        <div class="nav-section-label">Conteúdo</div>
+
+        <a href="<%= _ctx %>/MinhasReceitasController"
+           class="nav-item <%= "minhasReceitas".equals(currentPage) ? "active" : "" %>">
+            <span class="nav-icon">📖</span>
+            <span class="nav-label">Minhas Receitas</span>
+        </a>
+
+        <a href="<%= _ctx %>/CriarReceitaController"
+           class="nav-item nav-item-create <%= "criarReceita".equals(currentPage) ? "active" : "" %>">
+            <span class="nav-icon">✨</span>
+            <span class="nav-label">Criar Receita</span>
+        </a>
+
+        <a href="<%= _ctx %>/ComentarioAutorController"
+           class="nav-item <%= "comentarios".equals(currentPage) ? "active" : "" %>">
+            <span class="nav-icon">💬</span>
+            <span class="nav-label">Comentários</span>
+            <% if (_comentNr > 0) { %>
+                <span class="nav-badge"><%= _comentNr > 99 ? "99+" : _comentNr %></span>
+            <% } %>
+        </a>
+
+        <div class="nav-section-label">Conta</div>
+
+        <a href="<%= _ctx %>/PerfilController"
+           class="nav-item <%= "perfil".equals(currentPage) ? "active" : "" %>">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Perfil</span>
+            <% if (_notifNr > 0) { %>
+                <span class="nav-badge nav-badge-notif"><%= _notifNr > 99 ? "99+" : _notifNr %></span>
+            <% } %>
+        </a>
+
+        <a href="<%= _ctx %>/ConfiguracaoController"
+           class="nav-item <%= "configuracoes".equals(currentPage) ? "active" : "" %>">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Configurações</span>
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+        <!-- mini stat do autor -->
+        <div class="author-quick-stat">
+            <div class="aqs-item">
+                <div class="aqs-val" id="aqsReceitas">—</div>
+                <div class="aqs-lbl">Receitas</div>
+            </div>
+            <div class="aqs-divider"></div>
+            <div class="aqs-item">
+                <div class="aqs-val" id="aqsViews">—</div>
+                <div class="aqs-lbl">Visitas</div>
+            </div>
+            <div class="aqs-divider"></div>
+            <div class="aqs-item">
+                <div class="aqs-val" id="aqsFavs">—</div>
+                <div class="aqs-lbl">Favoritos</div>
+            </div>
+        </div>
+        <button class="btn-logout" onclick="logout()">
+            <span class="nav-icon">🚪</span>
+            <span>Sair</span>
+        </button>
+    </div>
+
+</aside>
+
+<style>
+    :root {
+        --moss:#4a5e3a; --moss-dark:#2f3d25; --moss-mid:#3d5030; --moss-light:#6b7f59;
+        --sage:#a3b18a; --sage-light:#c8d5b9; --cream:#f5f0e8; --cream-dark:#e6dece;
+        --warm-white:#faf8f4; --text-dark:#1e2718; --text-mid:#4a5240; --text-light:#8a9480;
+        --gold:#c4a265; --gold-light:#dfc094;
+        --sidebar-w: 260px;
+    }
+
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(30,39,24,.45); z-index: 99; backdrop-filter: blur(2px); }
+    .sidebar-overlay.active { display: block; }
+
+    .sidebar { width: var(--sidebar-w); background: var(--moss-dark); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow-y: auto; font-family: 'DM Sans', sans-serif; transition: transform .28s cubic-bezier(.25,.46,.45,.94); }
+    .sidebar::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 200% 60% at 50% 0%, rgba(74,94,58,.5) 0%, transparent 60%), radial-gradient(ellipse 100% 40% at 50% 100%, rgba(163,177,138,.1) 0%, transparent 60%); pointer-events: none; }
+
+    .sidebar-brand { padding: 28px 24px 22px; border-bottom: 1px solid rgba(255,255,255,.08); position: relative; z-index: 1; }
+    .brand-row { display: flex; align-items: center; gap: 12px; }
+    .brand-badge { width: 38px; height: 38px; background: linear-gradient(135deg, var(--moss-light), var(--sage)); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .brand-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--cream); display: block; line-height: 1; }
+    .brand-sub { font-size: 10px; color: var(--sage); text-transform: uppercase; letter-spacing: 1.2px; margin-top: 3px; display: block; font-weight: 300; }
+
+    .sidebar-user { padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,.07); display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; transition: background .2s; }
+    .sidebar-user:hover { background: rgba(255,255,255,.04); }
+    .user-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px; color: white; flex-shrink: 0; }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 13px; font-weight: 600; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role-badge { font-size: 10px; color: var(--sage-light); text-transform: uppercase; letter-spacing: .8px; font-weight: 300; }
+    .user-arrow { font-size: 18px; color: rgba(163,177,138,.4); flex-shrink: 0; }
+
+    .sidebar-nav { flex: 1; padding: 16px 0; position: relative; z-index: 1; }
+    .nav-section-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.8px; color: rgba(163,177,138,.5); padding: 16px 24px 6px; font-weight: 500; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 24px; color: rgba(245,240,232,.7); text-decoration: none; font-size: 14px; font-weight: 400; cursor: pointer; transition: all .2s; border-left: 3px solid transparent; }
+    .nav-item:hover { color: var(--cream); background: rgba(255,255,255,.06); border-left-color: var(--sage); }
+    .nav-item.active { color: var(--cream); background: rgba(163,177,138,.15); border-left-color: var(--sage-light); font-weight: 500; }
+    /* item especial criar receita */
+    .nav-item-create { color: rgba(196,162,101,.9) !important; }
+    .nav-item-create:hover { color: var(--gold-light) !important; background: rgba(196,162,101,.08) !important; border-left-color: var(--gold) !important; }
+    .nav-item-create.active { color: var(--gold-light) !important; border-left-color: var(--gold) !important; background: rgba(196,162,101,.12) !important; }
+    .nav-icon { width: 22px; text-align: center; font-size: 16px; flex-shrink: 0; }
+    .nav-label { flex: 1; }
+    .nav-badge { margin-left: auto; background: var(--gold); color: var(--moss-dark); font-family: 'Nunito', sans-serif; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 10px; }
+    .nav-badge-notif { background: #c46042; color: #fff; }
+
+    /* mini stats */
+    .author-quick-stat { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); border-radius: 2px; padding: 10px 14px; margin-bottom: 12px; }
+    .aqs-item { text-align: center; flex: 1; }
+    .aqs-val { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; color: var(--cream); }
+    .aqs-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: .8px; color: rgba(163,177,138,.6); margin-top: 2px; }
+    .aqs-divider { width: 1px; height: 28px; background: rgba(255,255,255,.1); }
+
+    .sidebar-bottom { padding: 16px 24px 24px; border-top: 1px solid rgba(255,255,255,.08); position: relative; z-index: 1; }
+    .btn-logout { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 16px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 2px; color: rgba(245,240,232,.7); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: all .2s; }
+    .btn-logout:hover { background: rgba(155,68,68,.2); border-color: rgba(155,68,68,.3); color: #e8a0a0; }
+
+    @media (max-width: 768px) {
+        .sidebar { transform: translateX(-100%); }
+        .sidebar.active { transform: translateX(0); }
+    }
+</style>
+
+<script>
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+    }
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 768) {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+        }
+    });
+    function logout()       { window.location.href = '<%= _ctx %>/LogoutController'; }
+    function irParaPerfil() { window.location.href = '<%= _ctx %>/PerfilController'; }
+
+    /* carrega mini stats do autor via AJAX */
+    (function loadAuthorStats() {
+        fetch('<%= _ctx %>/AutorStatsController?action=mini', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(d => {
+            const fmt = n => n >= 1000 ? (n/1000).toFixed(1)+'k' : n;
+            document.getElementById('aqsReceitas').textContent = d.totalReceitas ?? '0';
+            document.getElementById('aqsViews').textContent    = fmt(d.totalViews   ?? 0);
+            document.getElementById('aqsFavs').textContent     = fmt(d.totalFavs    ?? 0);
+        })
+        .catch(() => {
+            ['aqsReceitas','aqsViews','aqsFavs'].forEach(id => {
+                document.getElementById(id).textContent = '—';
+            });
+        });
+    })();
+</script>

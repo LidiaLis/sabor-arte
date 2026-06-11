@@ -1,0 +1,579 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabor & Arte — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --moss:#4a5e3a;--moss-dark:#2f3d25;--moss-mid:#3d5030;--moss-light:#6b7f59;
+    --sage:#a3b18a;--sage-light:#c8d5b9;--cream:#f5f0e8;--cream-dark:#e6dece;
+    --warm-white:#faf8f4;--text-dark:#1e2718;--text-mid:#4a5240;--text-light:#8a9480;
+    --gold:#c4a265;--gold-light:#dfc094;--gold-pale:#f5ead6;
+    --pending:#c4832a;--pending-bg:#fdf2e3;--published:#3a7a4a;--published-bg:#e8f4eb;
+    --draft:#6a7a8a;--draft-bg:#eef1f4;--archived:#8a7a6a;--archived-bg:#f4f0ec;
+    --sidebar-w:260px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh;display:flex;}
+
+  .sidebar{width:var(--sidebar-w);background:var(--moss-dark);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
+  .sidebar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 200% 60% at 50% 0%,rgba(74,94,58,0.5) 0%,transparent 60%),radial-gradient(ellipse 100% 40% at 50% 100%,rgba(163,177,138,0.1) 0%,transparent 60%);pointer-events:none;}
+  .sidebar-brand{padding:28px 24px 22px;border-bottom:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;}
+  .brand-row{display:flex;align-items:center;gap:12px;}
+  .brand-badge{width:38px;height:38px;background:linear-gradient(135deg,var(--moss-light),var(--sage));border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .brand-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--cream);display:block;line-height:1;}
+  .brand-sub{font-size:10px;color:var(--sage);text-transform:uppercase;letter-spacing:1.2px;margin-top:3px;display:block;font-weight:300;}
+  .sidebar-user{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
+  .user-avatar{width:38px;height:38px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--moss-dark);flex-shrink:0;}
+  .user-name{font-size:13px;font-weight:600;color:var(--cream);}
+  .user-role-badge{font-size:10px;color:var(--gold-light);text-transform:uppercase;letter-spacing:0.8px;font-weight:300;}
+  .sidebar-nav{flex:1;padding:16px 0;position:relative;z-index:1;}
+  .nav-section-label{font-size:9px;text-transform:uppercase;letter-spacing:1.8px;color:rgba(163,177,138,0.5);padding:16px 24px 6px;font-weight:500;}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:11px 24px;color:rgba(245,240,232,0.7);text-decoration:none;font-size:14px;font-weight:400;cursor:pointer;transition:all 0.2s;border-left:3px solid transparent;}
+  .nav-item:hover{color:var(--cream);background:rgba(255,255,255,0.06);border-left-color:var(--sage);}
+  .nav-item.active{color:var(--cream);background:rgba(163,177,138,0.15);border-left-color:var(--sage-light);font-weight:500;}
+  .nav-icon{width:22px;text-align:center;font-size:16px;flex-shrink:0;}
+  .nav-badge{margin-left:auto;background:var(--gold);color:var(--moss-dark);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;}
+  .sidebar-bottom{padding:16px 24px 24px;border-top:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;}
+  .btn-logout{display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:2px;color:rgba(245,240,232,0.7);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;}
+  .btn-logout:hover{background:rgba(155,68,68,0.2);border-color:rgba(155,68,68,0.3);color:#e8a0a0;}
+
+  .main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;}
+  .topbar{background:var(--warm-white);border-bottom:1px solid var(--cream-dark);padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+  .page-crumb{font-size:12px;color:var(--text-light);display:flex;align-items:center;gap:6px;font-weight:300;}
+  .page-crumb .current{color:var(--moss);font-weight:500;}
+  .topbar-right{display:flex;align-items:center;gap:16px;}
+  .topbar-search{display:flex;align-items:center;gap:8px;background:var(--cream);border:1.5px solid var(--cream-dark);border-radius:2px;padding:7px 14px;width:220px;transition:border-color 0.2s,box-shadow 0.2s;}
+  .topbar-search:focus-within{border-color:var(--moss-light);box-shadow:0 0 0 3px rgba(74,94,58,0.08);}
+  .topbar-search input{border:none;background:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-dark);outline:none;flex:1;}
+  .topbar-search input::placeholder{color:var(--text-light);font-weight:300;}
+  .notif-btn{width:36px;height:36px;background:var(--cream);border:1.5px solid var(--cream-dark);border-radius:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;position:relative;transition:all 0.2s;}
+  .notif-btn:hover{background:var(--cream-dark);}
+  .notif-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--gold);border-radius:50%;border:2px solid var(--warm-white);}
+
+  .content{flex:1;padding:36px 40px;}
+  .section-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;}
+  .section-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:500;color:var(--text-dark);line-height:1;}
+  .section-title em{font-style:italic;color:var(--moss);}
+  .section-date{font-size:12px;color:var(--text-light);font-weight:300;margin-top:4px;}
+
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:36px;}
+  .stat-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:2px;padding:24px 22px;position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;cursor:default;}
+  .stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(47,61,37,0.1);}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .stat-card.moss::before{background:linear-gradient(90deg,var(--moss),var(--sage));}
+  .stat-card.gold::before{background:linear-gradient(90deg,var(--gold),var(--gold-light));}
+  .stat-card.pending::before{background:linear-gradient(90deg,var(--pending),#e8a84a);}
+  .stat-card.green::before{background:linear-gradient(90deg,var(--published),#5ab870);}
+  .stat-icon{width:40px;height:40px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:16px;}
+  .stat-card.moss .stat-icon{background:rgba(74,94,58,0.1);}
+  .stat-card.gold .stat-icon{background:rgba(196,162,101,0.1);}
+  .stat-card.pending .stat-icon{background:rgba(196,131,42,0.12);}
+  .stat-card.green .stat-icon{background:rgba(58,122,74,0.1);}
+  .stat-value{font-family:'Nunito',sans-serif;font-size:40px;font-weight:800;color:var(--text-dark);line-height:1;margin-bottom:4px;letter-spacing:-1px;}
+  .stat-label{font-size:12px;color:var(--text-light);text-transform:uppercase;letter-spacing:0.8px;font-weight:500;}
+  .stat-delta{position:absolute;top:22px;right:18px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;display:flex;align-items:center;gap:3px;}
+  .stat-delta.up{color:var(--published);}
+  .stat-delta.down{color:#9b4444;}
+
+  /* ===== CHART CARDS ===== */
+  .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:36px;}
+  .chart-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:4px;padding:20px 22px;}
+  .chart-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .chart-card-title{font-size:14px;font-weight:600;color:var(--text-dark);}
+  .chart-card-sub{font-size:11px;color:var(--text-light);font-weight:300;margin-top:2px;}
+  .chart-legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-mid);}
+  .legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+
+  .featured-section{margin-bottom:36px;}
+  .sub-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+  .sub-title{font-size:16px;font-weight:600;color:var(--text-dark);display:flex;align-items:center;gap:8px;}
+  .sub-link{font-size:12px;color:var(--moss-light);cursor:pointer;font-weight:500;transition:color 0.2s;}
+  .sub-link:hover{color:var(--moss-dark);}
+
+  .recipes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  .recipe-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:4px;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;cursor:pointer;}
+  .recipe-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(47,61,37,0.14);}
+  .recipe-img-wrap{position:relative;overflow:hidden;height:180px;}
+  .recipe-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;}
+  .recipe-card:hover .recipe-img-wrap img{transform:scale(1.05);}
+  .img-badge{position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;backdrop-filter:blur(6px);}
+  .img-badge.pendente{background:rgba(196,131,42,0.92);color:#fff;}
+  .img-badge.publicado{background:rgba(58,122,74,0.92);color:#fff;}
+  .img-badge.rascunho{background:rgba(80,90,100,0.88);color:#fff;}
+  .img-time{position:absolute;bottom:10px;right:12px;background:rgba(30,39,24,0.75);color:rgba(245,240,232,0.95);font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;backdrop-filter:blur(4px);}
+  .recipe-body{padding:16px 18px 14px;}
+  .recipe-cat{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--moss-light);font-weight:600;margin-bottom:6px;}
+  .recipe-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--text-dark);line-height:1.35;margin-bottom:12px;}
+  .recipe-meta{display:flex;align-items:center;justify-content:space-between;}
+  .recipe-author{display:flex;align-items:center;gap:7px;}
+  .author-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-size:9px;font-weight:800;color:white;flex-shrink:0;}
+  .author-name{font-size:12px;color:var(--text-mid);font-weight:400;}
+  .recipe-stars{font-size:12px;color:var(--gold);letter-spacing:-1px;}
+  .recipe-footer{display:flex;align-items:center;gap:6px;padding:10px 14px;border-top:1px solid var(--cream-dark);background:var(--cream);}
+  .footer-btn{flex:1;padding:7px;border:1.5px solid var(--cream-dark);background:var(--warm-white);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;color:var(--text-mid);cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:5px;}
+  .footer-btn:hover{border-color:var(--moss);color:var(--moss);background:rgba(74,94,58,0.05);}
+  .footer-btn.approve{border-color:var(--published);color:var(--published);}
+  .footer-btn.approve:hover{background:var(--published-bg);}
+
+  /* ===== BOTTOM GRID ===== */
+  .bottom-grid{display:grid;grid-template-columns:1fr 310px;gap:24px;}
+  .side-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:2px;}
+  .card-head{padding:18px 22px;border-bottom:1px solid var(--cream-dark);display:flex;align-items:center;justify-content:space-between;}
+  .card-title-sm{font-size:14px;font-weight:600;color:var(--text-dark);display:flex;align-items:center;gap:8px;}
+  .card-action{font-size:12px;color:var(--moss-light);cursor:pointer;font-weight:500;transition:color 0.2s;}
+  .card-action:hover{color:var(--moss-dark);}
+  .cat-item{display:flex;align-items:center;gap:12px;padding:11px 20px;border-bottom:1px solid var(--cream-dark);}
+  .cat-item:last-child{border-bottom:none;}
+  .cat-color{width:8px;height:28px;border-radius:2px;flex-shrink:0;}
+  .cat-name{font-size:13px;font-weight:500;color:var(--text-dark);}
+  .cat-count{font-family:'Nunito',sans-serif;font-size:11px;color:var(--text-light);font-weight:600;}
+  .cat-info{flex:1;}
+  .cat-bar-wrap{width:80px;height:4px;background:var(--cream-dark);border-radius:2px;overflow:hidden;}
+  .cat-bar{height:100%;background:linear-gradient(90deg,var(--moss),var(--sage));border-radius:2px;}
+
+  /* Pizza card */
+  .pizza-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:2px;display:flex;flex-direction:column;}
+  .pizza-legend{padding:0 18px 16px;display:flex;flex-direction:column;gap:8px;}
+  .pizza-legend-item{display:flex;align-items:center;justify-content:space-between;font-size:12px;}
+  .pizza-legend-left{display:flex;align-items:center;gap:8px;color:var(--text-mid);}
+  .pizza-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .pizza-legend-pct{font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;color:var(--text-dark);}
+
+  @media(max-width:1280px){.recipes-grid{grid-template-columns:repeat(2,1fr);}  .charts-row{grid-template-columns:1fr;}}
+  @media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr);} .bottom-grid{grid-template-columns:1fr;}}
+  @media(max-width:860px){.recipes-grid{grid-template-columns:1fr;}}
+  @media(max-width:768px){.sidebar{display:none;} .main{margin-left:0;} .content{padding:24px 20px;} .topbar{padding:0 20px;}}
+  @media(max-width:480px){.stats-row{grid-template-columns:1fr;} .topbar-search{display:none;}}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-row">
+      <div class="brand-badge">🌿</div>
+      <div>
+        <span class="brand-title">Sabor &amp; Arte</span>
+        <span class="brand-sub">Blog Editorial</span>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-user">
+    <div class="user-avatar">MA</div>
+    <div>
+      <div class="user-name">Maria Andrade</div>
+      <div class="user-role-badge">Administradora</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+    <a class="nav-item active"><span class="nav-icon">📊</span> Dashboard</a>
+    <a class="nav-item"><span class="nav-icon">📝</span> Receitas <span class="nav-badge">12</span></a>
+    <a class="nav-item"><span class="nav-icon">⏳</span> Pendentes <span class="nav-badge">5</span></a>
+    <a class="nav-item"><span class="nav-icon">💬</span> Comentários <span class="nav-badge">8</span></a>
+    <div class="nav-section-label">Gestão</div>
+<a href="/saborearte/UsuarioController" class="nav-item">
+    <span class="nav-icon">👥</span>
+    Usuários
+</a>    <a class="nav-item"><span class="nav-icon">🏷️</span> Categorias</a>
+    <a class="nav-item"><span class="nav-icon">📈</span> Relatórios</a>
+    <a class="nav-item"><span class="nav-icon">📋</span> Logs</a>
+    <div class="nav-section-label">Sistema</div>
+    <a class="nav-item"><span class="nav-icon">⚙️</span> Configurações</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <button class="btn-logout">↩ Sair do sistema</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="page-crumb">
+      <span>Painel</span>
+      <span style="color:var(--cream-dark)">/</span>
+      <span class="current">Dashboard</span>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-search">
+        <span style="font-size:14px;color:var(--text-light)">🔍</span>
+        <input type="text" placeholder="Buscar receitas…">
+      </div>
+      <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="section-header">
+      <div>
+        <div class="section-title">Bom dia, <em>Maria</em> 👋</div>
+        <div class="section-date">Sábado, 16 de maio de 2026 · Painel Editorial</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card moss">
+        <div class="stat-delta up">▲ 12%</div>
+        <div class="stat-icon">📖</div>
+        <div class="stat-value">134</div>
+        <div class="stat-label">Receitas Publicadas</div>
+      </div>
+      <div class="stat-card pending">
+        <div class="stat-delta up">▲ 3</div>
+        <div class="stat-icon">⏳</div>
+        <div class="stat-value">5</div>
+        <div class="stat-label">Aguardando Revisão</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-delta up">▲ 8%</div>
+        <div class="stat-icon">💬</div>
+        <div class="stat-value">287</div>
+        <div class="stat-label">Comentários</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="stat-delta down">▼ 2</div>
+        <div class="stat-icon">👥</div>
+        <div class="stat-value">42</div>
+        <div class="stat-label">Autores Ativos</div>
+      </div>
+    </div>
+
+    <!-- NOVOS CARDS GRÁFICOS -->
+    <div class="charts-row">
+
+      <!-- Gráfico 1: Publicações por mês (linha) -->
+      <div class="chart-card">
+        <div class="chart-card-head">
+          <div>
+            <div class="chart-card-title">📈 Publicações por Mês</div>
+            <div class="chart-card-sub">Últimos 6 meses</div>
+          </div>
+          <span style="font-size:11px;color:var(--moss);font-weight:600;cursor:pointer;">Ver relatório →</span>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#4a5e3a"></div> Publicadas</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#c4a265;border-radius:50%"></div> Pendentes</div>
+        </div>
+        <div style="position:relative;width:100%;height:200px;">
+          <canvas id="lineChart" role="img" aria-label="Gráfico de linhas mostrando publicações por mês nos últimos 6 meses">Publicações mensais: Dez 18, Jan 22, Fev 20, Mar 28, Abr 24, Mai 30.</canvas>
+        </div>
+      </div>
+
+      <!-- Gráfico 2: Status das receitas (barras) -->
+      <div class="chart-card">
+        <div class="chart-card-head">
+          <div>
+            <div class="chart-card-title">📊 Status das Receitas</div>
+            <div class="chart-card-sub">Distribuição atual do acervo</div>
+          </div>
+          <span style="font-size:11px;color:var(--moss);font-weight:600;cursor:pointer;">Ver relatório →</span>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#3a7a4a;border-radius:50%"></div> Publicadas</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#c4832a;border-radius:50%"></div> Pendentes</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#6a7a8a;border-radius:50%"></div> Rascunhos</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#8a7a6a;border-radius:50%"></div> Arquivadas</div>
+        </div>
+        <div style="position:relative;width:100%;height:200px;">
+          <canvas id="barChart" role="img" aria-label="Gráfico de barras mostrando distribuição de receitas por status">Publicadas 134, Pendentes 5, Rascunhos 18, Arquivadas 27.</canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Receitas recentes -->
+    <div class="featured-section">
+      <div class="sub-header">
+        <div class="sub-title">🍽️ Receitas Recentes</div>
+        <span class="sub-link">Ver todas →</span>
+      </div>
+      <div class="recipes-grid">
+        <div class="recipe-card">
+          <div class="recipe-img-wrap">
+            <img src="https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=600&q=80" alt="Risoto">
+            <span class="img-badge pendente">⏳ Pendente</span>
+            <span class="img-time">⏱ 45 min</span>
+          </div>
+          <div class="recipe-body">
+            <div class="recipe-cat">🍝 Massas</div>
+            <div class="recipe-name">Risoto de Cogumelos Selvagens</div>
+            <div class="recipe-meta">
+              <div class="recipe-author"><div class="author-dot" style="background:linear-gradient(135deg,#4a5e3a,#6b7f59)">CA</div><span class="author-name">Carlos Andrade</span></div>
+              <div class="recipe-stars">★★★★☆</div>
+            </div>
+          </div>
+          <div class="recipe-footer">
+            <button class="footer-btn">👁 Ver</button>
+            <button class="footer-btn">✏️ Editar</button>
+            <button class="footer-btn approve">✅ Aprovar</button>
+          </div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-img-wrap">
+            <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&q=80" alt="Bolo">
+            <span class="img-badge publicado">✅ Publicado</span>
+            <span class="img-time">⏱ 60 min</span>
+          </div>
+          <div class="recipe-body">
+            <div class="recipe-cat">🎂 Sobremesas</div>
+            <div class="recipe-name">Bolo de Cenoura com Calda de Chocolate</div>
+            <div class="recipe-meta">
+              <div class="recipe-author"><div class="author-dot" style="background:linear-gradient(135deg,#c4a265,#dfc094)">MA</div><span class="author-name">Maria Andrade</span></div>
+              <div class="recipe-stars">★★★★★</div>
+            </div>
+          </div>
+          <div class="recipe-footer">
+            <button class="footer-btn">👁 Ver</button>
+            <button class="footer-btn">✏️ Editar</button>
+            <button class="footer-btn">📦 Arquivar</button>
+          </div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-img-wrap">
+            <img src="https://images.unsplash.com/photo-1598103442097-8b74394b95c3?w=600&q=80" alt="Frango">
+            <span class="img-badge rascunho">📝 Rascunho</span>
+            <span class="img-time">⏱ 30 min</span>
+          </div>
+          <div class="recipe-body">
+            <div class="recipe-cat">🍗 Carnes</div>
+            <div class="recipe-name">Frango ao Limão Siciliano com Ervas</div>
+            <div class="recipe-meta">
+              <div class="recipe-author"><div class="author-dot" style="background:linear-gradient(135deg,#5a8a6a,#7ab890)">LS</div><span class="author-name">Luisa Silva</span></div>
+              <div class="recipe-stars">★★★★☆</div>
+            </div>
+          </div>
+          <div class="recipe-footer">
+            <button class="footer-btn">👁 Ver</button>
+            <button class="footer-btn">✏️ Editar</button>
+            <button class="footer-btn">📤 Enviar</button>
+          </div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-img-wrap">
+            <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80" alt="Salada">
+            <span class="img-badge pendente">⏳ Pendente</span>
+            <span class="img-time">⏱ 15 min</span>
+          </div>
+          <div class="recipe-body">
+            <div class="recipe-cat">🥗 Saladas</div>
+            <div class="recipe-name">Salada Mediterrânea Fresca com Feta</div>
+            <div class="recipe-meta">
+              <div class="recipe-author"><div class="author-dot" style="background:linear-gradient(135deg,#7a6aa0,#9a8ac0)">JP</div><span class="author-name">João Pedro</span></div>
+              <div class="recipe-stars">★★★★★</div>
+            </div>
+          </div>
+          <div class="recipe-footer">
+            <button class="footer-btn">👁 Ver</button>
+            <button class="footer-btn">✏️ Editar</button>
+            <button class="footer-btn approve">✅ Aprovar</button>
+          </div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-img-wrap">
+            <img src="https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=80" alt="Sopa">
+            <span class="img-badge publicado">✅ Publicado</span>
+            <span class="img-time">⏱ 40 min</span>
+          </div>
+          <div class="recipe-body">
+            <div class="recipe-cat">🥣 Sopas</div>
+            <div class="recipe-name">Sopa de Abóbora Cremosa com Gengibre</div>
+            <div class="recipe-meta">
+              <div class="recipe-author"><div class="author-dot" style="background:linear-gradient(135deg,#c46042,#e08060)">FT</div><span class="author-name">Fernanda Torres</span></div>
+              <div class="recipe-stars">★★★★★</div>
+            </div>
+          </div>
+          <div class="recipe-footer">
+            <button class="footer-btn">👁 Ver</button>
+            <button class="footer-btn">✏️ Editar</button>
+            <button class="footer-btn">📦 Arquivar</button>
+          </div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-img-wrap">
+            <img src="https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=600&q=80" alt="Espaguete">
+            <span class="img-badge rascunho">📝 Rascunho</span>
+            <span class="img-time">⏱ 25 min</span>
+          </div>
+          <div class="recipe-body">
+            <div class="recipe-cat">🍝 Massas</div>
+            <div class="recipe-name">Espaguete ao Pesto de Manjericão Fresco</div>
+            <div class="recipe-meta">
+              <div class="recipe-author"><div class="author-dot" style="background:linear-gradient(135deg,#3a7a8a,#5a9aaa)">RB</div><span class="author-name">Rafael Braga</span></div>
+              <div class="recipe-stars">★★★★☆</div>
+            </div>
+          </div>
+          <div class="recipe-footer">
+            <button class="footer-btn">👁 Ver</button>
+            <button class="footer-btn">✏️ Editar</button>
+            <button class="footer-btn">📤 Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom -->
+    <div class="bottom-grid">
+      <!-- Categorias -->
+      <div class="side-card">
+        <div class="card-head">
+          <div class="card-title-sm">🏷️ Categorias</div>
+          <span class="card-action">Gerenciar</span>
+        </div>
+        <div class="cat-item">
+          <div class="cat-color" style="background:var(--moss)"></div>
+          <div class="cat-info"><div class="cat-name">Sobremesas</div><div class="cat-count">34 receitas</div></div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:85%"></div></div>
+        </div>
+        <div class="cat-item">
+          <div class="cat-color" style="background:var(--gold)"></div>
+          <div class="cat-info"><div class="cat-name">Massas</div><div class="cat-count">28 receitas</div></div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:70%"></div></div>
+        </div>
+        <div class="cat-item">
+          <div class="cat-color" style="background:var(--published)"></div>
+          <div class="cat-info"><div class="cat-name">Saladas</div><div class="cat-count">22 receitas</div></div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:55%"></div></div>
+        </div>
+        <div class="cat-item">
+          <div class="cat-color" style="background:var(--pending)"></div>
+          <div class="cat-info"><div class="cat-name">Sopas</div><div class="cat-count">18 receitas</div></div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:45%"></div></div>
+        </div>
+        <div class="cat-item">
+          <div class="cat-color" style="background:var(--sage)"></div>
+          <div class="cat-info"><div class="cat-name">Carnes</div><div class="cat-count">14 receitas</div></div>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:35%"></div></div>
+        </div>
+      </div>
+
+      <!-- Gráfico de Pizza -->
+      <div class="pizza-card">
+        <div class="card-head">
+          <div class="card-title-sm">🥧 Receitas por Categoria</div>
+          <span class="card-action">Ver mais</span>
+        </div>
+        <div style="position:relative;width:100%;height:180px;padding:12px 16px 0;">
+          <canvas id="pieChart" role="img" aria-label="Gráfico de pizza mostrando distribuição de receitas por categoria">Sobremesas 34, Massas 28, Saladas 22, Sopas 18, Carnes 14.</canvas>
+        </div>
+        <div class="pizza-legend" style="margin-top:14px;">
+          <div class="pizza-legend-item">
+            <div class="pizza-legend-left"><div class="pizza-legend-dot" style="background:#4a5e3a"></div> Sobremesas</div>
+            <div class="pizza-legend-pct">29%</div>
+          </div>
+          <div class="pizza-legend-item">
+            <div class="pizza-legend-left"><div class="pizza-legend-dot" style="background:#c4a265"></div> Massas</div>
+            <div class="pizza-legend-pct">24%</div>
+          </div>
+          <div class="pizza-legend-item">
+            <div class="pizza-legend-left"><div class="pizza-legend-dot" style="background:#3a7a4a"></div> Saladas</div>
+            <div class="pizza-legend-pct">19%</div>
+          </div>
+          <div class="pizza-legend-item">
+            <div class="pizza-legend-left"><div class="pizza-legend-dot" style="background:#c4832a"></div> Sopas</div>
+            <div class="pizza-legend-pct">15%</div>
+          </div>
+          <div class="pizza-legend-item">
+            <div class="pizza-legend-left"><div class="pizza-legend-dot" style="background:#a3b18a"></div> Carnes</div>
+            <div class="pizza-legend-pct">12%</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+  new Chart(document.getElementById('lineChart'), {
+    type: 'line',
+    data: {
+      labels: ['Dez', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai'],
+      datasets: [
+        {
+          label: 'Publicadas',
+          data: [18, 22, 20, 28, 24, 30],
+          borderColor: '#4a5e3a',
+          backgroundColor: 'rgba(74,94,58,0.08)',
+          borderWidth: 2,
+          pointBackgroundColor: '#4a5e3a',
+          pointRadius: 4,
+          tension: 0.4,
+          fill: true,
+          borderDash: []
+        },
+        {
+          label: 'Pendentes',
+          data: [3, 5, 4, 7, 5, 5],
+          borderColor: '#c4a265',
+          backgroundColor: 'rgba(196,162,101,0.06)',
+          borderWidth: 2,
+          pointBackgroundColor: '#c4a265',
+          pointRadius: 4,
+          tension: 0.4,
+          fill: true,
+          borderDash: [5,3]
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(166,156,138,0.15)' }, ticks: { font: { family: 'DM Sans', size: 11 }, color: '#8a9480' } },
+        y: { grid: { color: 'rgba(166,156,138,0.15)' }, ticks: { font: { family: 'DM Sans', size: 11 }, color: '#8a9480' }, beginAtZero: true }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Publicadas', 'Pendentes', 'Rascunhos', 'Arquivadas'],
+      datasets: [{
+        label: 'Receitas',
+        data: [134, 5, 18, 27],
+        backgroundColor: ['#3a7a4a', '#c4832a', '#6a7a8a', '#8a7a6a'],
+        borderRadius: 3,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'DM Sans', size: 11 }, color: '#8a9480' } },
+        y: { grid: { color: 'rgba(166,156,138,0.15)' }, ticks: { font: { family: 'DM Sans', size: 11 }, color: '#8a9480' }, beginAtZero: true }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('pieChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Sobremesas', 'Massas', 'Saladas', 'Sopas', 'Carnes'],
+      datasets: [{
+        data: [34, 28, 22, 18, 14],
+        backgroundColor: ['#4a5e3a', '#c4a265', '#3a7a4a', '#c4832a', '#a3b18a'],
+        borderColor: '#faf8f4',
+        borderWidth: 3,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '60%',
+      plugins: { legend: { display: false } }
+    }
+  });
+</script>
+</body>
+</html>
