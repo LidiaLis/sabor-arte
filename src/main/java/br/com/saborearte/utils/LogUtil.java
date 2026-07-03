@@ -11,7 +11,7 @@ import java.sql.Connection;
 // Utilitário estático para registrar logs de qualquer Controller.
  
 public class LogUtil {
-
+/*
 
 	
     public static void registrar(Connection conexao,
@@ -55,5 +55,5 @@ public class LogUtil {
                                   String entidade,
                                   String detalhes) {
         registrar(conexao, request, acao, entidade, null, detalhes);
-    }
+    }*/
 }
