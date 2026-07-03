@@ -4,7 +4,6 @@ import br.com.saborearte.model.Usuario;
 import br.com.saborearte.model.Usuario.StatusUsuario;
 import br.com.saborearte.model.Usuario.TemaUsuario;
 import br.com.saborearte.model.Usuario.TipoUsuario;
-import br.com.saborearte.utils.Conexao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

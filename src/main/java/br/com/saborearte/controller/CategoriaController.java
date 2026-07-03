@@ -109,6 +109,7 @@ public class CategoriaController extends HttpServlet {
                 case "atualizar" -> atualizar(request, response);
                 case "excluir"   -> excluir(request, response);
                 case "status"    -> alterarStatus(request, response);
+                case "salvarEmoji" -> salvarEmoji(request, response);
                 default          -> response.sendRedirect(request.getContextPath() + "/CategoriaController");
             }
         } catch (Exception e) {
@@ -149,12 +150,14 @@ public class CategoriaController extends HttpServlet {
         }
 
         CategoriaEmoji emoji = categoriaDAO.buscarEmojiPorUnicode(emojiUni.trim());
-        CategoriaCor   cor   = categoriaDAO.buscarCorPorUnicode(corUni.trim());
 
         if (emoji == null) {
-            setErroERedirect(request, response, "Ícone selecionado inválido.");
-            return;
-        }
+
+            categoriaDAO.cadastrarEmoji(emojiUni.trim());
+
+            emoji = categoriaDAO.buscarEmojiPorUnicode(emojiUni.trim());
+        }        CategoriaCor   cor   = categoriaDAO.buscarCorPorUnicode(corUni.trim());
+
         if (cor == null) {
             setErroERedirect(request, response, "Cor selecionada inválida.");
             return;
@@ -202,11 +205,21 @@ public class CategoriaController extends HttpServlet {
         }
 
         if (!isBlank(emojiUni)) {
-            CategoriaEmoji emoji = categoriaDAO.buscarEmojiPorUnicode(emojiUni.trim());
+
+            String unicode = emojiUni.trim();
+
+            CategoriaEmoji emoji = categoriaDAO.buscarEmojiPorUnicode(unicode);
+
+            if (emoji == null) {
+                categoriaDAO.cadastrarEmoji(unicode);
+                emoji = categoriaDAO.buscarEmojiPorUnicode(unicode);
+            }
+
             if (emoji == null) {
                 setErroERedirect(request, response, "Ícone selecionado inválido.");
                 return;
             }
+
             categoria.setEmoji_categoria(emoji.getUnicode_emoji());
         }
 
@@ -284,10 +297,37 @@ public class CategoriaController extends HttpServlet {
         categoria.setStatus_categoria(statusEnum);
         categoriaDAO.atualizarCategoria(categoria);
 
-        String label = statusEnum == StatusCategoria.ativa ? "ativa" : "inativa";
+        String label = statusEnum == StatusCategoria.ATIVA ? "ativa" : "inativa";
         request.getSession().setAttribute("sucesso",
             "Categoria \"" + categoria.getNome_categoria() + "\" " + label + " com sucesso!");
         response.sendRedirect(request.getContextPath() + "/CategoriaController");
+    }
+    
+    // =========================================================================
+    // AÇÃO: SALVAR NOVO EMOJI NA LISTA
+    // =========================================================================
+    
+    private void salvarEmoji(HttpServletRequest request, HttpServletResponse response)
+            throws Exception {
+
+        String unicode = request.getParameter("emoji");
+        System.out.println("Antes do cadastro: " + unicode);
+
+        if (isBlank(unicode)) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("Emoji vazio");
+            return;
+        }
+
+        CategoriaEmoji emoji = categoriaDAO.buscarEmojiPorUnicode(unicode.trim());
+        System.out.println("Antes do cadastro: " + unicode);
+
+        if (emoji == null) {
+            categoriaDAO.cadastrarEmoji(unicode.trim());
+        }
+
+        response.setContentType("text/plain;charset=UTF-8");
+        response.getWriter().write("OK");
     }
 
     // =========================================================================

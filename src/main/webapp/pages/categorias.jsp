@@ -1,4 +1,55 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="java.util.List" %>
+<%@ page import="br.com.saborearte.model.Categoria" %>
+<%@ page import="br.com.saborearte.model.Categoria.StatusCategoria" %>
+<%@ page import="br.com.saborearte.model.CategoriaEmoji" %>
+<%@ page import="br.com.saborearte.model.CategoriaCor" %>
+<%!
+    // Escapa texto para uso seguro dentro de HTML (texto e atributos)
+    private String esc(Object val) {
+        if (val == null) return "";
+        return val.toString()
+                .replace("&", "&amp;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+    }
+
+    // Escapa texto para uso seguro dentro de string JavaScript
+    private String jsEsc(Object val) {
+        if (val == null) return "";
+        return val.toString()
+                .replace("\\", "\\\\")
+                .replace("'", "\\'")
+                .replace("\"", "\\\"")
+                .replace("\n", " ")
+                .replace("\r", "");
+    }
+    %>
+
+  <%
+    List<Categoria> categorias = (List<Categoria>) request.getAttribute("categorias");
+    if (categorias == null) categorias = new java.util.ArrayList<>();
+    
+    /* ── Contagens para os cards de stats ── */
+    long totalCategorias = (categorias != null) ? categorias.size() : 0;
+    long totalAtivas = 0;
+    if (categorias != null) {
+        totalAtivas = categorias.stream()
+                .filter(c -> c.getStatus_categoria() == StatusCategoria.ATIVA)
+                .count();
+    }
+    long totalInativas = totalCategorias - totalAtivas;
+    %>
+    <%
+
+    List<CategoriaEmoji> emojis = (List<CategoriaEmoji>) request.getAttribute("emojis");
+    List<CategoriaCor> cores = (List<CategoriaCor>) request.getAttribute("cores");
+    String msgSucesso = (String) request.getAttribute("sucesso");
+    String msgErro = (String) request.getAttribute("erro");
+    String ctx = request.getContextPath();
+    %>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,31 +58,12 @@
 <title>Sabor &amp; Arte — Categorias</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--moss:#4a5e3a;--moss-dark:#2f3d25;--moss-light:#6b7f59;--sage:#a3b18a;--sage-light:#c8d5b9;--cream:#f5f0e8;--cream-dark:#e6dece;--warm-white:#faf8f4;--text-dark:#1e2718;--text-mid:#4a5240;--text-light:#8a9480;--gold:#c4a265;--gold-light:#dfc094;--pending:#c4832a;--pending-bg:#fdf2e3;--published:#3a7a4a;--published-bg:#e8f4eb;--sidebar-w:260px;}
+  :root{--moss:#4a5e3a;--moss-dark:#2f3d25;--moss-light:#6b7f59;--sage:#a3b18a;--sage-light:#c8d5b9;--cream:#f5f0e8;--cream-dark:#e6dece;--warm-white:#faf8f4;--text-dark:#1e2718;--text-mid:#4a5240;--text-light:#8a9480;--gold:#c4a265;--gold-light:#dfc094;--pending:#c4832a;--pending-bg:#fdf2e3;--published:#3a7a4a;--published-bg:#e8f4eb;--inactive:#9b4444;--sidebar-w:260px;}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh;display:flex;}
 
   .sidebar{width:var(--sidebar-w);background:var(--moss-dark);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
   .sidebar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 200% 60% at 50% 0%,rgba(74,94,58,.5) 0%,transparent 60%),radial-gradient(ellipse 100% 40% at 50% 100%,rgba(163,177,138,.1) 0%,transparent 60%);pointer-events:none;}
-  .sidebar-brand{padding:28px 24px 22px;border-bottom:1px solid rgba(255,255,255,.08);position:relative;z-index:1;}
-  .brand-row{display:flex;align-items:center;gap:12px;}
-  .brand-badge{width:38px;height:38px;background:linear-gradient(135deg,var(--moss-light),var(--sage));border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
-  .brand-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--cream);display:block;line-height:1;}
-  .brand-sub{font-size:10px;color:var(--sage);text-transform:uppercase;letter-spacing:1.2px;margin-top:3px;display:block;font-weight:300;}
-  .sidebar-user{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
-  .user-avatar{width:38px;height:38px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--moss-dark);flex-shrink:0;}
-  .user-name{font-size:13px;font-weight:600;color:var(--cream);}
-  .user-role-badge{font-size:10px;color:var(--gold-light);text-transform:uppercase;letter-spacing:.8px;font-weight:300;}
-  .sidebar-nav{flex:1;padding:16px 0;position:relative;z-index:1;}
-  .nav-section-label{font-size:9px;text-transform:uppercase;letter-spacing:1.8px;color:rgba(163,177,138,.5);padding:16px 24px 6px;font-weight:500;}
-  .nav-item{display:flex;align-items:center;gap:12px;padding:11px 24px;color:rgba(245,240,232,.7);text-decoration:none;font-size:14px;font-weight:400;cursor:pointer;transition:all .2s;border-left:3px solid transparent;}
-  .nav-item:hover{color:var(--cream);background:rgba(255,255,255,.06);border-left-color:var(--sage);}
-  .nav-item.active{color:var(--cream);background:rgba(163,177,138,.15);border-left-color:var(--sage-light);font-weight:500;}
-  .nav-icon{width:22px;text-align:center;font-size:16px;flex-shrink:0;}
-  .nav-badge{margin-left:auto;background:var(--gold);color:var(--moss-dark);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;}
-  .sidebar-bottom{padding:16px 24px 24px;border-top:1px solid rgba(255,255,255,.08);position:relative;z-index:1;}
-  .btn-logout{display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:2px;color:rgba(245,240,232,.7);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;}
-  .btn-logout:hover{background:rgba(155,68,68,.2);border-color:rgba(155,68,68,.3);color:#e8a0a0;}
 
   .main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;}
   .topbar{background:var(--warm-white);border-bottom:1px solid var(--cream-dark);padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
@@ -49,7 +81,6 @@
   .section-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;}
   .section-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:500;color:var(--text-dark);line-height:1;}
   .section-title em{font-style:italic;color:var(--moss);}
-  .section-date{font-size:12px;color:var(--text-light);font-weight:300;margin-top:4px;}
   .btn-primary{display:flex;align-items:center;gap:8px;background:var(--moss);color:var(--cream);padding:10px 20px;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .2s,transform .15s;}
   .btn-primary:hover{background:var(--moss-dark);transform:translateY(-1px);}
 
@@ -61,22 +92,22 @@
   .cat-emoji-box{width:48px;height:48px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
   .cat-card-info{flex:1;}
   .cat-card-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--text-dark);line-height:1;margin-bottom:3px;}
-  .cat-card-slug{font-size:10px;color:var(--text-light);font-family:monospace;background:var(--cream);padding:2px 7px;border-radius:10px;}
-  .cat-menu-btn{width:28px;height:28px;border:1.5px solid var(--cream-dark);background:var(--warm-white);border-radius:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .15s;}
-  .cat-menu-btn:hover{border-color:var(--moss);background:rgba(74,94,58,.05);}
   .cat-card-body{padding:16px 20px;}
-  .cat-desc{font-size:12px;color:var(--text-mid);font-weight:300;line-height:1.5;margin-bottom:14px;}
-  .cat-stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
-  .cat-stat{text-align:center;padding:10px 8px;background:var(--cream);border-radius:2px;}
-  .cat-stat-val{font-family:'Nunito',sans-serif;font-size:20px;font-weight:800;color:var(--text-dark);line-height:1;}
-  .cat-stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--text-light);font-weight:500;margin-top:3px;}
-  .cat-card-footer{display:flex;align-items:center;gap:6px;padding:12px 20px;background:var(--cream);border-top:1px solid var(--cream-dark);}
+  .cat-desc{font-size:12px;color:var(--text-mid);font-weight:300;line-height:1.5;}
+  .cat-card-footer{display:flex;align-items:center;gap:6px;padding:12px 20px;background:var(--cream);border-top:1px solid var(--cream-dark);flex-wrap:wrap;}
   .cat-status{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-mid);margin-right:auto;}
   .status-dot-sm{width:6px;height:6px;border-radius:50%;}
   .active-dot{background:var(--published);}
+  .inactive-dot{background:var(--inactive);}
   .footer-act-btn{padding:6px 12px;border:1.5px solid var(--cream-dark);background:var(--warm-white);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;color:var(--text-mid);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px;}
   .footer-act-btn:hover{border-color:var(--moss);color:var(--moss);}
   .footer-act-btn.danger:hover{border-color:#9b4444;color:#9b4444;}
+  .form-inline{display:inline;margin:0;}
+
+  .empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-light);}
+  .empty-state .empty-icon{font-size:44px;margin-bottom:14px;}
+  .empty-state h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--text-dark);margin-bottom:6px;}
+  .empty-state p{font-size:13px;font-weight:300;}
 
   /* OVERLAY GERAL */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:200;padding:20px;}
@@ -91,11 +122,9 @@
   .modal-nova-cat-body{padding:22px 24px;display:flex;flex-direction:column;gap:16px;}
   .modal-nova-cat-footer{padding:16px 24px;border-top:1px solid var(--cream-dark);display:flex;gap:10px;justify-content:flex-end;background:var(--cream);}
 
-  /* Preview de destaque no modal de edição */
   .edit-preview-bar{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:2px;border:1px solid var(--cream-dark);background:var(--cream);margin-bottom:4px;}
   .edit-preview-icon{width:44px;height:44px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;transition:background .3s;}
   .edit-preview-name{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--text-dark);}
-  .edit-preview-slug{font-size:10px;color:var(--text-light);font-family:monospace;}
   .edit-preview-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-light);font-weight:500;margin-left:auto;}
 
   .form-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-light);font-weight:700;display:block;margin-bottom:6px;}
@@ -103,39 +132,27 @@
   .form-input:focus{border-color:var(--moss-light);box-shadow:0 0 0 3px rgba(74,94,58,.06);}
   textarea.form-input{resize:vertical;min-height:72px;}
 
-  .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-
   .color-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
   .color-swatch{width:32px;height:32px;border-radius:2px;cursor:pointer;border:2.5px solid transparent;transition:all .15s;flex-shrink:0;}
   .color-swatch:hover{transform:scale(1.1);}
   .color-swatch.selected{border-color:var(--text-dark);transform:scale(.87);}
 
-  /* EMOJI ROW */
-  .emoji-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+  .emoji-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;max-height:160px;overflow-y:auto;padding:2px;}
   .emoji-opt{width:36px;height:36px;border:1.5px solid var(--cream-dark);background:var(--cream);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:all .15s;flex-shrink:0;}
   .emoji-opt:hover{border-color:var(--moss);background:rgba(74,94,58,.06);}
   .emoji-opt.selected{border-color:var(--moss);background:rgba(74,94,58,.12);box-shadow:0 0 0 2px rgba(74,94,58,.18);}
   .emoji-add{width:36px;height:36px;border:1.5px dashed var(--cream-dark);background:var(--warm-white);border-radius:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--text-light);transition:all .15s;flex-shrink:0;}
   .emoji-add:hover{border-color:var(--moss);color:var(--moss);}
 
-  .btn-ghost{background:none;color:var(--text-mid);border:1.5px solid var(--cream-dark);border-radius:2px;padding:9px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;}
-  .btn-ghost:hover{border-color:var(--moss-light);color:var(--moss);}
-  .btn-criar{background:var(--moss);color:var(--cream);border:none;border-radius:2px;padding:9px 20px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .2s;}
-  .btn-criar:hover{background:var(--moss-dark);}
-  .btn-salvar{background:var(--moss);color:var(--cream);border:none;border-radius:2px;padding:9px 20px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .2s;}
-  .btn-salvar:hover{background:var(--moss-dark);}
-
-  /* MODAL EMOJI PICKER */
+  /* MODAL EMOJI PICKER (emojis pré-definidos no JSP) */
   .modal-sub{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:4px;width:100%;max-width:360px;box-shadow:0 18px 40px rgba(0,0,0,.25);}
   .modal-sub-head{padding:14px 18px;border-bottom:1px solid var(--cream-dark);display:flex;align-items:center;justify-content:space-between;}
   .modal-sub-title{font-size:14px;font-weight:600;color:var(--text-dark);}
   .modal-sub-body{padding:16px 18px;}
-
   .emoji-cats{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;}
   .emoji-cat-btn{padding:4px 10px;border:1.5px solid var(--cream-dark);border-radius:10px;font-size:11px;color:var(--text-mid);cursor:pointer;background:var(--cream);font-family:'DM Sans',sans-serif;transition:all .15s;}
   .emoji-cat-btn:hover{border-color:var(--moss);color:var(--moss);}
   .emoji-cat-btn.active{background:var(--moss);color:var(--cream);border-color:var(--moss);}
-
   .emoji-picker-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-height:220px;overflow-y:auto;}
   .emoji-picker-grid::-webkit-scrollbar{width:4px;}
   .emoji-picker-grid::-webkit-scrollbar-thumb{background:var(--cream-dark);border-radius:2px;}
@@ -143,9 +160,44 @@
   .emoji-picker-item:hover{background:var(--cream-dark);}
   .emoji-picker-item.in-use{background:rgba(74,94,58,.12);outline:2px solid var(--moss);outline-offset:-2px;}
 
-  /* Toast */
+  .btn-ghost{background:none;color:var(--text-mid);border:1.5px solid var(--cream-dark);border-radius:2px;padding:9px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;}
+  .btn-ghost:hover{border-color:var(--moss-light);color:var(--moss);}
+  .btn-criar,.btn-salvar{background:var(--moss);color:var(--cream);border:none;border-radius:2px;padding:9px 20px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .2s;}
+  .btn-criar:hover,.btn-salvar:hover{background:var(--moss-dark);}
+
   .toast{position:fixed;bottom:28px;right:28px;background:var(--moss-dark);color:var(--cream);padding:12px 18px;border-radius:2px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:999;transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:8px;}
   .toast.show{transform:translateY(0);opacity:1;}
+  .toast.error{background:#7a3232;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:30px;}
+.stat-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:2px;padding:22px 20px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(47,61,37,.1);}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.stat-card.moss::before{background:linear-gradient(90deg,var(--moss),var(--sage));}
+.stat-card.green::before{background:linear-gradient(90deg,var(--published),#5ab870);}
+.stat-card.pending::before{background:linear-gradient(90deg,var(--pending),#e8a84a);}
+.stat-card.blue::before{background:linear-gradient(90deg,#2a72a8,#5aa0d8);}
+.stat-icon{width:38px;height:38px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:14px;}
+.stat-card.moss .stat-icon{background:rgba(74,94,58,.1);}
+.stat-card.green .stat-icon{background:rgba(58,122,74,.1);}
+.stat-card.pending .stat-icon{background:rgba(196,131,42,.12);}
+.stat-card.blue .stat-icon{background:rgba(42,114,168,.1);}
+.stat-value{font-family:'Nunito',sans-serif;font-size:38px;font-weight:800;color:var(--text-dark);line-height:1;margin-bottom:4px;letter-spacing:-1px;}
+.stat-label{font-size:12px;color:var(--text-light);text-transform:uppercase;letter-spacing:.8px;font-weight:500;}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.filter-select{background:var(--warm-white);border:1.5px solid var(--cream-dark);border-radius:2px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-dark);cursor:pointer;outline:none;transition:border-color .2s;}
+.filter-select:focus{border-color:var(--moss-light);}
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--warm-white);border:1.5px solid var(--cream-dark);border-radius:2px;padding:8px 14px;flex:1;max-width:320px;}
+.search-bar:focus-within{border-color:var(--moss-light);}
+.search-bar input{border:none;background:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-dark);outline:none;flex:1;}
+.search-bar input::placeholder{color:var(--text-light);}
+.toolbar-spacer{flex:1;}
+
+@media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:480px){.stats-row{grid-template-columns:1fr;}}
 
   @media(max-width:1100px){.cat-grid{grid-template-columns:1fr 1fr;}}
   @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;}.content{padding:20px;}.topbar{padding:0 20px;}.cat-grid{grid-template-columns:1fr;}}
@@ -155,7 +207,6 @@
 
 <jsp:include page="/pages/includes/sidebar-editor-admin.jsp" />
 
-<%-- ===== MAIN ===== --%>
 <main class="main">
   <div class="topbar">
     <div class="page-crumb">
@@ -164,10 +215,6 @@
       <span class="current">Categorias</span>
     </div>
     <div class="topbar-right">
-      <div class="topbar-search">
-        <span style="font-size:14px;color:var(--text-light)">🔍</span>
-        <input type="text" placeholder="Buscar categorias…" id="campoBusca">
-      </div>
       <div class="notif-btn">🔔<div class="notif-dot"></div></div>
     </div>
   </div>
@@ -176,221 +223,101 @@
     <div class="section-header">
       <div>
         <div class="section-title">Gestão de <em>Categorias</em></div>
-        <%-- Total de categorias e receitas pode vir do backend --%>
-        <div class="section-date">
-          <c:choose>
-            <c:when test="${not empty totalCategorias}">
-              <c:out value="${totalCategorias}" /> categorias ativas ·
-              <c:out value="${totalReceitas}" /> receitas organizadas
-            </c:when>
-            <c:otherwise>8 categorias ativas · 134 receitas organizadas</c:otherwise>
-          </c:choose>
-        </div>
       </div>
-      <button class="btn-primary" id="btnNovaCat">✚ Nova Categoria</button>
+      <button class="btn-primary" type="button" id="btnNovaCat">✚ Nova Categoria</button>
     </div>
 
-    <%-- ===== GRID DE CATEGORIAS ===== --%>
+    <%-- ===== CARDS DE STATS ===== --%>
+    <div class="stats-row">
+      <div class="stat-card moss">
+        <div class="stat-icon">📂</div>
+        <div class="stat-value"><%= totalCategorias %></div>
+        <div class="stat-label">Total de Categorias</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value"><%= totalAtivas %></div>
+        <div class="stat-label">Ativas</div>
+      </div>
+      <div class="stat-card pending">
+        <div class="stat-icon">⏸️</div>
+        <div class="stat-value"><%= totalInativas %></div>
+        <div class="stat-label">Inativas</div>
+      </div>
+    </div>
+
+    <%-- ===== TOOLBAR: BUSCA + FILTRO ===== --%>
+    <div class="toolbar">
+      <div class="search-bar">
+        <span style="font-size:14px;color:var(--text-light)">🔍</span>
+        <input type="text" id="campoBusca" placeholder="Buscar categorias…">
+      </div>
+      <select class="filter-select" id="filterStatus">
+        <option value="ativa" selected>Ativa</option>
+        <option value="inativa">Inativa</option>
+        <option value="">Todos os status</option>
+      </select>
+      <div class="toolbar-spacer"></div>
+    </div>
+
     <div class="cat-grid" id="catGrid">
-
-      <%-- Renderização dinâmica via JSTL (quando a lista vier do Servlet/Controller) --%>
-      <c:choose>
-        <c:when test="${not empty categorias}">
-          <c:forEach var="cat" items="${categorias}">
-            <div class="cat-card"
-                 data-name="${cat.nome}"
-                 data-slug="${cat.slug}"
-                 data-emoji="${cat.emoji}"
-                 data-desc="${cat.descricao}"
-                 data-color="${cat.corFundo}"
-                 data-accent="${cat.corDestaque}">
-              <div class="cat-card-header">
-                <div class="cat-emoji-box" style="background:${cat.corFundo}">
-                  <c:out value="${cat.emoji}" />
-                </div>
-                <div class="cat-card-info">
-                  <div class="cat-card-name"><c:out value="${cat.nome}" /></div>
-                  <span class="cat-card-slug"><c:out value="${cat.slug}" /></span>
-                </div>
-                <button class="cat-menu-btn">⋯</button>
-              </div>
-              <div class="cat-card-body">
-                <div class="cat-desc"><c:out value="${cat.descricao}" /></div>
-                <div class="cat-stats-row">
-                  <div class="cat-stat">
-                    <div class="cat-stat-val"><c:out value="${cat.totalReceitas}" /></div>
-                    <div class="cat-stat-lbl">Receitas</div>
-                  </div>
-                  <div class="cat-stat">
-                    <div class="cat-stat-val"><c:out value="${cat.avaliacao}" /></div>
-                    <div class="cat-stat-lbl">Avaliação</div>
-                  </div>
-                  <div class="cat-stat">
-                    <div class="cat-stat-val"><c:out value="${cat.viewsMes}" /></div>
-                    <div class="cat-stat-lbl">Views/mês</div>
-                  </div>
-                </div>
-              </div>
-              <div class="cat-card-footer">
-                <span class="cat-status">
-                  <span class="status-dot-sm active-dot"></span>
-                  <c:out value="${cat.ativa ? 'Ativa' : 'Inativa'}" />
-                </span>
-                <button class="footer-act-btn btn-editar">✏️ Editar</button>
-                <button class="footer-act-btn danger" data-id="${cat.id}">🗑️</button>
-              </div>
-            </div>
-          </c:forEach>
-        </c:when>
-
-        <%-- Fallback estático (dados de exemplo) --%>
-        <c:otherwise>
-          <div class="cat-card" data-name="Sobremesas" data-slug="/sobremesas" data-emoji="🎂" data-desc="Doces, bolos, tortas e sobremesas de todas as tradições culinárias." data-color="rgba(74,94,58,.1)" data-accent="#4a5e3a">
-            <div class="cat-card-header">
-              <div class="cat-emoji-box" style="background:rgba(74,94,58,.1)">🎂</div>
-              <div class="cat-card-info">
-                <div class="cat-card-name">Sobremesas</div>
-                <span class="cat-card-slug">/sobremesas</span>
-              </div>
-              <button class="cat-menu-btn">⋯</button>
-            </div>
-            <div class="cat-card-body">
-              <div class="cat-desc">Doces, bolos, tortas e sobremesas de todas as tradições culinárias.</div>
-              <div class="cat-stats-row">
-                <div class="cat-stat"><div class="cat-stat-val">34</div><div class="cat-stat-lbl">Receitas</div></div>
-                <div class="cat-stat"><div class="cat-stat-val">4.8</div><div class="cat-stat-lbl">Avaliação</div></div>
-                <div class="cat-stat"><div class="cat-stat-val">2.1k</div><div class="cat-stat-lbl">Views/mês</div></div>
-              </div>
-            </div>
-            <div class="cat-card-footer">
-              <span class="cat-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-              <button class="footer-act-btn btn-editar">✏️ Editar</button>
-              <button class="footer-act-btn danger">🗑️</button>
-            </div>
+<%
+    if (categorias != null && !categorias.isEmpty()) {
+        for (Categoria cat : categorias) {
+            boolean ativa = cat.getStatus_categoria() == StatusCategoria.ATIVA;
+            String novoStatus = ativa ? "inativa" : "ativa";
+            String statusLabel = ativa ? "Ativa" : "Inativa";
+            String dotClass = ativa ? "active-dot" : "inactive-dot";
+            String toggleLabel = ativa ? "🚫 Desativar" : "🔄 Ativar";
+%>
+<div class="cat-card" data-status="<%= ativa ? "ativa" : "inativa" %>">        <div class="cat-card-header">
+          <div class="cat-emoji-box" data-cor="<%= esc(cat.getCor_categoria()) %>"><%= cat.getEmoji_categoria() %></div>
+          <div class="cat-card-info">
+            <div class="cat-card-name"><%= esc(cat.getNome_categoria()) %></div>
           </div>
+        </div>
+        <div class="cat-card-body">
+          <div class="cat-desc"><%= esc(cat.getDescricao_categoria()) %></div>
+        </div>
+        <div class="cat-card-footer">
+          <span class="cat-status">
+            <span class="status-dot-sm <%= dotClass %>"></span>
+            <%= statusLabel %>
+          </span>
 
-          <div class="cat-card" data-name="Massas" data-slug="/massas" data-emoji="🍝" data-desc="Macarrões, risotos, gnocchis e todas as especialidades italianas." data-color="rgba(196,162,101,.12)" data-accent="#c4a265">
-            <div class="cat-card-header">
-              <div class="cat-emoji-box" style="background:rgba(196,162,101,.12)">🍝</div>
-              <div class="cat-card-info">
-                <div class="cat-card-name">Massas</div>
-                <span class="cat-card-slug">/massas</span>
-              </div>
-              <button class="cat-menu-btn">⋯</button>
-            </div>
-            <div class="cat-card-body">
-              <div class="cat-desc">Macarrões, risotos, gnocchis e todas as especialidades italianas.</div>
-              <div class="cat-stats-row">
-                <div class="cat-stat"><div class="cat-stat-val">28</div><div class="cat-stat-lbl">Receitas</div></div>
-                <div class="cat-stat"><div class="cat-stat-val">4.6</div><div class="cat-stat-lbl">Avaliação</div></div>
-                <div class="cat-stat"><div class="cat-stat-val">1.8k</div><div class="cat-stat-lbl">Views/mês</div></div>
-              </div>
-            </div>
-            <div class="cat-card-footer">
-              <span class="cat-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-              <button class="footer-act-btn btn-editar">✏️ Editar</button>
-              <button class="footer-act-btn danger">🗑️</button>
-            </div>
-          </div>
+          <button class="footer-act-btn btn-editar" type="button"
+                  data-id="<%= cat.getId_categoria() %>"
+                  data-nome="<%= esc(cat.getNome_categoria()) %>"
+                  data-desc="<%= esc(cat.getDescricao_categoria()) %>"
+                  data-emoji="<%= esc(cat.getEmoji_categoria()) %>"
+                  data-cor="<%= esc(cat.getCor_categoria()) %>">✏️ Editar</button>
 
-          <div class="cat-card" data-name="Saladas" data-slug="/saladas" data-emoji="🥗" data-desc="Saladas frescas, nutritivas e cheias de sabor para o dia a dia." data-color="rgba(58,122,74,.1)" data-accent="#3a7a4a">
-            <div class="cat-card-header">
-              <div class="cat-emoji-box" style="background:rgba(58,122,74,.1)">🥗</div>
-              <div class="cat-card-info">
-                <div class="cat-card-name">Saladas</div>
-                <span class="cat-card-slug">/saladas</span>
-              </div>
-              <button class="cat-menu-btn">⋯</button>
-            </div>
-            <div class="cat-card-body">
-              <div class="cat-desc">Saladas frescas, nutritivas e cheias de sabor para o dia a dia.</div>
-              <div class="cat-stats-row">
-                <div class="cat-stat"><div class="cat-stat-val">22</div><div class="cat-stat-lbl">Receitas</div></div>
-                <div class="cat-stat"><div class="cat-stat-val">4.5</div><div class="cat-stat-lbl">Avaliação</div></div>
-                <div class="cat-stat"><div class="cat-stat-val">1.4k</div><div class="cat-stat-lbl">Views/mês</div></div>
-              </div>
-            </div>
-            <div class="cat-card-footer">
-              <span class="cat-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-              <button class="footer-act-btn btn-editar">✏️ Editar</button>
-              <button class="footer-act-btn danger">🗑️</button>
-            </div>
-          </div>
+          <form class="form-inline" method="post" action="<%= ctx %>/CategoriaController">
+            <input type="hidden" name="action" value="status">
+            <input type="hidden" name="id" value="<%= cat.getId_categoria() %>">
+            <input type="hidden" name="novoStatus" value="<%= novoStatus %>">
+            <button class="footer-act-btn" type="submit"><%= toggleLabel %></button>
+          </form>
 
-          <div class="cat-card" data-name="Sopas" data-slug="/sopas" data-emoji="🥣" data-desc="Caldos, cremes e sopas reconfortantes para todas as estações." data-color="rgba(196,131,42,.1)" data-accent="#c4832a">
-            <div class="cat-card-header">
-              <div class="cat-emoji-box" style="background:rgba(196,131,42,.1)">🥣</div>
-              <div class="cat-card-info">
-                <div class="cat-card-name">Sopas</div>
-                <span class="cat-card-slug">/sopas</span>
-              </div>
-              <button class="cat-menu-btn">⋯</button>
-            </div>
-            <div class="cat-card-body">
-              <div class="cat-desc">Caldos, cremes e sopas reconfortantes para todas as estações.</div>
-              <div class="cat-stats-row">
-                <div class="cat-stat"><div class="cat-stat-val">18</div><div class="cat-stat-lbl">Receitas</div></div>
-                <div class="cat-stat"><div class="cat-stat-val">4.7</div><div class="cat-stat-lbl">Avaliação</div></div>
-                <div class="cat-stat"><div class="cat-stat-val">960</div><div class="cat-stat-lbl">Views/mês</div></div>
-              </div>
-            </div>
-            <div class="cat-card-footer">
-              <span class="cat-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-              <button class="footer-act-btn btn-editar">✏️ Editar</button>
-              <button class="footer-act-btn danger">🗑️</button>
-            </div>
-          </div>
-
-          <div class="cat-card" data-name="Carnes" data-slug="/carnes" data-emoji="🍗" data-desc="Grelhados, assados, ensopados e pratos com proteínas de qualidade." data-color="rgba(163,177,138,.15)" data-accent="#5a8a6a">
-            <div class="cat-card-header">
-              <div class="cat-emoji-box" style="background:rgba(163,177,138,.15)">🍗</div>
-              <div class="cat-card-info">
-                <div class="cat-card-name">Carnes</div>
-                <span class="cat-card-slug">/carnes</span>
-              </div>
-              <button class="cat-menu-btn">⋯</button>
-            </div>
-            <div class="cat-card-body">
-              <div class="cat-desc">Grelhados, assados, ensopados e pratos com proteínas de qualidade.</div>
-              <div class="cat-stats-row">
-                <div class="cat-stat"><div class="cat-stat-val">14</div><div class="cat-stat-lbl">Receitas</div></div>
-                <div class="cat-stat"><div class="cat-stat-val">4.3</div><div class="cat-stat-lbl">Avaliação</div></div>
-                <div class="cat-stat"><div class="cat-stat-val">720</div><div class="cat-stat-lbl">Views/mês</div></div>
-              </div>
-            </div>
-            <div class="cat-card-footer">
-              <span class="cat-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-              <button class="footer-act-btn btn-editar">✏️ Editar</button>
-              <button class="footer-act-btn danger">🗑️</button>
-            </div>
-          </div>
-
-          <div class="cat-card" data-name="Vegano" data-slug="/vegano" data-emoji="🥬" data-desc="Receitas 100% plant-based, saborosas e nutritivas para todos." data-color="rgba(90,138,106,.1)" data-accent="#5a8a6a">
-            <div class="cat-card-header">
-              <div class="cat-emoji-box" style="background:rgba(90,138,106,.1)">🥬</div>
-              <div class="cat-card-info">
-                <div class="cat-card-name">Vegano</div>
-                <span class="cat-card-slug">/vegano</span>
-              </div>
-              <button class="cat-menu-btn">⋯</button>
-            </div>
-            <div class="cat-card-body">
-              <div class="cat-desc">Receitas 100% plant-based, saborosas e nutritivas para todos.</div>
-              <div class="cat-stats-row">
-                <div class="cat-stat"><div class="cat-stat-val">10</div><div class="cat-stat-lbl">Receitas</div></div>
-                <div class="cat-stat"><div class="cat-stat-val">4.9</div><div class="cat-stat-lbl">Avaliação</div></div>
-                <div class="cat-stat"><div class="cat-stat-val">540</div><div class="cat-stat-lbl">Views/mês</div></div>
-              </div>
-            </div>
-            <div class="cat-card-footer">
-              <span class="cat-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-              <button class="footer-act-btn btn-editar">✏️ Editar</button>
-              <button class="footer-act-btn danger">🗑️</button>
-            </div>
-          </div>
-        </c:otherwise>
-      </c:choose>
-
+          <form class="form-inline form-excluir" method="post" action="<%= ctx %>/CategoriaController">
+            <input type="hidden" name="action" value="excluir">
+            <input type="hidden" name="id" value="<%= cat.getId_categoria() %>">
+            <button class="footer-act-btn danger" type="submit" data-nome="<%= esc(cat.getNome_categoria()) %>">🗑️</button>
+          </form>
+        </div>
+      </div>
+<%
+        }
+    } else {
+%>
+      <div class="empty-state">
+        <div class="empty-icon">🍳</div>
+        <h3>Nenhuma categoria cadastrada</h3>
+        <p>Clique em "Nova Categoria" para criar a primeira.</p>
+      </div>
+<%
+    }
+%>
     </div><%-- /cat-grid --%>
   </div><%-- /content --%>
 </main>
@@ -398,437 +325,440 @@
 <%-- ===== MODAL NOVA CATEGORIA ===== --%>
 <div class="modal-overlay" id="modalNovaCat">
   <div class="modal-nova-cat">
-    <div class="modal-nova-cat-head">
-      <div class="modal-nova-cat-title">✚ Nova Categoria</div>
-      <button class="modal-close-btn" id="btnFecharNovaCat">✕</button>
-    </div>
-    <div class="modal-nova-cat-body">
-      <div>
-        <label class="form-label">Nome da Categoria</label>
-        <input class="form-input" type="text" id="novaCatNome" placeholder="ex: Bebidas">
+    <form method="post" action="<%= ctx %>/CategoriaController">
+      <input type="hidden" name="action" value="cadastrar">
+      <input type="hidden" name="emoji" id="novaCatEmojiInput" value="<%= (emojis != null && !emojis.isEmpty()) ? esc(emojis.get(0).getUnicode_emoji()) : "" %>">
+      <input type="hidden" name="cor" id="novaCatCorInput" value="<%= (cores != null && !cores.isEmpty()) ? esc(cores.get(0).getUnicode_cor()) : "" %>">
+
+      <div class="modal-nova-cat-head">
+        <div class="modal-nova-cat-title">✚ Nova Categoria</div>
+        <button class="modal-close-btn" type="button" id="btnFecharNovaCat">✕</button>
       </div>
-      <div>
-        <label class="form-label">Descrição</label>
-        <textarea class="form-input" id="novaCatDesc" rows="3" placeholder="Descreva brevemente esta categoria…"></textarea>
-      </div>
-      <div>
-        <label class="form-label">Ícone</label>
-        <div class="emoji-row" id="novaEmojiRow">
-          <div class="emoji-opt selected">🥤</div>
-          <div class="emoji-opt">🍵</div>
-          <div class="emoji-opt">🍹</div>
-          <div class="emoji-opt">🧁</div>
-          <div class="emoji-opt">🫕</div>
-          <div class="emoji-opt">🥘</div>
-          <div class="emoji-opt">🍲</div>
-          <div class="emoji-opt">🥙</div>
-          <div class="emoji-add" data-target="novaEmojiRow">+</div>
+      <div class="modal-nova-cat-body">
+        <div>
+          <label class="form-label">Nome da Categoria</label>
+          <input class="form-input" type="text" name="nome" id="novaCatNome" placeholder="ex: Bebidas" required>
+        </div>
+        <div>
+          <label class="form-label">Descrição</label>
+          <textarea class="form-input" name="descricao" id="novaCatDesc" rows="3" placeholder="Descreva brevemente esta categoria…"></textarea>
+        </div>
+        <div>
+          <label class="form-label">Ícone</label>
+          <div class="emoji-row" id="novaEmojiRow" data-input="novaCatEmojiInput">
+<%
+    if (emojis != null) {
+        for (int i = 0; i < emojis.size(); i++) {
+            CategoriaEmoji e = emojis.get(i);
+            String selCls = (i == 0) ? " selected" : "";
+%>
+            <div class="emoji-opt<%= selCls %>" data-emoji="<%= esc(e.getUnicode_emoji()) %>"><%= e.getUnicode_emoji() %></div>
+<%
+        }
+    }
+%>
+            <div class="emoji-add" data-target="novaEmojiRow" title="Mais emojis">+</div>
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Cor de Destaque</label>
+          <div class="color-row" id="novaColorRow" data-input="novaCatCorInput">
+<%
+    if (cores != null) {
+        for (int i = 0; i < cores.size(); i++) {
+            CategoriaCor c = cores.get(i);
+            String selCls = (i == 0) ? " selected" : "";
+%>
+            <div class="color-swatch<%= selCls %>" data-cor="<%= esc(c.getUnicode_cor()) %>" style="background:<%= esc(c.getUnicode_cor()) %>" title="<%= esc(c.getUnicode_cor()) %>"></div>
+<%
+        }
+    }
+%>
+          </div>
         </div>
       </div>
-      <div>
-        <label class="form-label">Cor de Destaque</label>
-        <div class="color-row" id="novaColorRow">
-          <div class="color-swatch selected" style="background:#4a5e3a" title="#4a5e3a"></div>
-          <div class="color-swatch" style="background:#c4a265" title="#c4a265"></div>
-          <div class="color-swatch" style="background:#3a7a4a" title="#3a7a4a"></div>
-          <div class="color-swatch" style="background:#c4832a" title="#c4832a"></div>
-          <div class="color-swatch" style="background:#5a8a6a" title="#5a8a6a"></div>
-          <div class="color-swatch" style="background:#7a6aa0" title="#7a6aa0"></div>
-        </div>
+      <div class="modal-nova-cat-footer">
+        <button class="btn-ghost" type="button" id="btnCancelarNovaCat">Cancelar</button>
+        <button class="btn-criar" type="submit">✚ Criar Categoria</button>
       </div>
-    </div>
-    <div class="modal-nova-cat-footer">
-      <button class="btn-ghost" id="btnCancelarNovaCat">Cancelar</button>
-      <button class="btn-criar" id="btnConfirmarNovaCat">✚ Criar Categoria</button>
-    </div>
+    </form>
   </div>
 </div>
 
 <%-- ===== MODAL EDITAR CATEGORIA ===== --%>
 <div class="modal-overlay" id="modalEditarCat">
   <div class="modal-nova-cat">
-    <div class="modal-nova-cat-head">
-      <div class="modal-nova-cat-title">✏️ Editar Categoria</div>
-      <button class="modal-close-btn" id="btnFecharEditarCat">✕</button>
-    </div>
-    <div class="modal-nova-cat-body">
-      <div class="edit-preview-bar" id="editPreviewBar">
-        <div class="edit-preview-icon" id="editPreviewIcon">🎂</div>
-        <div>
+    <form method="post" action="<%= ctx %>/CategoriaController">
+      <input type="hidden" name="action" value="atualizar">
+      <input type="hidden" name="id" id="editCatId">
+      <input type="hidden" name="emoji" id="editCatEmojiInput">
+      <input type="hidden" name="cor" id="editCatCorInput">
+
+      <div class="modal-nova-cat-head">
+        <div class="modal-nova-cat-title">✏️ Editar Categoria</div>
+        <button class="modal-close-btn" type="button" id="btnFecharEditarCat">✕</button>
+      </div>
+      <div class="modal-nova-cat-body">
+        <div class="edit-preview-bar" id="editPreviewBar">
+          <div class="edit-preview-icon" id="editPreviewIcon">🎂</div>
           <div class="edit-preview-name" id="editPreviewName">Nome</div>
-          <div class="edit-preview-slug" id="editPreviewSlug">/slug</div>
+          <span class="edit-preview-lbl">Pré-visualização</span>
         </div>
-        <span class="edit-preview-lbl">Pré-visualização</span>
-      </div>
-      <div>
-        <label class="form-label">Nome da Categoria</label>
-        <input class="form-input" type="text" id="editCatNome" placeholder="Nome da categoria">
-      </div>
-      <div>
-        <label class="form-label">Descrição</label>
-        <textarea class="form-input" id="editCatDesc" rows="3" placeholder="Descreva brevemente esta categoria…"></textarea>
-      </div>
-      <div>
-        <label class="form-label">Ícone</label>
-        <div class="emoji-row" id="editEmojiRow">
-          <%-- preenchido via JS --%>
+        <div>
+          <label class="form-label">Nome da Categoria</label>
+          <input class="form-input" type="text" name="nome" id="editCatNome" placeholder="Nome da categoria" required>
+        </div>
+        <div>
+          <label class="form-label">Descrição</label>
+          <textarea class="form-input" name="descricao" id="editCatDesc" rows="3" placeholder="Descreva brevemente esta categoria…"></textarea>
+        </div>
+        <div>
+          <label class="form-label">Ícone</label>
+          <div class="emoji-row" id="editEmojiRow" data-input="editCatEmojiInput">
+<%
+    if (emojis != null) {
+        for (CategoriaEmoji e : emojis) {
+%>
+            <div class="emoji-opt" data-emoji="<%= esc(e.getUnicode_emoji()) %>"><%= e.getUnicode_emoji() %></div>
+<%
+        }
+    }
+%>
+            <div class="emoji-add" data-target="editEmojiRow" title="Mais emojis">+</div>
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Cor de Destaque</label>
+          <div class="color-row" id="editColorRow" data-input="editCatCorInput">
+<%
+    if (cores != null) {
+        for (CategoriaCor c : cores) {
+%>
+            <div class="color-swatch" data-cor="<%= esc(c.getUnicode_cor()) %>" style="background:<%= esc(c.getUnicode_cor()) %>" title="<%= esc(c.getUnicode_cor()) %>"></div>
+<%
+        }
+    }
+%>
+          </div>
         </div>
       </div>
-      <div>
-        <label class="form-label">Cor de Destaque</label>
-        <div class="color-row" id="editColorRow">
-          <div class="color-swatch" style="background:#4a5e3a" title="#4a5e3a"></div>
-          <div class="color-swatch" style="background:#c4a265" title="#c4a265"></div>
-          <div class="color-swatch" style="background:#3a7a4a" title="#3a7a4a"></div>
-          <div class="color-swatch" style="background:#c4832a" title="#c4832a"></div>
-          <div class="color-swatch" style="background:#5a8a6a" title="#5a8a6a"></div>
-          <div class="color-swatch" style="background:#7a6aa0" title="#7a6aa0"></div>
-        </div>
+      <div class="modal-nova-cat-footer">
+        <button class="btn-ghost" type="button" id="btnCancelarEditarCat">Cancelar</button>
+        <button class="btn-salvar" type="submit">💾 Salvar Alterações</button>
       </div>
-    </div>
-    <div class="modal-nova-cat-footer">
-      <button class="btn-ghost" id="btnCancelarEditarCat">Cancelar</button>
-      <button class="btn-salvar" id="btnConfirmarEditarCat">💾 Salvar Alterações</button>
-    </div>
+    </form>
   </div>
 </div>
 
-<%-- ===== MODAL EMOJI PICKER ===== --%>
+<%-- ===== MODAL EMOJI PICKER (lista fixa, pré-definida aqui no JSP) ===== --%>
 <div class="modal-overlay" id="emojiModal">
   <div class="modal-sub">
     <div class="modal-sub-head">
       <div class="modal-sub-title">Escolher ícone</div>
-      <button class="modal-close-btn" id="closeEmojiModal">✕</button>
+      <button class="modal-close-btn" type="button" id="closeEmojiModal">✕</button>
     </div>
     <div class="modal-sub-body">
       <div class="emoji-cats" id="emojiCats">
-        <button class="emoji-cat-btn active" data-cat="all">Todos</button>
-        <button class="emoji-cat-btn" data-cat="food">Comida</button>
-        <button class="emoji-cat-btn" data-cat="drink">Bebidas</button>
-        <button class="emoji-cat-btn" data-cat="veggie">Vegetais</button>
-        <button class="emoji-cat-btn" data-cat="sweet">Doces</button>
-        <button class="emoji-cat-btn" data-cat="other">Outros</button>
+        <button class="emoji-cat-btn active" type="button" data-cat="all">Todos</button>
+        <button class="emoji-cat-btn" type="button" data-cat="food">Comida</button>
+        <button class="emoji-cat-btn" type="button" data-cat="drink">Bebidas</button>
+        <button class="emoji-cat-btn" type="button" data-cat="veggie">Vegetais</button>
+        <button class="emoji-cat-btn" type="button" data-cat="sweet">Doces</button>
+        <button class="emoji-cat-btn" type="button" data-cat="other">Outros</button>
       </div>
       <div class="emoji-picker-grid" id="emojiPickerGrid">
-        <%-- preenchido via JS --%>
+        <%-- preenchido via JS a partir do EMOJI_DB pré-definido --%>
       </div>
     </div>
   </div>
 </div>
 
-<%-- TOAST --%>
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── DADOS DE EMOJIS ─────────────────────────────────────────────────────────
-const EMOJI_DB = {
-  food:   ['🍔','🍕','🌮','🌯','🥙','🫔','🥗','🍜','🍝','🍲','🥘','🫕','🍛','🍣','🍤','🍱','🥟','🍗','🍖','🥩','🥚','🧆','🥞','🧇'],
-  drink:  ['🥤','🍹','🍸','🍷','🍺','🧃','☕','🍵','🧋','🥛','🫖','🍶','🥂','🍻'],
-  veggie: ['🥬','🥦','🥕','🌽','🧅','🧄','🫑','🍆','🥑','🍅','🥒','🥝','🍋','🫐','🍓','🍇','🍒','🍑','🥭','🍍'],
-  sweet:  ['🎂','🍰','🧁','🍩','🍪','🍫','🍬','🍭','🍦','🍧','🍨','🥐','🍞','🥖','🥨'],
-  other:  ['🫕','🥘','🍲','🥣','🥗','🧑‍🍳','👨‍🍳','🍽️','🥄','🔪','🫙','🧂','🌶️','🫚','🫛']
-};
-const ALL_EMOJIS = [...new Set(Object.values(EMOJI_DB).flat())];
+(function() {
+  var MSG_SUCESSO = "<%= jsEsc(msgSucesso) %>";
+  var MSG_ERRO = "<%= jsEsc(msgErro) %>";
 
-// ─── ESTADO ───────────────────────────────────────────────────────────────────
-let activeEmojiTarget = null;
-let editingCard = null;
-
-// ─── UTILITÁRIOS ──────────────────────────────────────────────────────────────
-function openModal(m){ m.classList.add('open'); }
-function closeModal(m){ m.classList.remove('open'); }
-
-function showToast(msg, icon='✅') {
-  const t = document.getElementById('toast');
-  t.innerHTML = icon + ' ' + msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
-}
-
-function slugify(text) {
-  return '/' + text.toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim().replace(/\s+/g, '-');
-}
-
-function getSelectedEmoji(rowId) {
-  const sel = document.querySelector('#' + rowId + ' .emoji-opt.selected');
-  return sel ? sel.textContent : '🏷️';
-}
-
-function getSelectedColor(rowId) {
-  const sel = document.querySelector('#' + rowId + ' .color-swatch.selected');
-  if (!sel) return '#4a5e3a';
-  return sel.title || sel.style.background;
-}
-
-// ─── MODAL NOVA CATEGORIA ─────────────────────────────────────────────────────
-document.getElementById('btnNovaCat').onclick = () => {
-  document.getElementById('novaCatNome').value = '';
-  document.getElementById('novaCatDesc').value = '';
-  openModal(document.getElementById('modalNovaCat'));
-};
-document.getElementById('btnFecharNovaCat').onclick = () => closeModal(document.getElementById('modalNovaCat'));
-document.getElementById('btnCancelarNovaCat').onclick = () => closeModal(document.getElementById('modalNovaCat'));
-
-document.getElementById('btnConfirmarNovaCat').onclick = function() {
-  const nome = document.getElementById('novaCatNome').value.trim();
-  if (!nome) { document.getElementById('novaCatNome').focus(); return; }
-  const desc  = document.getElementById('novaCatDesc').value.trim() || 'Sem descrição.';
-  const emoji = getSelectedEmoji('novaEmojiRow');
-  const color = getSelectedColor('novaColorRow');
-  const slug  = slugify(nome);
-
-  const card = document.createElement('div');
-  card.className = 'cat-card';
-  card.dataset.name  = nome;
-  card.dataset.slug  = slug;
-  card.dataset.emoji = emoji;
-  card.dataset.desc  = desc;
-  card.dataset.accent = color;
-  const bgColor = hexToRgba(color, 0.1);
-  card.innerHTML = `
-    <div class="cat-card-header">
-      <div class="cat-emoji-box" style="background:${bgColor}">${emoji}</div>
-      <div class="cat-card-info">
-        <div class="cat-card-name">${nome}</div>
-        <span class="cat-card-slug">${slug}</span>
-      </div>
-      <button class="cat-menu-btn">⋯</button>
-    </div>
-    <div class="cat-card-body">
-      <div class="cat-desc">${desc}</div>
-      <div class="cat-stats-row">
-        <div class="cat-stat"><div class="cat-stat-val">0</div><div class="cat-stat-lbl">Receitas</div></div>
-        <div class="cat-stat"><div class="cat-stat-val">—</div><div class="cat-stat-lbl">Avaliação</div></div>
-        <div class="cat-stat"><div class="cat-stat-val">0</div><div class="cat-stat-lbl">Views/mês</div></div>
-      </div>
-    </div>
-    <div class="cat-card-footer">
-      <span class="cat-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-      <button class="footer-act-btn btn-editar">✏️ Editar</button>
-      <button class="footer-act-btn danger">🗑️</button>
-    </div>`;
-  document.getElementById('catGrid').appendChild(card);
-  closeModal(document.getElementById('modalNovaCat'));
-  showToast('Categoria "' + nome + '" criada com sucesso!');
-};
-
-// ─── MODAL EDITAR CATEGORIA ───────────────────────────────────────────────────
-document.getElementById('catGrid').addEventListener('click', function(e) {
-  const btn = e.target.closest('.btn-editar');
-  if (!btn) return;
-  const card = btn.closest('.cat-card');
-  editingCard = card;
-  openEditModal(card);
-});
-
-function openEditModal(card) {
-  const name  = card.dataset.name  || card.querySelector('.cat-card-name').textContent;
-  const slug  = card.dataset.slug  || card.querySelector('.cat-card-slug').textContent;
-  const emoji = card.dataset.emoji || card.querySelector('.cat-emoji-box').textContent;
-  const desc  = card.dataset.desc  || card.querySelector('.cat-desc').textContent;
-  const accent = card.dataset.accent || '#4a5e3a';
-
-  document.getElementById('editCatNome').value = name;
-  document.getElementById('editCatDesc').value = desc;
-
-  updateEditPreview(emoji, name, slug, accent);
-
-  const editEmojiRow = document.getElementById('editEmojiRow');
-  const addBtn = editEmojiRow.querySelector('.emoji-add');
-  editEmojiRow.querySelectorAll('.emoji-opt').forEach(e => e.remove());
-  const defaults = ['🥤','🍵','🍹','🧁','🫕','🥘','🍲','🥙'];
-  const pool = defaults.includes(emoji) ? defaults : [emoji, ...defaults];
-  pool.slice(0,8).forEach(em => {
-    const d = document.createElement('div');
-    d.className = 'emoji-opt' + (em === emoji ? ' selected' : '');
-    d.textContent = em;
-    editEmojiRow.insertBefore(d, addBtn);
-  });
-
-  document.querySelectorAll('#editColorRow .color-swatch').forEach(sw => {
-    sw.classList.toggle('selected', sw.title === accent || sw.style.background === accent);
-  });
-
-  const nomeInput = document.getElementById('editCatNome');
-  nomeInput.oninput = function() {
-    const newSlug = slugify(this.value || 'categoria');
-    document.getElementById('editPreviewName').textContent = this.value || 'Nome';
-    document.getElementById('editPreviewSlug').textContent = newSlug;
+  // ─── LISTA FIXA DE EMOJIS (pré-definida aqui no JSP, não vem do banco) ──
+  // Usada apenas no picker "+", para o usuário escolher um ícone extra além
+  // dos que já estão cadastrados em categoria_emoji.
+  var EMOJI_DB = {
+    food:   ['🍔','🍕','🌮','🌯','🥙','🫔','🥗','🍜','🍝','🍲','🥘','🫕','🍛','🍣','🍤','🍱','🥟','🍗','🍖','🥩','🥚','🧆','🥞','🧇'],
+    drink:  ['🥤','🍹','🍸','🍷','🍺','🧃','☕','🍵','🧋','🥛','🫖','🍶','🥂','🍻'],
+    veggie: ['🥬','🥦','🥕','🌽','🧅','🧄','🫑','🍆','🥑','🍅','🥒','🥝','🍋','🫐','🍓','🍇','🍒','🍑','🥭','🍍'],
+    sweet:  ['🎂','🍰','🧁','🍩','🍪','🍫','🍬','🍭','🍦','🍧','🍨','🥐','🍞','🥖','🥨'],
+    other:  ['🫕','🥘','🍲','🥣','🥗','🧑‍🍳','👨‍🍳','🍽️','🥄','🔪','🫙','🧂','🌶️','🫚','🫛']
   };
+  var ALL_EMOJIS = Array.from(new Set([].concat(EMOJI_DB.food, EMOJI_DB.drink, EMOJI_DB.veggie, EMOJI_DB.sweet, EMOJI_DB.other)));
 
-  openModal(document.getElementById('modalEditarCat'));
-}
+  function openModal(m){ m.classList.add('open'); }
+  function closeModal(m){ m.classList.remove('open'); }
 
-function updateEditPreview(emoji, name, slug, color) {
-  document.getElementById('editPreviewIcon').textContent = emoji;
-  document.getElementById('editPreviewIcon').style.background = hexToRgba(color, 0.12);
-  document.getElementById('editPreviewName').textContent = name;
-  document.getElementById('editPreviewSlug').textContent = slug;
-}
+  function showToast(msg, isError) {
+    var t = document.getElementById('toast');
+    t.textContent = (isError ? '⚠️ ' : '✅ ') + msg;
+    t.classList.toggle('error', !!isError);
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 3200);
+  }
 
-document.getElementById('editEmojiRow').addEventListener('click', function(e) {
-  if (!e.target.classList.contains('emoji-opt')) return;
-  document.querySelectorAll('#editEmojiRow .emoji-opt').forEach(el => el.classList.remove('selected'));
-  e.target.classList.add('selected');
-  document.getElementById('editPreviewIcon').textContent = e.target.textContent;
-});
+  function hexToRgba(hex, alpha) {
+    if (!hex) return 'rgba(74,94,58,' + alpha + ')';
+    hex = hex.trim();
+    if (hex.indexOf('rgb') === 0) return hex;
+    hex = hex.replace('#','');
+    if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+    if (hex.length !== 6) return 'rgba(74,94,58,' + alpha + ')';
+    var r = parseInt(hex.substring(0,2),16);
+    var g = parseInt(hex.substring(2,4),16);
+    var b = parseInt(hex.substring(4,6),16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+  }
 
-document.getElementById('editColorRow').addEventListener('click', function(e) {
-  const sw = e.target.closest('.color-swatch');
-  if (!sw) return;
-  document.querySelectorAll('#editColorRow .color-swatch').forEach(el => el.classList.remove('selected'));
-  sw.classList.add('selected');
-  const color = sw.title || sw.style.background;
-  document.getElementById('editPreviewIcon').style.background = hexToRgba(color, 0.12);
-});
+  // Aplica a cor de fundo (com transparência) em cada ícone de categoria já renderizado
+  document.querySelectorAll('.cat-emoji-box[data-cor]').forEach(function(box) {
+    box.style.background = hexToRgba(box.dataset.cor, 0.14);
+  });
 
-document.getElementById('btnFecharEditarCat').onclick = () => closeModal(document.getElementById('modalEditarCat'));
-document.getElementById('btnCancelarEditarCat').onclick = () => closeModal(document.getElementById('modalEditarCat'));
+  if (MSG_SUCESSO) showToast(MSG_SUCESSO, false);
+  if (MSG_ERRO) showToast(MSG_ERRO, true);
 
-document.getElementById('btnConfirmarEditarCat').onclick = function() {
-  if (!editingCard) return;
-  const nome  = document.getElementById('editCatNome').value.trim();
-  if (!nome) { document.getElementById('editCatNome').focus(); return; }
-  const desc   = document.getElementById('editCatDesc').value.trim() || 'Sem descrição.';
-  const emoji  = getSelectedEmoji('editEmojiRow');
-  const color  = getSelectedColor('editColorRow');
-  const slug   = slugify(nome);
-  const bgColor = hexToRgba(color, 0.1);
+  // ─── MODAL NOVA CATEGORIA ───────────────────────────────────────────────
+  var modalNova = document.getElementById('modalNovaCat');
+  document.getElementById("btnNovaCat").addEventListener("click", function () {
+	    document.getElementById("novaCatNome").value = "";
+	    document.getElementById("novaCatDesc").value = "";
+	    openModal(modalNova);
+	});
+  document.getElementById("btnFecharNovaCat")
+  .addEventListener("click", function () {
+      closeModal(modalNova);
+  });
 
-  editingCard.dataset.name  = nome;
-  editingCard.dataset.slug  = slug;
-  editingCard.dataset.emoji = emoji;
-  editingCard.dataset.desc  = desc;
-  editingCard.dataset.accent = color;
+document.getElementById("btnCancelarNovaCat")
+  .addEventListener("click", function () {
+      closeModal(modalNova);
+  });
 
-  editingCard.querySelector('.cat-card-name').textContent = nome;
-  editingCard.querySelector('.cat-card-slug').textContent = slug;
-  editingCard.querySelector('.cat-emoji-box').textContent = emoji;
-  editingCard.querySelector('.cat-emoji-box').style.background = bgColor;
-  editingCard.querySelector('.cat-desc').textContent = desc;
+  // ─── MODAL EDITAR CATEGORIA ─────────────────────────────────────────────
+  var modalEditar = document.getElementById('modalEditarCat');
 
-  closeModal(document.getElementById('modalEditarCat'));
-  showToast('Categoria "' + nome + '" atualizada!', '💾');
-  editingCard = null;
-};
+  document.getElementById('catGrid').addEventListener('click', function(e) {
+    var btn = e.target.closest('.btn-editar');
+    if (!btn) return;
 
-// ─── EMOJI PICKER ─────────────────────────────────────────────────────────────
-let currentEmojiCat = 'all';
-let currentEmojiTargetRowId = null;
+    document.getElementById('editCatId').value = btn.dataset.id;
+    document.getElementById('editCatNome').value = btn.dataset.nome;
+    document.getElementById('editCatDesc').value = btn.dataset.desc;
+    document.getElementById('editCatEmojiInput').value = btn.dataset.emoji;
+    document.getElementById('editCatCorInput').value = btn.dataset.cor;
 
-function renderEmojiPicker(cat = 'all') {
-  const grid = document.getElementById('emojiPickerGrid');
-  let pool = cat === 'all' ? ALL_EMOJIS : (EMOJI_DB[cat] || ALL_EMOJIS);
-  const inUse = currentEmojiTargetRowId
-    ? [...document.querySelectorAll('#' + currentEmojiTargetRowId + ' .emoji-opt')].map(e => e.textContent)
-    : [];
+    document.getElementById('editPreviewIcon').textContent = btn.dataset.emoji;
+    document.getElementById('editPreviewIcon').style.background = hexToRgba(btn.dataset.cor, 0.14);
+    document.getElementById('editPreviewName').textContent = btn.dataset.nome;
 
-  grid.innerHTML = pool.map(em =>
-    `<div class="emoji-picker-item${inUse.includes(em) ? ' in-use' : ''}" data-emoji="${em}">${em}</div>`
-  ).join('');
-}
+    document.querySelectorAll('#editEmojiRow .emoji-opt').forEach(function(el) {
+      el.classList.toggle('selected', el.dataset.emoji === btn.dataset.emoji);
+    });
+    document.querySelectorAll('#editColorRow .color-swatch').forEach(function(el) {
+      el.classList.toggle('selected', el.dataset.cor === btn.dataset.cor);
+    });
 
-document.addEventListener('click', function(e) {
-  const addBtn = e.target.closest('.emoji-add');
-  if (!addBtn) return;
-  currentEmojiTargetRowId = addBtn.dataset.target;
-  activeEmojiTarget = document.getElementById(currentEmojiTargetRowId);
-  currentEmojiCat = 'all';
-  document.querySelectorAll('.emoji-cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === 'all'));
-  renderEmojiPicker('all');
-  openModal(document.getElementById('emojiModal'));
-});
+    openModal(modalEditar);
+  });
 
-document.getElementById('emojiCats').addEventListener('click', function(e) {
-  const btn = e.target.closest('.emoji-cat-btn');
-  if (!btn) return;
-  currentEmojiCat = btn.dataset.cat;
-  document.querySelectorAll('.emoji-cat-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderEmojiPicker(currentEmojiCat);
-});
+  document.getElementById('editCatNome').addEventListener('input', function() {
+    document.getElementById('editPreviewName').textContent = this.value || 'Nome';
+  });
 
-document.getElementById('emojiPickerGrid').addEventListener('click', function(e) {
-  const item = e.target.closest('.emoji-picker-item');
-  if (!item || !activeEmojiTarget) return;
-  const emoji = item.dataset.emoji;
+  document.getElementById("btnFecharEditarCat")
+  .addEventListener("click", function () {
+      closeModal(modalEditar);
+  });
 
-  const existing = [...activeEmojiTarget.querySelectorAll('.emoji-opt')].find(el => el.textContent === emoji);
-  if (existing) {
-    activeEmojiTarget.querySelectorAll('.emoji-opt').forEach(el => el.classList.remove('selected'));
-    existing.classList.add('selected');
-  } else {
-    const addBtn = activeEmojiTarget.querySelector('.emoji-add');
-    const div = document.createElement('div');
-    div.className = 'emoji-opt selected';
-    div.textContent = emoji;
-    activeEmojiTarget.insertBefore(div, addBtn);
-    activeEmojiTarget.querySelectorAll('.emoji-opt').forEach(el => {
-      if (el !== div) el.classList.remove('selected');
+document.getElementById("btnCancelarEditarCat")
+  .addEventListener("click", function () {
+      closeModal(modalEditar);
+  });
+  // ─── SELEÇÃO DE EMOJI / COR (genérico para os dois modais) ─────────────
+  document.addEventListener('click', function(e) {
+    var opt = e.target.closest('.emoji-opt');
+    if (opt) {
+      var row = opt.closest('.emoji-row');
+      row.querySelectorAll('.emoji-opt').forEach(function(el){ el.classList.remove('selected'); });
+      opt.classList.add('selected');
+      var inputId = row.dataset.input;
+      if (inputId) document.getElementById(inputId).value = opt.dataset.emoji;
+      if (inputId === 'editCatEmojiInput') {
+        document.getElementById('editPreviewIcon').textContent = opt.dataset.emoji;
+      }
+      return;
+    }
+
+    var sw = e.target.closest('.color-swatch');
+    if (sw) {
+      var crow = sw.closest('.color-row');
+      crow.querySelectorAll('.color-swatch').forEach(function(el){ el.classList.remove('selected'); });
+      sw.classList.add('selected');
+      var cInputId = crow.dataset.input;
+      if (cInputId) document.getElementById(cInputId).value = sw.dataset.cor;
+      if (cInputId === 'editCatCorInput') {
+        document.getElementById('editPreviewIcon').style.background = hexToRgba(sw.dataset.cor, 0.14);
+      }
+    }
+  });
+
+  // ─── CONFIRMAÇÃO DE EXCLUSÃO ─────────────────────────────────────────────
+  document.querySelectorAll('.form-excluir').forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+      var nome = form.querySelector('.footer-act-btn.danger').dataset.nome || 'esta categoria';
+      if (!confirm('Tem certeza que deseja excluir a categoria "' + nome + '"?')) {
+        e.preventDefault();
+      }
+    });
+  });
+
+  // ─── FECHAR MODAL CLICANDO FORA ─────────────────────────────────────────
+  [modalNova, modalEditar].forEach(function(m) {
+    m.addEventListener('click', function(e) { if (e.target === m) closeModal(m); });
+  });
+
+//─── BUSCA + FILTRO DE STATUS ───────────────────────────────────────────
+  function filterCards() {
+    var termo = document.getElementById('campoBusca').value.trim().toLowerCase();
+    var status = document.getElementById('filterStatus').value;
+
+    document.querySelectorAll('#catGrid .cat-card').forEach(function(card) {
+      var nome = (card.querySelector('.cat-card-name') || {}).textContent || '';
+      var bateNome = nome.toLowerCase().indexOf(termo) !== -1;
+      var bateStatus = !status || card.dataset.status === status;
+      card.style.display = (bateNome && bateStatus) ? '' : 'none';
     });
   }
 
-  if (currentEmojiTargetRowId === 'editEmojiRow') {
-    document.getElementById('editPreviewIcon').textContent = emoji;
+  document.getElementById('campoBusca').addEventListener('input', filterCards);
+  document.getElementById('filterStatus').addEventListener('change', filterCards);
+
+  // aplica o filtro padrão (Ativa) assim que a página carrega
+  filterCards();
+  
+//================= EMOJI PICKER =================
+
+  var emojiModal = document.getElementById("emojiModal");
+  var emojiGrid = document.getElementById("emojiPickerGrid");
+  var currentEmojiRow = null;
+
+  // abre o picker
+  document.addEventListener("click", function(e){
+
+      var btn = e.target.closest(".emoji-add");
+      if(!btn) return;
+
+      currentEmojiRow = document.getElementById(btn.dataset.target);
+
+      renderEmojiGrid("all");
+
+      openModal(emojiModal);
+  });
+
+  // fecha
+document.getElementById("closeEmojiModal")
+    .addEventListener("click", function () {
+        closeModal(emojiModal);
+    });
+
+  emojiModal.addEventListener("click", function(e){
+      if(e.target === emojiModal){
+          closeModal(emojiModal);
+      }
+  });
+
+  // troca categoria
+  document.querySelectorAll(".emoji-cat-btn").forEach(function(btn){
+
+      btn.addEventListener("click", function(){
+
+          document.querySelectorAll(".emoji-cat-btn")
+              .forEach(function(b){
+                  b.classList.remove("active");
+              });
+
+          btn.classList.add("active");
+
+          renderEmojiGrid(btn.dataset.cat);
+      });
+
+  });
+
+  // desenha emojis
+  function renderEmojiGrid(cat){
+
+      emojiGrid.innerHTML = "";
+
+      var lista =
+          cat === "all"
+              ? ALL_EMOJIS
+              : EMOJI_DB[cat] || [];
+
+      lista.forEach(function(emoji){
+
+          var div = document.createElement("div");
+
+          div.className = "emoji-picker-item";
+          div.textContent = emoji;
+
+          div.addEventListener("click", function () {
+
+        	    var input =
+        	        document.getElementById(
+        	            currentEmojiRow.dataset.input
+        	        );
+
+        	    input.value = emoji;
+
+        	    currentEmojiRow.querySelectorAll(".emoji-opt")
+        	        .forEach(function(el){
+        	            el.classList.remove("selected");
+        	        });
+
+        	    var existente =
+        	        currentEmojiRow.querySelector(
+        	            '[data-emoji="' + emoji + '"]'
+        	        );
+
+        	    if(existente){
+
+        	        existente.classList.add("selected");
+
+        	    }else{
+
+        	        var novo = document.createElement("div");
+
+        	        novo.className = "emoji-opt selected";
+        	        novo.dataset.emoji = emoji;
+        	        novo.textContent = emoji;
+
+        	        currentEmojiRow.insertBefore(
+        	            novo,
+        	            currentEmojiRow.querySelector(".emoji-add")
+        	        );
+        	    }
+
+        	    if(currentEmojiRow.dataset.input === "editCatEmojiInput"){
+        	        document.getElementById("editPreviewIcon").textContent = emoji;
+        	    }
+
+        	    closeModal(emojiModal);
+
+        	});
+
+          emojiGrid.appendChild(div);
+
+      });
+
   }
-
-  closeModal(document.getElementById('emojiModal'));
-});
-
-document.addEventListener('click', function(e) {
-  if (!e.target.classList.contains('emoji-opt')) return;
-  const row = e.target.closest('.emoji-row');
-  if (!row) return;
-  row.querySelectorAll('.emoji-opt').forEach(el => el.classList.remove('selected'));
-  e.target.classList.add('selected');
-});
-
-document.getElementById('closeEmojiModal').onclick = () => closeModal(document.getElementById('emojiModal'));
-
-document.addEventListener('click', function(e) {
-  const sw = e.target.closest('.color-swatch');
-  if (!sw) return;
-  const row = sw.closest('.color-row');
-  if (!row) return;
-  row.querySelectorAll('.color-swatch').forEach(el => el.classList.remove('selected'));
-  sw.classList.add('selected');
-});
-
-[document.getElementById('modalNovaCat'),
- document.getElementById('modalEditarCat'),
- document.getElementById('emojiModal')].forEach(function(m) {
-  m.addEventListener('click', function(e) { if (e.target === m) closeModal(m); });
-});
-
-document.getElementById('catGrid').addEventListener('click', function(e) {
-  if (!e.target.closest('.footer-act-btn.danger')) return;
-  const card = e.target.closest('.cat-card');
-  const name = card.dataset.name || card.querySelector('.cat-card-name').textContent;
-  if (confirm('Tem certeza que deseja excluir a categoria "' + name + '"?')) {
-    card.style.transition = 'opacity .3s, transform .3s';
-    card.style.opacity = '0';
-    card.style.transform = 'scale(.96)';
-    setTimeout(() => card.remove(), 300);
-    showToast('Categoria "' + name + '" excluída.', '🗑️');
-  }
-});
-
-// ─── UTILITÁRIO: HEX → RGBA ───────────────────────────────────────────────────
-function hexToRgba(hex, alpha) {
-  if (!hex || typeof hex !== 'string') return `rgba(74,94,58,${alpha})`;
-  hex = hex.trim();
-  if (hex.startsWith('rgba') || hex.startsWith('rgb')) return hex;
-  hex = hex.replace('#','');
-  if (hex.length === 3) hex = hex.split('').map(c => c+c).join('');
-  if (hex.length !== 6) return `rgba(74,94,58,${alpha})`;
-  const r = parseInt(hex.substring(0,2),16);
-  const g = parseInt(hex.substring(2,4),16);
-  const b = parseInt(hex.substring(4,6),16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
+})();
 </script>
 </body>
 </html>

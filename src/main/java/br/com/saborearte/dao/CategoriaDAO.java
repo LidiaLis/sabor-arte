@@ -241,6 +241,22 @@ public class CategoriaDAO {
 
         return null;
     }
+    
+    public void cadastrarEmoji(String unicode) throws SQLException {
+
+        String sql = "INSERT INTO categoria_emoji(unicode_emoji) VALUES (?)";
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+
+            stmt.setString(1, unicode);
+
+            int linhas = stmt.executeUpdate();
+
+            System.out.println("Emoji cadastrado: " + unicode + " | linhas=" + linhas);
+
+        }
+
+    }
 
     // =========================================================================
     // MAPEAMENTO INTERNO
@@ -256,4 +272,5 @@ public class CategoriaDAO {
         c.setStatus_categoria(Categoria.StatusCategoria.valueOf(rs.getString("status_categoria")));
         return c;
     }
+
 }

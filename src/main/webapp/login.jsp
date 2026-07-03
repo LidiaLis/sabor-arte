@@ -13,6 +13,11 @@
     if (erro != null) {
         session.removeAttribute("erro"); // consome o erro — não repete no reload
     }
+    
+    String sucesso = (String) session.getAttribute("sucesso");
+    if (sucesso != null) {
+        session.removeAttribute("sucesso");
+    }
 %>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -166,6 +171,16 @@
 
   .error-msg { background: rgba(155,68,68,0.08); border: 1px solid rgba(155,68,68,0.25); border-left: 3px solid var(--error); border-radius: 2px; padding: 10px 14px; font-size: 13px; color: var(--error); margin-bottom: 18px; }
   .error-msg-hidden { display: none; }
+  
+  .success-msg {
+    background: rgba(74,94,58,0.08);
+    border: 1px solid rgba(74,94,58,0.25);
+    border-left: 3px solid #4a5e3a;
+    border-radius: 2px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #2f3d25;
+    margin-bottom: 18px;}
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(14px); }
@@ -253,6 +268,10 @@
       <div class="error-msg">⚠️ <%= erro %></div>
     <% } %>
 
+	<% if (sucesso != null && !sucesso.isEmpty()) { %>
+	    <div class="success-msg">✅ <%= sucesso %></div>
+	<% } %>
+	
     <%-- ② FORM que envia para o LoginController via POST --%>
     <form action="<%= request.getContextPath() %>/LoginController" method="post">
 
@@ -315,7 +334,7 @@
 
     <%-- O modal envia para um CadastroController (POST) --%>
     <form id="formCadastro" action="<%= request.getContextPath() %>/UsuarioController" method="post">
-     <input type="hidden" name="acao" value="cadastrar">
+     <input type="hidden" name="action" value="cadastrar">
       <div class="modal-body">
         <div class="modal-error" id="modalErr"></div>
         <div class="modal-success" id="modalSuc"></div>

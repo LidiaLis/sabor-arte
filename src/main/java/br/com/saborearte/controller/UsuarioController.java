@@ -98,11 +98,13 @@ public class UsuarioController extends HttpServlet {
 
     private void cadastrar(HttpServletRequest request, HttpServletResponse response)
             throws Exception {
-
+    	System.out.println("1 - Entrou no cadastrar");
         String nome  = request.getParameter("nome");
         String email = request.getParameter("email");
         String senha = request.getParameter("senha");
-
+        System.out.println("2 - Nome: " + nome);
+        System.out.println("3 - Email: " + email);
+        System.out.println("4 - Senha: " + senha);
      // adicione no topo do método cadastrar
         String emailRegex = "^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$";
         if (!email.trim().matches(emailRegex)) {
@@ -112,7 +114,7 @@ public class UsuarioController extends HttpServlet {
             request.getSession().setAttribute("erro", "E-mail inválido. Use um formato válido como usuario@dominio.com");
             response.sendRedirect(request.getContextPath() + destino);
             return;
-        }
+        }System.out.println("5 - Email válido");
         
         // Validações básicas no servidor
         if (nome == null || nome.trim().isEmpty() ||
@@ -143,7 +145,7 @@ public class UsuarioController extends HttpServlet {
         novo.setSenha_usuario(senha);
         // tipo_usuario  = VISITANTE (default do model)
         // status_usuario = ATIVO    (default do model)
-
+        System.out.println("Chamando DAO...");
         usuarioDAO.cadastrarUsuario(novo);
 
         System.out.println("Novo usuário cadastrado: " + email.trim());

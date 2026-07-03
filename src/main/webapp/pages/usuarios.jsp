@@ -354,10 +354,6 @@
     <div class="section-header">
       <div>
         <div class="section-title">Gestão de <em>Usuários</em></div>
-        <%-- Contagem dinâmica vinda do Java --%>
-        <div class="section-date">
-          <%= totalUsuarios %> usuário<%= totalUsuarios != 1 ? "s" : "" %> cadastrado<%= totalUsuarios != 1 ? "s" : "" %>
-        </div>
       </div>
       <button class="btn-primary" onclick="openModal('modalAdd')">✚ Novo Usuário</button>
     </div>

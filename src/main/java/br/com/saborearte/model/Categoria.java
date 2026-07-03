@@ -14,12 +14,12 @@ public class Categoria {
     // ===== ENUMS =====
 
     public enum StatusCategoria {
-        ativa,
-        inativa
+        ATIVA,
+        INATIVA
     }
 
     // DEFAULT
-    private StatusCategoria status_categoria = StatusCategoria.ativa;
+    private StatusCategoria status_categoria = StatusCategoria.ATIVA;
 
     // ===== Construtor vazio =====
 
