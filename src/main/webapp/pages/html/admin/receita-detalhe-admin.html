@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabor & Arte — Receita</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --moss:         #4a5e3a;
+    --moss-dark:    #2f3d25;
+    --moss-mid:     #3d5030;
+    --moss-light:   #6b7f59;
+    --sage:         #a3b18a;
+    --sage-light:   #c8d5b9;
+    --cream:        #f5f0e8;
+    --cream-dark:   #e6dece;
+    --warm-white:   #faf8f4;
+    --text-dark:    #1e2718;
+    --text-mid:     #4a5240;
+    --text-light:   #8a9480;
+    --gold:         #c4a265;
+    --gold-light:   #dfc094;
+    --gold-pale:    #f5ead6;
+    --sidebar-w:    260px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--moss-dark);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 200% 60% at 50% 0%, rgba(74,94,58,0.5) 0%, transparent 60%),
+      radial-gradient(ellipse 100% 40% at 50% 100%, rgba(163,177,138,0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .sidebar-brand {
+    padding: 28px 24px 22px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    position: relative; z-index: 1;
+  }
+
+  .brand-row { display: flex; align-items: center; gap: 12px; }
+
+  .brand-badge {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--moss-light), var(--sage));
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+
+  .brand-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 700;
+    color: var(--cream); display: block; line-height: 1;
+  }
+
+  .brand-sub {
+    font-size: 10px; color: var(--sage);
+    text-transform: uppercase; letter-spacing: 1.2px;
+    margin-top: 3px; display: block; font-weight: 300;
+  }
+
+  .sidebar-nav { flex: 1; padding: 16px 0; position: relative; z-index: 1; }
+
+  .nav-section-label {
+    font-size: 9px; text-transform: uppercase; letter-spacing: 1.8px;
+    color: rgba(163,177,138,0.5); padding: 16px 24px 6px; font-weight: 500;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 24px;
+    color: rgba(245,240,232,0.7);
+    text-decoration: none; font-size: 14px; font-weight: 400;
+    cursor: pointer; transition: all 0.2s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { color: var(--cream); background: rgba(255,255,255,0.06); border-left-color: var(--sage); }
+  .nav-item.active { color: var(--cream); background: rgba(163,177,138,0.15); border-left-color: var(--sage-light); font-weight: 500; }
+
+  .nav-icon { width: 22px; text-align: center; font-size: 16px; flex-shrink: 0; }
+
+  .sidebar-user {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    text-decoration: none;
+    position: relative; z-index: 1;
+  }
+  .user-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    flex-shrink: 0; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 13px; font-weight: 700;
+  }
+  .user-avatar img { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .user-avatar img.visible { display: block; }
+  .user-info { line-height: 1.3; min-width: 0; }
+  .user-name { font-size: 13px; color: var(--cream); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role-badge { font-size: 10px; color: var(--sage); letter-spacing: 0.3px; }
+
+  .sidebar-bottom { padding: 16px 24px; position: relative; z-index: 1; margin-top: auto; }
+  .btn-logout {
+    display: flex; align-items: center; gap: 10px;
+    color: rgba(245,240,232,0.7); text-decoration: none;
+    font-size: 14px; transition: color 0.2s;
+  }
+  .btn-logout:hover { color: var(--cream); }
+
+  /* ===== MAIN ===== */
+  .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+  .topbar {
+    background: var(--warm-white);
+    border-bottom: 1px solid var(--cream-dark);
+    padding: 0 40px; height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+
+  .page-crumb { font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 6px; font-weight: 300; }
+  .page-crumb a { color: var(--text-light); text-decoration: none; transition: color 0.2s; }
+  .page-crumb a:hover { color: var(--moss); }
+  .page-crumb .current { color: var(--moss); font-weight: 500; }
+
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+
+  .topbar-search {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--cream); border: 1.5px solid var(--cream-dark);
+    border-radius: 2px; padding: 7px 14px; width: 240px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .topbar-search:focus-within { border-color: var(--moss-light); box-shadow: 0 0 0 3px rgba(74,94,58,0.08); }
+  .topbar-search input { border: none; background: none; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-dark); outline: none; flex: 1; }
+  .topbar-search input::placeholder { color: var(--text-light); font-weight: 300; }
+
+  .notif-btn {
+    width: 36px; height: 36px; background: var(--cream);
+    border: 1.5px solid var(--cream-dark); border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px; position: relative; transition: all 0.2s;
+  }
+  .notif-btn:hover { background: var(--cream-dark); }
+  .notif-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background: var(--gold); border-radius: 50%; border: 2px solid var(--warm-white); }
+
+  /* ===== CONTEÚDO ===== */
+  .content { flex: 1; padding: 0; }
+
+  /* Hero banner */
+  .recipe-hero {
+    position: relative;
+    height: 420px;
+    overflow: hidden;
+  }
+
+  .recipe-hero img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    animation: zoomIn 0.8s ease both;
+  }
+
+  @keyframes zoomIn {
+    from { transform: scale(1.06); opacity: 0.7; }
+    to   { transform: scale(1);    opacity: 1; }
+  }
+
+  .hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(30,39,24,0.1) 0%,
+      rgba(30,39,24,0.15) 40%,
+      rgba(30,39,24,0.72) 100%
+    );
+  }
+
+  .hero-content {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 32px 48px;
+    animation: slideUp 0.6s 0.2s ease both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-cat {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--sage-light); font-weight: 600; margin-bottom: 10px;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 38px; font-weight: 700;
+    color: #fff; line-height: 1.2;
+    margin-bottom: 16px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  }
+
+  .hero-meta-row {
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+
+  .hero-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 6px 14px; border-radius: 30px;
+    font-size: 13px; color: rgba(255,255,255,0.95);
+    font-weight: 500;
+  }
+
+  .hero-author {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .author-ava {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px; font-weight: 800;
+    color: white; flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.4);
+  }
+
+  .author-info { line-height: 1; }
+  .author-lbl { font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.8px; }
+  .author-nm  { font-size: 13px; color: rgba(255,255,255,0.95); font-weight: 500; }
+
+  .hero-stars { font-size: 16px; color: var(--gold-light); letter-spacing: 0; }
+
+  .fav-btn-hero {
+    margin-left: auto;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,255,255,0.18); backdrop-filter: blur(8px);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; cursor: pointer; transition: all 0.2s;
+  }
+  .fav-btn-hero:hover { background: rgba(196,162,101,0.4); transform: scale(1.08); }
+
+  /* ===== BODY LAYOUT ===== */
+  .recipe-body-wrap {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 32px;
+    padding: 36px 48px;
+    max-width: 1200px;
+  }
+
+  /* ===== LEFT COLUMN ===== */
+  .left-col { min-width: 0; }
+
+  /* Descrição */
+  .section-block {
+    margin-bottom: 36px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .sec-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--text-dark); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sec-title::after {
+    content: '';
+    flex: 1; height: 1px;
+    background: var(--cream-dark);
+  }
+
+  .recipe-desc {
+    font-size: 15px; line-height: 1.75;
+    color: var(--text-mid); font-weight: 300;
+  }
+
+  /* Ingredientes */
+  .ing-list {
+    list-style: none;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  }
+
+  .ing-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--cream-dark);
+    font-size: 14px;
+  }
+
+  .ing-item:last-child,
+  .ing-item:nth-last-child(2):nth-child(odd) { border-bottom: none; }
+
+  .ing-check {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 1.5px solid var(--sage);
+    background: var(--warm-white);
+    flex-shrink: 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .ing-item.checked .ing-check {
+    background: var(--moss); border-color: var(--moss);
+    color: white; font-size: 11px;
+  }
+  .ing-item.checked .ing-text { text-decoration: line-through; color: var(--text-light); }
+
+  .ing-qty { font-weight: 600; color: var(--moss); min-width: 54px; font-size: 13px; }
+  .ing-text { color: var(--text-mid); }
+
+  /* Modo de preparo */
+  .steps-list { list-style: none; counter-reset: step-counter; }
+
+  .step-item {
+    display: flex; gap: 18px;
+    margin-bottom: 24px;
+    counter-increment: step-counter;
+    position: relative;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .step-item::before {
+    content: '';
+    position: absolute;
+    left: 22px; top: 44px;
+    width: 1.5px;
+    bottom: -24px;
+    background: var(--cream-dark);
+  }
+  .step-item:last-child::before { display: none; }
+
+  .step-num {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--moss); color: var(--cream);
+    font-family: 'Nunito', sans-serif;
+    font-size: 16px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(47,61,37,0.2);
+    position: relative; z-index: 1;
+  }
+
+  .step-content { flex: 1; padding-top: 10px; }
+  .step-title { font-weight: 600; font-size: 14px; color: var(--moss); margin-bottom: 5px; }
+  .step-text { font-size: 14px; line-height: 1.7; color: var(--text-mid); font-weight: 300; }
+
+  .step-tip {
+    display: flex; align-items: flex-start; gap: 8px;
+    background: var(--gold-pale);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin-top: 10px;
+    font-size: 12px; color: var(--text-mid); line-height: 1.6;
+  }
+
+  /* ===== RIGHT COLUMN ===== */
+  .right-col { }
+
+  .info-card {
+    background: var(--warm-white);
+    border: 1px solid var(--cream-dark);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    position: sticky; top: 84px;
+  }
+
+  .info-card-header {
+    background: var(--moss);
+    padding: 16px 20px;
+    font-family: 'Playfair Display', serif;
+    font-size: 16px; color: var(--cream);
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .info-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .info-cell {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--cream-dark);
+    border-right: 1px solid var(--cream-dark);
+  }
+  .info-cell:nth-child(even) { border-right: none; }
+  .info-cell:nth-last-child(-n+2) { border-bottom: none; }
+
+  .info-cell-lbl {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-light); font-weight: 600; margin-bottom: 4px;
+  }
+
+  .info-cell-val {
+    font-family: 'Nunito', sans-serif;
+    font-size: 18px; font-weight: 800;
+    color: var(--moss);
+  }
+
+  .info-cell-unit {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px; color: var(--text-light); font-weight: 300;
+  }
+
+  /* Relacionadas */
+  .related-card {
+    background: var(--warm-white);
+    border: 1px solid var(--cream-dark);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .related-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--cream-dark);
+    font-family: 'Playfair Display', serif;
+    font-size: 15px; color: var(--text-dark);
+  }
+
+  .related-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--cream-dark);
+    cursor: pointer; transition: background 0.15s;
+    text-decoration: none;
+  }
+  .related-item:last-child { border-bottom: none; }
+  .related-item:hover { background: var(--cream); }
+
+  .related-thumb {
+    width: 52px; height: 52px; border-radius: 6px;
+    object-fit: cover; flex-shrink: 0;
+  }
+
+  .related-name {
+    font-size: 13px; font-weight: 600; color: var(--text-dark);
+    margin-bottom: 3px; line-height: 1.3;
+  }
+
+  .related-meta { font-size: 11px; color: var(--text-light); font-weight: 300; }
+
+  /* ===== COMMENTS SECTION ===== */
+  .comments-section {
+    padding: 0 48px 48px;
+    max-width: 1200px;
+    border-top: 1px solid var(--cream-dark);
+    padding-top: 32px;
+    margin-top: 8px;
+  }
+
+  .comment-item {
+    display: flex; gap: 14px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .comment-ava {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px; font-weight: 800;
+    color: white; flex-shrink: 0;
+  }
+
+  .comment-bubble {
+    flex: 1;
+    background: var(--warm-white);
+    border: 1px solid var(--cream-dark);
+    border-radius: 0 8px 8px 8px;
+    padding: 12px 16px;
+  }
+
+  .comment-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 7px;
+  }
+
+  .comment-name { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+  .comment-date { font-size: 11px; color: var(--text-light); }
+  .comment-stars { font-size: 12px; color: var(--gold); letter-spacing: -1px; }
+  .comment-text { font-size: 13px; line-height: 1.65; color: var(--text-mid); font-weight: 300; }
+
+  /* Comment form */
+  .comment-form {
+    background: var(--warm-white);
+    border: 1px solid var(--cream-dark);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-top: 8px;
+  }
+
+  .form-title { font-family: 'Playfair Display', serif; font-size: 17px; color: var(--text-dark); margin-bottom: 16px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-light); font-weight: 600; }
+  .form-group input,
+  .form-group textarea {
+    padding: 9px 14px;
+    border: 1.5px solid var(--cream-dark);
+    border-radius: 4px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; color: var(--text-dark);
+    background: var(--cream);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    resize: none;
+  }
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: var(--moss-light);
+    box-shadow: 0 0 0 3px rgba(74,94,58,0.08);
+  }
+
+  .star-rating { display: flex; gap: 4px; }
+  .star-rating span {
+    font-size: 22px; cursor: pointer;
+    color: var(--cream-dark);
+    transition: color 0.15s;
+  }
+  .star-rating span.active { color: var(--gold); }
+
+  .btn-comment {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--moss); color: var(--cream);
+    padding: 10px 22px; border: none; border-radius: 4px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: background 0.2s;
+    margin-top: 4px;
+  }
+  .btn-comment:hover { background: var(--moss-dark); }
+
+  /* Scrollbar personalizada */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--cream); }
+  ::-webkit-scrollbar-thumb { background: var(--sage); border-radius: 3px; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 1100px) { .recipe-body-wrap { grid-template-columns: 1fr; } .right-col { order: -1; } .info-card { position: static; } }
+  @media (max-width: 768px)  { .sidebar { display: none; } .main { margin-left: 0; } .recipe-body-wrap { padding: 24px 20px; } .topbar { padding: 0 20px; } .hero-content { padding: 20px; } .hero-title { font-size: 26px; } .comments-section { padding: 24px 20px; } }
+  @media (max-width: 580px)  { .ing-list { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<!--
+  TELA DINÂMICA — receita-detalhe.php?id=<id_receita>
+
+  Query principal (1x por carregamento):
+    SELECT r.*, c.nome_categoria, c.emoji_categoria,
+           u.nome_usuario, u.foto_usuario
+    FROM receita r
+    JOIN categoria c ON c.id_categoria = r.categoria
+    JOIN usuario u   ON u.id_usuario   = r.usuario
+    WHERE r.id_receita = :id AND r.status_receita = 'publicada'
+
+  + query em receita_ingrediente JOIN ingrediente (lista de ingredientes)
+  + query em passo ORDER BY ordem_passo (modo de preparo, com titulo_passo)
+  + query em comentario JOIN usuario ORDER BY data_comentario DESC
+  + query em receita_categoria JOIN categoria (tags/categorias extras da receita)
+  + a cada acesso: INSERT em visualizacao_receita (ip, data) e
+    UPDATE receita SET visualizacoes_receita = visualizacoes_receita + 1
+
+  Alterações de schema necessárias (não existiam no DER original):
+    - receita.descricao_receita TEXT
+    - passo.titulo_passo VARCHAR(150)
+    - tabela receita_categoria (junção N:N receita <-> categoria, pra tags)
+
+  Removido desta tela por não ter suporte no DER: nível de dificuldade e
+  card de informação nutricional.
+-->
+
+<!-- ===== SIDEBAR ADMIN (estático) ===== -->
+<aside class="sidebar" id="sidebar" data-role="admin">
+
+    <div class="sidebar-brand">
+        <div class="brand-row">
+            <div class="brand-badge">🌿</div>
+            <div>
+                <span class="brand-title">Sabor &amp; Arte</span>
+                <span class="brand-sub">Blog Editorial</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- usuario.nome_usuario / usuario.foto_usuario do usuário da sessão -->
+    <a href="perfil-admin.html" class="sidebar-user" title="Meu perfil">
+        <div id="sidebarAvatar"
+             class="user-avatar"
+             style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+
+            <img id="sidebarAvatarImg"
+                 src="/saborearte/img/g.png"
+                 class="visible"
+                 alt="A">
+        </div>
+
+        <div class="user-info">
+            <div class="user-name">Ana Silva</div>
+            <div class="user-role-badge">👑 Administrador</div>
+        </div>
+    </a>
+
+    <nav class="sidebar-nav">
+
+        <!-- ===== SEÇÃO VISÃO GERAL ===== -->
+        <div class="nav-section-label">Principal</div>
+
+        <a href="dashboard-admin.html" class="nav-item ">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </a>
+
+        <!-- ===== SEÇÃO GESTÃO ===== -->
+        <div class="nav-section-label">Gestão</div>
+
+        <a href="/saborearte/UsuarioController" class="nav-item">
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">Usuários</span>
+        </a>
+
+        <a href="/saborearte/CategoriaController" class="nav-item">
+            <span class="nav-icon">🏷️</span>
+            <span class="nav-label">Categorias</span>
+        </a>
+
+        <a href="receita-admin.html" class="nav-item active">
+            <span class="nav-icon">📝</span>
+            <span class="nav-label">Receitas</span>
+        </a>
+
+        <!-- ===== SEÇÃO ANÁLISE ===== -->
+        <div class="nav-section-label">Análise</div>
+
+        <a href="relatorio-admin.html" class="nav-item">
+            <span class="nav-icon">📈</span>
+            <span class="nav-label">Relatórios</span>
+        </a>
+
+        <a href="log-admin.html" class="nav-item">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-label">Auditoria</span>
+        </a>
+
+        <!-- ===== SEÇÃO CONTA ===== -->
+        <div class="nav-section-label">Conta</div>
+
+        <a href="/saborearte/ConfiguracaoController" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Configurações</span>
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+        <a href="/saborearte/LogoutController" class="btn-logout">
+            <span class="nav-icon">🚪</span>
+            <span>Sair</span>
+        </a>
+    </div>
+
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="page-crumb">
+      <a href="#">Receitas</a>
+      <span style="color:var(--cream-dark)">/</span>
+      <!-- categoria.nome_categoria -->
+      <a href="#">Massas</a>
+      <span style="color:var(--cream-dark)">/</span>
+      <!-- receita.titulo_receita -->
+      <span class="current">Risoto de Cogumelos Selvagens</span>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-search">
+        <span style="font-size:14px;color:var(--text-light)">🔍</span>
+        <input type="text" placeholder="Buscar receitas…">
+      </div>
+      <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div class="recipe-hero">
+    <img src="https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=1200&q=85" alt="Risoto de Cogumelos Selvagens">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-cat">🍝 Massas &amp; Risotos</div>
+      <div class="hero-title">Risoto de Cogumelos Selvagens</div>
+      <div class="hero-meta-row">
+        <div class="hero-author">
+          <div class="author-ava" style="background:linear-gradient(135deg,#4a5e3a,#6b7f59)">CA</div>
+          <div class="author-info">
+            <div class="author-lbl">Receita por</div>
+            <div class="author-nm">Carlos Andrade</div>
+          </div>
+        </div>
+        <span class="hero-pill">⏱ 45 min preparo</span>
+        <span class="hero-pill">👥 4 porções</span>
+        <div class="hero-stars">★★★★☆</div>
+        <div class="hero-stars" style="font-size:13px;color:rgba(255,255,255,0.6);margin-left:-10px">(38)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="recipe-body-wrap">
+
+    <!-- LEFT COL -->
+    <div class="left-col">
+
+      <!-- Descrição -->
+      <div class="section-block" style="animation-delay:0.05s">
+        <div class="sec-title">Sobre a receita</div>
+        <!-- receita.descricao_receita -->
+        <p class="recipe-desc">
+          Um risoto rico e aveludado que celebra a profundidade terrosa dos cogumelos selvagens. A combinação de shiitake, porcini e funghi garante camadas de sabor únicas, enquanto o arroz arbóreo absorve cada nuance do caldo, resultando em uma textura cremosa irresistível. Perfeito como prato principal vegetariano ou como acompanhamento sofisticado.
+        </p>
+      </div>
+
+      <!-- Ingredientes -->
+      <div class="section-block" style="animation-delay:0.1s">
+        <div class="sec-title">Ingredientes</div>
+        <!-- receita_ingrediente JOIN ingrediente WHERE id_receita = :id -->
+        <p style="font-size:12px;color:var(--text-light);margin-bottom:14px;font-weight:300">
+          Clique nos itens para marcar o que já separou 🛒
+        </p>
+        <ul class="ing-list" id="ingList">
+          <li class="ing-item" onclick="toggleIng(this)">
+            <div class="ing-check"></div>
+            <span class="ing-qty">300 g</span>
+            <span class="ing-text">Arroz arbóreo</span>
+          </li>
+          <li class="ing-item" onclick="toggleIng(this)">
+            <div class="ing-check"></div>
+            <span class="ing-qty">200 g</span>
+            <span class="ing-text">Cogumelos shiitake frescos</span>
+          </li>
+          <li class="ing-item" onclick="toggleIng(this)">
+            <div class="ing-check"></div>
+            <span class="ing-qty">100 g</span>
+            <span class="ing-text">Funghi secchi hidratado</span>
+          </li>
+          <li class="ing-item" onclick="toggleIng(this)">
+            <div class="ing-check"></div>
+            <span class="ing-qty">150 g</span>
+            <span class="ing-text">Cogumelo porcini</span>
+          </li>
+          <li class="ing-item" onclick="toggleIng(this)">
+            <div class="ing-check"></div>
+            <span class="ing-qty">1 un</span>
+            <span class="ing-text">Cebola média picada</span>
+          </li>
+          <li class="ing-item" onclick="toggleIng(this)">
+            <div class="ing-check"></div>
+            <span class="ing-qty">3 dentes</span>
+            <span class="ing-text">Alho picado</span>
+          </li>
+          <li class="ing-item" onclick="toggleIng(this)">
+            <div class="ing-check"></div>
+            <span class="ing-qty">1 L</span>
+            <span class="ing-text">Caldo de legumes quente</span>
+          </li>
+          <li class="ing-item" onclick="toggleIng(this)">
+            <div class="ing-check"></div>
+            <span class="ing-qty">150 ml</span>
+            <span class="ing-text">Vinho branco seco</span>
+          </li>
+          <li class="ing-item" onclick="toggleIng(this)">
+            <div class="ing-check"></div>
+            <span class="ing-qty">3 col.</span>
+            <span class="ing-text">Azeite de oliva extra virgem</span>
+          </li>
+          <li class="ing-item" onclick="toggleIng(this)">
+            <div class="ing-check"></div>
+            <span class="ing-qty">2 col.</span>
+            <span class="ing-text">Manteiga gelada</span>
+          </li>
+          <li class="ing-item" onclick="toggleIng(this)">
+            <div class="ing-check"></div>
+            <span class="ing-qty">a gosto</span>
+            <span class="ing-text">Sal e pimenta-do-reino</span>
+          </li>
+          <li class="ing-item" onclick="toggleIng(this)">
+            <div class="ing-check"></div>
+            <span class="ing-qty">Enfeite</span>
+            <span class="ing-text">Tomilho fresco e salsinha</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Modo de preparo -->
+      <div class="section-block" style="animation-delay:0.15s">
+        <div class="sec-title">Modo de Preparo</div>
+        <!-- SELECT * FROM passo WHERE receita = :id ORDER BY ordem_passo -->
+        <ol class="steps-list">
+
+          <li class="step-item" style="animation-delay:0.05s">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <div class="step-title">Preparar os cogumelos</div>
+              <div class="step-text">Hidrate o funghi secchi em água morna por 20 minutos. Escorra e reserve a água do molho (ela irá ao caldo depois). Fatie os cogumelos shiitake e porcini em fatias médias e seque bem com papel toalha.</div>
+            </div>
+          </li>
+
+          <li class="step-item" style="animation-delay:0.1s">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <div class="step-title">Refogar a base aromática</div>
+              <div class="step-text">Em uma panela funda, aqueça o azeite em fogo médio. Adicione a cebola e refogue por 4–5 minutos até ficar translúcida. Acrescente o alho e refogue por mais 1 minuto, sem deixar dourar demais.</div>
+            </div>
+          </li>
+
+          <li class="step-item" style="animation-delay:0.15s">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <div class="step-title">Saltear os cogumelos</div>
+              <div class="step-text">Aumente para fogo alto e adicione todos os cogumelos. Deixe dourar sem mexer por 2–3 minutos para criar uma crosta caramelizada. Tempere com sal e pimenta. Reserve metade para decorar no final.</div>
+            </div>
+          </li>
+
+          <li class="step-item" style="animation-delay:0.2s">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <div class="step-title">Tostar o arroz</div>
+              <div class="step-text">Reduza para fogo médio e adicione o arroz arbóreo à panela. Mexa por 2 minutos até os grãos ficarem levemente translúcidos nas bordas. Este processo de tosta é fundamental para a textura final.</div>
+            </div>
+          </li>
+
+          <li class="step-item" style="animation-delay:0.25s">
+            <div class="step-num">5</div>
+            <div class="step-content">
+              <div class="step-title">Deglaçar com vinho</div>
+              <div class="step-text">Adicione o vinho branco e mexa continuamente até evaporar completamente. O álcool vai incorporar os sabores caramelizados da panela e equilibrar a acidez do prato.</div>
+            </div>
+          </li>
+
+          <li class="step-item" style="animation-delay:0.3s">
+            <div class="step-num">6</div>
+            <div class="step-content">
+              <div class="step-title">Adicionar o caldo aos poucos</div>
+              <div class="step-text">Adicione o caldo quente, concha a concha, mexendo constantemente em movimentos suaves. Só adicione a próxima concha quando a anterior for absorvida. Continue por 18–20 minutos até o arroz estar al dente.</div>
+            </div>
+          </li>
+
+          <li class="step-item" style="animation-delay:0.35s">
+            <div class="step-num">7</div>
+            <div class="step-content">
+              <div class="step-title">Mantecar (Mantecatura)</div>
+              <div class="step-text">Desligue o fogo. Adicione a manteiga gelada e misture vigorosamente com movimentos circulares por 1–2 minutos. Esta etapa cria a emulsão que dá a cremosidade característica do risoto autêntico. Ajuste o sal.</div>
+            </div>
+          </li>
+
+          <li class="step-item" style="animation-delay:0.4s">
+            <div class="step-num">8</div>
+            <div class="step-content">
+              <div class="step-title">Servir e decorar</div>
+              <div class="step-text">Sirva imediatamente em pratos aquecidos. Distribua os cogumelos reservados por cima, adicione folhas de tomilho fresco, salsinha picada e um fio de azeite de qualidade. O risoto não espera!</div>
+            </div>
+          </li>
+
+        </ol>
+      </div>
+
+    </div><!-- /left-col -->
+
+    <!-- RIGHT COL -->
+    <div class="right-col">
+
+    </div><!-- /right-col -->
+
+  </div><!-- /recipe-body-wrap -->
+
+  <!-- COMMENTS -->
+  <!-- SELECT c.*, u.nome_usuario, u.foto_usuario FROM comentario c JOIN usuario u ON u.id_usuario = c.usuario WHERE c.receita = :id ORDER BY c.data_comentario DESC -->
+  <div class="comments-section">
+    <div class="sec-title" style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--text-dark);margin-bottom:24px;display:flex;align-items:center;gap:10px">
+      Comentários <span id="commentCount" style="font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;background:var(--moss);color:var(--cream);padding:3px 10px;border-radius:20px">3</span>
+      <span style="flex:1;height:1px;background:var(--cream-dark)"></span>
+    </div>
+
+    <div id="commentsList">
+    <div class="comment-item" style="animation-delay:0.05s">
+      <div class="comment-ava" style="background:linear-gradient(135deg,#7a6aa0,#9a8ac0)">JP</div>
+      <div class="comment-bubble">
+        <div class="comment-top">
+          <div>
+            <div class="comment-name">João Pedro</div>
+            <div class="comment-stars">★★★★★</div>
+          </div>
+          <div class="comment-date">21/05/2026</div>
+        </div>
+        <div class="comment-text">Fiz essa receita no fim de semana e ficou incrível! O segredo do caldo quente faz toda a diferença. Adicionei um pouco de parmesão no final e ficou ainda mais cremoso. Com certeza vou repetir!</div>
+      </div>
+    </div>
+
+    <div class="comment-item" style="animation-delay:0.1s">
+      <div class="comment-ava" style="background:linear-gradient(135deg,#c46042,#e08060)">FT</div>
+      <div class="comment-bubble">
+        <div class="comment-top">
+          <div>
+            <div class="comment-name">Fernanda Torres</div>
+            <div class="comment-stars">★★★★☆</div>
+          </div>
+          <div class="comment-date">15/05/2026</div>
+        </div>
+        <div class="comment-text">Receita excelente! Dica da água do funghi foi reveladora para mim. Reduzi um pouco o sal porque o caldo já era salgado, mas no geral ficou perfeito. A dica de servir all'onda é chique demais 😄</div>
+      </div>
+    </div>
+
+    <div class="comment-item" style="animation-delay:0.15s">
+      <div class="comment-ava" style="background:linear-gradient(135deg,#3a7a8a,#5a9aaa)">RB</div>
+      <div class="comment-bubble">
+        <div class="comment-top">
+          <div>
+            <div class="comment-name">Rafael Braga</div>
+            <div class="comment-stars">★★★★★</div>
+          </div>
+          <div class="comment-date">18/04/2026</div>
+        </div>
+        <div class="comment-text">Nunca tinha feito risoto antes e essa receita foi perfeita para aprender. As explicações do porquê de cada etapa me ajudaram muito a entender a técnica. Minha esposa amou!</div>
+      </div>
+    </div>
+    </div><!-- /commentsList -->
+
+    <!-- Formulário -->
+    <div class="comment-form">
+      <div class="form-title">✍️ Deixe seu comentário</div>
+      <div id="commentErr" style="display:none;font-size:12px;color:var(--gold);background:#fdf3e3;border-left:3px solid var(--gold);padding:8px 12px;margin-bottom:14px;border-radius:0 4px 4px 0;"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Avaliação</label>
+          <div class="star-rating" id="starRating">
+            <span onclick="setStars(1)">★</span>
+            <span onclick="setStars(2)">★</span>
+            <span onclick="setStars(3)">★</span>
+            <span onclick="setStars(4)">★</span>
+            <span onclick="setStars(5)">★</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Comentário</label>
+        <textarea id="commentText" rows="4" placeholder="Conte como ficou, dicas que deu certo, variações…"></textarea>
+      </div>
+      <button type="button" class="btn-comment" id="btnPublicarComentario">💬 Publicar comentário</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  function toggleFav() {
+    const btn = document.getElementById('favBtn');
+    btn.textContent = btn.textContent === '🤍' ? '❤️' : '🤍';
+  }
+
+  function toggleIng(item) {
+    item.classList.toggle('checked');
+    const check = item.querySelector('.ing-check');
+    check.textContent = item.classList.contains('checked') ? '✓' : '';
+  }
+
+  let selectedStars = 0;
+  function setStars(n) {
+    selectedStars = n;
+    const stars = document.querySelectorAll('#starRating span');
+    stars.forEach((s, i) => s.classList.toggle('active', i < n));
+  }
+
+  // ── Publicar comentário ──
+  // Nome/foto vêm do usuário logado, direto do bloco .sidebar-user (que já reflete
+  // a sessão via `usuario.nome_usuario` / `usuario.foto_usuario`).
+  // Ao integrar com backend, troque o bloco "novo" abaixo por um INSERT real:
+  //   INSERT INTO comentario (receita, usuario, texto_comentario, avaliacao_comentario, data_comentario, status_comentario)
+  //   VALUES (:id_receita, :id_usuario_sessao, :texto, :nota, NOW(), 'pendente')
+  document.getElementById('btnPublicarComentario').addEventListener('click', function () {
+    const errBox   = document.getElementById('commentErr');
+    const textarea = document.getElementById('commentText');
+    const texto    = textarea.value.trim();
+
+    errBox.style.display = 'none';
+
+    if (selectedStars === 0) {
+      errBox.textContent = 'Selecione de 1 a 5 estrelas antes de publicar.';
+      errBox.style.display = 'block';
+      return;
+    }
+    if (texto.length < 5) {
+      errBox.textContent = 'Escreva um comentário um pouco mais completo.';
+      errBox.style.display = 'block';
+      return;
+    }
+
+    const nome = document.querySelector('.sidebar-user .user-name').textContent.trim();
+    const foto = document.getElementById('sidebarAvatarImg').src;
+    const hoje = new Date().toLocaleDateString('pt-BR');
+
+    const item = document.createElement('div');
+    item.className = 'comment-item';
+    item.innerHTML =
+      '<img class="comment-ava" style="object-fit:cover" src="' + foto + '" alt="' + nome + '">' +
+      '<div class="comment-bubble">' +
+        '<div class="comment-top">' +
+          '<div>' +
+            '<div class="comment-name">' + nome + '</div>' +
+            '<div class="comment-stars">' + '★'.repeat(selectedStars) + '☆'.repeat(5 - selectedStars) + '</div>' +
+          '</div>' +
+          '<div class="comment-date">' + hoje + '</div>' +
+        '</div>' +
+        '<div class="comment-text"></div>' +
+      '</div>';
+    item.querySelector('.comment-text').textContent = texto; // textContent evita HTML injetado
+
+    document.getElementById('commentsList').prepend(item);
+
+    const counter = document.getElementById('commentCount');
+    counter.textContent = String(Number(counter.textContent) + 1);
+
+    textarea.value = '';
+    selectedStars = 0;
+    document.querySelectorAll('#starRating span').forEach(s => s.classList.remove('active'));
+  });
+</script>
+</body>
+</html>

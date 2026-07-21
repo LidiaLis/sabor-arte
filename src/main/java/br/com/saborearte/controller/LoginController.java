@@ -63,8 +63,7 @@ public class LoginController extends HttpServlet {
                 if (tipo == TipoUsuario.ADMIN ||
                     tipo == TipoUsuario.EDITOR ||
                     tipo == TipoUsuario.AUTOR) {
-                   //DESOCULTE QUANDO DASHBOARD ESTIVER CRIADO => response.sendRedirect(request.getContextPath() + "/pages/HTML/dashboard.html");
-                	response.sendRedirect(request.getContextPath() + "/UsuarioController");
+                   response.sendRedirect(request.getContextPath() + "/pages/html/admin/dashboard-admin.html");
 
                 } else if (tipo == TipoUsuario.VISITANTE) {
                     response.sendRedirect(request.getContextPath() + "/pages/HTML/receitas-visitante.jsp");

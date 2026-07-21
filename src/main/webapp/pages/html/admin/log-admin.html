@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabor & Arte — Logs de Auditoria</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --moss:#4a5e3a;--moss-dark:#2f3d25;--moss-light:#6b7f59;--sage:#a3b18a;--sage-light:#c8d5b9;
+    --cream:#f5f0e8;--cream-dark:#e6dece;--warm-white:#faf8f4;
+    --text-dark:#1e2718;--text-mid:#4a5240;--text-light:#8a9480;
+    --gold:#c4a265;--gold-light:#dfc094;
+    --published:#3a7a4a;--published-bg:#e8f4eb;
+    --pending:#c4832a;--pending-bg:#fdf2e3;
+    --draft:#6a7a8a;--draft-bg:#eef1f4;
+    --error:#9b4444;--error-bg:#fdf0f0;
+    --sidebar-w:260px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh;display:flex;}
+
+  .sidebar{width:var(--sidebar-w);background:var(--moss-dark);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
+  .sidebar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 200% 60% at 50% 0%,rgba(74,94,58,0.5) 0%,transparent 60%);pointer-events:none;}
+  .sidebar-brand{padding:28px 24px 22px;border-bottom:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;}
+  .brand-row{display:flex;align-items:center;gap:12px;}
+  .brand-badge{width:38px;height:38px;background:linear-gradient(135deg,var(--moss-light),var(--sage));border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+  .brand-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--cream);display:block;line-height:1;}
+  .brand-sub{font-size:10px;color:var(--sage);text-transform:uppercase;letter-spacing:1.2px;margin-top:3px;display:block;font-weight:300;}
+  .sidebar-user{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
+  .user-avatar{width:38px;height:38px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--moss-dark);}
+  .user-name{font-size:13px;font-weight:600;color:var(--cream);}
+  .user-role-badge{font-size:10px;color:var(--gold-light);text-transform:uppercase;letter-spacing:0.8px;font-weight:300;}
+  .sidebar-nav{flex:1;padding:16px 0;position:relative;z-index:1;}
+  .nav-section-label{font-size:9px;text-transform:uppercase;letter-spacing:1.8px;color:rgba(163,177,138,0.5);padding:16px 24px 6px;font-weight:500;}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:11px 24px;color:rgba(245,240,232,0.7);text-decoration:none;font-size:14px;cursor:pointer;transition:all 0.2s;border-left:3px solid transparent;}
+  .nav-item:hover{color:var(--cream);background:rgba(255,255,255,0.06);border-left-color:var(--sage);}
+  .nav-item.active{color:var(--cream);background:rgba(163,177,138,0.15);border-left-color:var(--sage-light);font-weight:500;}
+  .nav-icon{width:22px;text-align:center;font-size:16px;}
+  .nav-badge{margin-left:auto;background:var(--gold);color:var(--moss-dark);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;}
+  .sidebar-bottom{padding:16px 24px 24px;border-top:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;}
+  .btn-logout{display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:2px;color:rgba(245,240,232,0.7);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;}
+  .btn-logout:hover{background:rgba(155,68,68,0.2);border-color:rgba(155,68,68,0.3);color:#e8a0a0;}
+
+.feedback-bar{
+    display:none;
+    padding:12px 20px;
+    font-size:13px;
+    font-weight:600;
+    border-bottom:1px solid var(--cream-dark);
+    align-items:center;
+    gap:8px;
+}
+
+  .main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;}
+  .topbar{background:var(--warm-white);border-bottom:1px solid var(--cream-dark);padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+  .topbar-left{display:flex;align-items:center;gap:14px;}
+  .menu-toggle{display:none;background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-dark);padding:4px;}
+  .page-crumb{font-size:12px;color:var(--text-light);display:flex;align-items:center;gap:6px;}
+  .page-crumb .current{color:var(--moss);font-weight:500;}
+  .topbar-right{display:flex;align-items:center;gap:10px;}
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,0.12);}
+  .btn-pdf{background:#fdeaea;color:var(--error);}
+  .btn-excel{background:var(--published-bg);color:var(--published);}
+  .btn-print{background:var(--draft-bg);color:var(--draft);}
+  .btn-sm{padding:6px 12px;font-size:11px;}
+
+  .content{flex:1;padding:32px 40px;}
+  .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;}
+  .page-title-main{font-family:'Playfair Display',serif;font-size:26px;font-weight:500;color:var(--text-dark);line-height:1;}
+  .page-title-main em{font-style:italic;color:var(--moss);}
+  .page-subtitle{font-size:13px;color:var(--text-light);font-weight:300;margin-top:5px;}
+
+  .audit-layout{display:grid;grid-template-columns:240px 1fr;gap:18px;align-items:start;}
+  .left-panel{position:sticky;top:80px;}
+  .panel-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:4px;overflow:hidden;}
+  .panel-head{padding:13px 18px;border-bottom:1px solid var(--cream-dark);font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:1.2px;}
+  .panel-body{padding:14px 16px;}
+  .fgroup{margin-bottom:11px;}
+  .fgroup:last-child{margin-bottom:0;}
+  .flabel{display:block;font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.9px;margin-bottom:5px;}
+  .finput,.fselect{width:100%;padding:8px 10px;border:1.5px solid var(--cream-dark);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-dark);background:var(--cream);outline:none;transition:border-color 0.18s,box-shadow 0.18s;}
+  .finput:focus,.fselect:focus{border-color:var(--moss);background:var(--warm-white);box-shadow:0 0 0 3px rgba(74,94,58,0.07);}
+  .search-wrap{position:relative;}
+  .search-wrap .search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-light);font-size:13px;pointer-events:none;}
+  .search-wrap .finput{padding-left:29px;}
+  .btn-clear{width:100%;padding:8px 10px;background:var(--cream-dark);border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--text-mid);cursor:pointer;margin-top:4px;transition:all 0.15s;}
+  .btn-clear:hover{background:var(--sage-light);color:var(--moss-dark);}
+
+  .right-panel{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:4px;overflow:hidden;}
+  .result-head{padding:14px 20px;border-bottom:1px solid var(--cream-dark);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  .result-title{font-size:15px;font-weight:600;color:var(--text-dark);display:flex;align-items:center;gap:8px;}
+  .row-count-badge{font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;background:var(--cream-dark);color:var(--text-light);padding:2px 10px;border-radius:10px;}
+  .head-actions{display:flex;gap:8px;align-items:center;}
+
+  .table-wrap{overflow-x:auto;}
+  .log-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .log-table thead th{padding:10px 14px;text-align:left;background:var(--cream);border-bottom:2px solid var(--cream-dark);font-size:9px;text-transform:uppercase;letter-spacing:1.1px;color:var(--text-light);font-weight:700;white-space:nowrap;}
+  .log-table tbody tr{border-bottom:1px solid var(--cream-dark);transition:background 0.1s;}
+  .log-table tbody tr:last-child{border-bottom:none;}
+  .log-table tbody tr:hover{background:rgba(245,240,232,0.7);}
+  .log-table td{padding:12px 14px;vertical-align:middle;color:var(--text-mid);}
+
+  .user-cell{display:flex;align-items:center;gap:9px;}
+  .user-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;flex-shrink:0;}
+  .av-green{background:rgba(74,94,58,0.15);color:var(--moss);}
+  .av-gold{background:rgba(196,162,101,0.2);color:#8a6030;}
+  .av-blue{background:rgba(59,107,200,0.12);color:#2a5ab8;}
+  .av-pink{background:rgba(180,60,120,0.12);color:#a03070;}
+  .av-teal{background:rgba(30,140,110,0.12);color:#1a7a62;}
+  .user-nm{font-size:12px;font-weight:600;color:var(--text-dark);line-height:1.2;}
+  .user-role-sm{font-size:10px;color:var(--text-light);font-weight:300;}
+
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap;}
+  .pill-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .pill.criacao{background:rgba(74,94,58,0.1);color:var(--moss);}
+  .pill.edicao{background:var(--draft-bg);color:var(--draft);}
+  .pill.exclusao{background:var(--error-bg);color:var(--error);}
+  .pill.login{background:var(--pending-bg);color:var(--pending);}
+  .pill.aprovado{background:var(--published-bg);color:var(--published);}
+  .pill.entidade{background:#f5f0e8;color:#8a7a6a;font-size:9px;border:1px solid #e6dece;}
+
+  .detail-text{font-size:11px;color:var(--text-mid);line-height:1.4;}
+  .time-cell{display:flex;flex-direction:column;gap:2px;}
+  .time-date{font-size:11px;font-weight:600;color:var(--text-dark);white-space:nowrap;}
+  .time-hour{font-size:10px;color:var(--text-light);font-weight:300;white-space:nowrap;}
+
+  .table-footer{padding:12px 20px;border-top:1px solid var(--cream-dark);display:flex;align-items:center;justify-content:space-between;}
+  .footer-info{font-size:11px;color:var(--text-light);font-weight:300;}
+  .footer-info strong{font-family:'Nunito',sans-serif;font-weight:700;color:var(--text-mid);}
+  .pagination{display:flex;gap:4px;}
+  .pag-btn{width:28px;height:28px;border:1.5px solid var(--cream-dark);background:none;border-radius:2px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:var(--text-light);display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+  .pag-btn:hover{border-color:var(--moss);color:var(--moss);}
+  .pag-btn.active{background:var(--moss);border-color:var(--moss);color:var(--cream);}
+  .pag-btn:disabled{opacity:0.35;cursor:not-allowed;}
+  .pag-btn:disabled:hover{border-color:var(--cream-dark);color:var(--text-light);}
+
+  /* ---- Área exclusiva de impressão (mesmo padrão visual do PDF) ---- */
+  #printArea{display:none;}
+  .print-header{margin-bottom:4px;}
+  .print-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--moss-dark);}
+  .print-subtitle{font-family:'DM Sans',sans-serif;font-size:11px;color:var(--text-mid);margin-top:2px;}
+  .print-meta{font-family:'DM Sans',sans-serif;font-size:9px;color:var(--text-light);margin-top:2px;margin-bottom:14px;}
+  .print-table{width:100%;border-collapse:collapse;font-size:10px;font-family:'DM Sans',sans-serif;}
+  .print-table th{background:var(--moss-dark);color:#fff;text-align:left;padding:7px 8px;font-size:9px;text-transform:uppercase;letter-spacing:0.6px;font-weight:700;border:1px solid var(--moss-dark);}
+  .print-table td{padding:6px 8px;border:1px solid #ddd;color:var(--text-dark);vertical-align:top;}
+  .print-table tbody tr:nth-child(even){background:#f5f0e8;}
+  .print-date-hour{white-space:nowrap;}
+
+  @media(max-width:768px){
+    .sidebar{transform:translateX(-100%);transition:transform 0.3s;}
+    .sidebar.open{transform:translateX(0);}
+    .main{margin-left:0;}
+    .content{padding:20px;}
+    .topbar{padding:0 20px;}
+    .menu-toggle{display:block;}
+    .audit-layout{grid-template-columns:1fr;}
+    .left-panel{position:static;}
+  }
+  @media print{
+    body > *:not(#printArea){display:none!important;}
+    #printArea{display:block!important;}
+    @page{margin:16mm 12mm;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ADMIN (estático) ===== -->
+<aside class="sidebar" id="sidebar" data-role="admin">
+
+    <div class="sidebar-brand">
+        <div class="brand-row">
+            <div class="brand-badge">🌿</div>
+            <div>
+                <span class="brand-title">Sabor &amp; Arte</span>
+                <span class="brand-sub">Blog Editorial</span>
+            </div>
+        </div>
+    </div>
+
+    <a href="perfil-admin.html" class="sidebar-user" title="Meu perfil">
+        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+			<img src="/saborearte/img/g.png"
+			     style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+			     alt="A">        
+	    </div>
+        <div class="user-info">
+            <div class="user-name">Ana Silva</div>
+            <div class="user-role-badge">👑 Administrador</div>
+        </div>
+    </a>
+
+    <nav class="sidebar-nav">
+
+        <!-- ===== SEÇÃO VISÃO GERAL ===== -->
+        <div class="nav-section-label">Principal</div>
+
+        <a href="dashboard-admin.html" class="nav-item ">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </a>
+
+        <!-- ===== SEÇÃO GESTÃO ===== -->
+        <div class="nav-section-label">Gestão</div>
+
+        <a href="/saborearte/UsuarioController" class="nav-item">
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">Usuários</span>
+        </a>
+
+        <a href="/saborearte/CategoriaController" class="nav-item">
+            <span class="nav-icon">🏷️</span>
+            <span class="nav-label">Categorias</span>
+        </a>
+
+        <a href="receita-admin.html" class="nav-item">
+            <span class="nav-icon">📝</span>
+            <span class="nav-label">Receitas</span>
+        </a>
+
+        <!-- ===== SEÇÃO ANÁLISE ===== -->
+        <div class="nav-section-label">Análise</div>
+
+        <a href="relatorio-admin.html" class="nav-item">
+            <span class="nav-icon">📈</span>
+            <span class="nav-label">Relatórios</span>
+        </a>
+
+        <a href="log-admin.html" class="nav-item active">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-label">Auditoria</span>
+        </a>
+
+        <!-- ===== SEÇÃO CONTA ===== -->
+        <div class="nav-section-label">Conta</div>
+
+        <a href="/saborearte/ConfiguracaoController" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Configurações</span>
+        </a>
+
+    </nav>
+	
+	<div class="sidebar-bottom">
+	    <a href="/saborearte/LogoutController" class="btn-logout">
+	        <span class="nav-icon">🚪</span>
+	        <span>Sair</span>
+	    </a>
+	</div>
+
+</aside>
+
+
+<div id="overlay" onclick="closeSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99"></div>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+      <div class="page-crumb">
+        <span>Análise</span>
+        <span style="color:var(--cream-dark)">/</span>
+        <span class="current">Logs de Auditoria</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-pdf" onclick="exportPDF()">⬇ PDF</button>
+      <button class="btn btn-excel" onclick="exportExcel()">⬇ Excel</button>
+      <button class="btn btn-print" onclick="printReport()">🖨 Imprimir</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="page-header">
+      <div>
+        <div class="page-title-main">Logs de <em>Auditoria</em></div>
+        <div class="page-subtitle">Rastreamento completo de todas as ações realizadas no sistema editorial</div>
+      </div>
+    </div>
+
+    <div class="audit-layout">
+
+      <div class="left-panel">
+        <div class="panel-card">
+          <div class="panel-head">Filtros</div>
+          <div class="panel-body">
+            <div class="fgroup">
+              <label class="flabel">Buscar usuário ou detalhe</label>
+              <div class="search-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="finput" id="searchMain" placeholder="Nome, palavra-chave…" oninput="applyFilters()">
+              </div>
+            </div>
+            <div class="fgroup">
+              <label class="flabel">Ação</label>
+              <select class="fselect" id="filterAction" onchange="applyFilters()">
+                <option value="">Todas</option>
+                <option value="criacao">Criação</option>
+                <option value="edicao">Edição</option>
+                <option value="exclusao">Exclusão</option>
+                <option value="login">Login</option>
+                <option value="aprovado">Aprovado</option>
+              </select>
+            </div>
+            <div class="fgroup">
+              <label class="flabel">Entidade</label>
+              <select class="fselect" id="filterEntity" onchange="applyFilters()">
+                <option value="">Todas</option>
+                <option>Receita</option>
+                <option>Comentário</option>
+                <option>Perfil</option>
+                <option>Sistema</option>
+              </select>
+            </div>
+            <div class="fgroup">
+              <label class="flabel">Período</label>
+              <select class="fselect" id="filterPeriod" onchange="applyFilters()">
+                <option value="">Todos os períodos</option>
+                <option value="hoje">Hoje</option>
+                <option value="7dias">Últimos 7 dias</option>
+                <option value="mes">Último mês</option>
+              </select>
+            </div>
+            <div class="fgroup">
+              <button class="btn-clear" onclick="clearFilters()">Limpar filtros</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="result-head">
+          <div class="result-title">
+            Registro de Ações
+            <span class="row-count-badge" id="row-count">8</span>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="log-table" id="main-table">
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>Ação</th>
+                <th>Entidade</th>
+                <th>Detalhe</th>
+                <th>Data / Hora</th>
+              </tr>
+            </thead>
+            <tbody id="log-body"></tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <div class="footer-info">Exibindo <strong id="footer-range">1–8</strong> de <strong id="footer-total">24</strong> registros</div>
+          <div class="pagination" id="pagination"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- Área usada apenas na impressão (Ctrl+P / botão Imprimir), com o mesmo padrão visual do PDF -->
+<div id="printArea"></div>
+
+<script>
+const LOGS=[
+  {id:1,usuario:'Ana Silva',iniciais:'AS',avClass:'av-green',papel:'Admin',acao:'aprovado',entidade:'Receita',detalhe:'Bolo de Cenoura com Calda aprovada e publicada no blog',data:'13/05/2026',hora:'14:32'},
+  {id:2,usuario:'Rafael Costa',iniciais:'RC',avClass:'av-gold',papel:'Autor',acao:'criacao',entidade:'Receita',detalhe:'Nova receita criada: Risoto de Cogumelos Selvagens',data:'12/05/2026',hora:'09:18'},
+  {id:3,usuario:'Lídia Lisboa',iniciais:'LL',avClass:'av-pink',papel:'Editora',acao:'edicao',entidade:'Receita',detalhe:'Frango ao Limão Siciliano — modo de preparo editado',data:'11/05/2026',hora:'16:45'},
+  {id:4,usuario:'Ana Silva',iniciais:'AS',avClass:'av-green',papel:'Admin',acao:'login',entidade:'Sistema',detalhe:'Login realizado com sucesso — Chrome / Windows 11',data:'11/05/2026',hora:'08:01'},
+  {id:5,usuario:'Rafael Costa',iniciais:'RC',avClass:'av-gold',papel:'Autor',acao:'criacao',entidade:'Receita',detalhe:'Nova receita criada: Salada Mediterrânea com Feta',data:'10/05/2026',hora:'11:22'},
+  {id:6,usuario:'Ana Silva',iniciais:'AS',avClass:'av-green',papel:'Admin',acao:'exclusao',entidade:'Comentário',detalhe:'Comentário spam removido da receita Bolo de Cenoura',data:'09/05/2026',hora:'13:55'},
+  {id:7,usuario:'Bruno Santos',iniciais:'BS',avClass:'av-teal',papel:'Visitante',acao:'login',entidade:'Sistema',detalhe:'Tentativa de login mal-sucedida — senha incorreta (2ª tentativa)',data:'08/05/2026',hora:'21:03'},
+  {id:8,usuario:'Thiago Ferreira',iniciais:'TF',avClass:'av-blue',papel:'Visitante',acao:'edicao',entidade:'Perfil',detalhe:'Biografia e foto de perfil atualizadas com sucesso',data:'07/05/2026',hora:'10:14'},
+  {id:9,usuario:'Lídia Lisboa',iniciais:'LL',avClass:'av-pink',papel:'Editora',acao:'criacao',entidade:'Receita',detalhe:'Nova receita criada: Sopa de Abóbora Cremosa',data:'07/05/2026',hora:'09:02'},
+  {id:10,usuario:'Rafael Costa',iniciais:'RC',avClass:'av-gold',papel:'Autor',acao:'login',entidade:'Sistema',detalhe:'Login realizado com sucesso — Firefox / macOS',data:'06/05/2026',hora:'08:47'},
+  {id:11,usuario:'Thiago Ferreira',iniciais:'TF',avClass:'av-blue',papel:'Visitante',acao:'criacao',entidade:'Comentário',detalhe:'Novo comentário publicado na receita Bolo de Cenoura',data:'05/05/2026',hora:'19:30'},
+  {id:12,usuario:'Rafael Costa',iniciais:'RC',avClass:'av-gold',papel:'Autor',acao:'edicao',entidade:'Receita',detalhe:'Espaguete ao Pesto — lista de ingredientes atualizada',data:'05/05/2026',hora:'15:10'},
+  {id:13,usuario:'Ana Silva',iniciais:'AS',avClass:'av-green',papel:'Admin',acao:'aprovado',entidade:'Receita',detalhe:'Cheesecake de Frutas Vermelhas aprovada e publicada no blog',data:'04/05/2026',hora:'12:00'},
+  {id:14,usuario:'Bruno Santos',iniciais:'BS',avClass:'av-teal',papel:'Visitante',acao:'edicao',entidade:'Perfil',detalhe:'Foto de perfil atualizada',data:'03/05/2026',hora:'17:22'},
+  {id:15,usuario:'Lídia Lisboa',iniciais:'LL',avClass:'av-pink',papel:'Editora',acao:'exclusao',entidade:'Comentário',detalhe:'Comentário ofensivo removido da receita Risoto de Cogumelos',data:'03/05/2026',hora:'10:15'},
+  {id:16,usuario:'Ana Silva',iniciais:'AS',avClass:'av-green',papel:'Admin',acao:'login',entidade:'Sistema',detalhe:'Login realizado com sucesso — Chrome / Windows 11',data:'02/05/2026',hora:'08:05'},
+  {id:17,usuario:'Rafael Costa',iniciais:'RC',avClass:'av-gold',papel:'Autor',acao:'criacao',entidade:'Receita',detalhe:'Nova receita criada: Strogonoff de Palmito',data:'01/05/2026',hora:'14:40'},
+  {id:18,usuario:'Thiago Ferreira',iniciais:'TF',avClass:'av-blue',papel:'Visitante',acao:'login',entidade:'Sistema',detalhe:'Login realizado com sucesso — Safari / iOS',data:'01/05/2026',hora:'09:12'},
+  {id:19,usuario:'Ana Silva',iniciais:'AS',avClass:'av-green',papel:'Admin',acao:'edicao',entidade:'Perfil',detalhe:'Permissões de usuário atualizadas para Rafael Costa',data:'30/04/2026',hora:'16:50'},
+  {id:20,usuario:'Lídia Lisboa',iniciais:'LL',avClass:'av-pink',papel:'Editora',acao:'aprovado',entidade:'Receita',detalhe:'Salada Mediterrânea com Feta revisada e aprovada',data:'29/04/2026',hora:'11:05'},
+  {id:21,usuario:'Bruno Santos',iniciais:'BS',avClass:'av-teal',papel:'Visitante',acao:'login',entidade:'Sistema',detalhe:'Tentativa de login mal-sucedida — conta bloqueada temporariamente',data:'28/04/2026',hora:'22:40'},
+  {id:22,usuario:'Rafael Costa',iniciais:'RC',avClass:'av-gold',papel:'Autor',acao:'exclusao',entidade:'Receita',detalhe:'Rascunho antigo de receita removido',data:'27/04/2026',hora:'13:18'},
+  {id:23,usuario:'Thiago Ferreira',iniciais:'TF',avClass:'av-blue',papel:'Visitante',acao:'criacao',entidade:'Comentário',detalhe:'Novo comentário publicado na receita Sopa de Abóbora',data:'26/04/2026',hora:'20:05'},
+  {id:24,usuario:'Ana Silva',iniciais:'AS',avClass:'av-green',papel:'Admin',acao:'exclusao',entidade:'Comentário',detalhe:'Comentário duplicado removido da receita Cheesecake',data:'25/04/2026',hora:'09:30'}
+];
+
+const PAGE_SIZE=8;
+let currentPage=1;
+let filteredData=LOGS.slice();
+
+// data de referência = data mais recente presente no log (usada como "hoje" para o filtro de período)
+function parseLogDate(r){
+  const [d,m,y]=r.data.split('/').map(Number);
+  const [hh,mm]=r.hora.split(':').map(Number);
+  return new Date(y,m-1,d,hh,mm);
+}
+const REF_DATE = LOGS.reduce((max,r)=>{
+  const dt=parseLogDate(r);
+  return dt>max?dt:max;
+},parseLogDate(LOGS[0]));
+
+function isSameDay(a,b){
+  return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+}
+
+function applyFilters(){
+  const q=document.getElementById('searchMain').value.toLowerCase().trim();
+  const action=document.getElementById('filterAction').value;
+  const entity=document.getElementById('filterEntity').value.toLowerCase();
+  const period=document.getElementById('filterPeriod').value;
+
+  filteredData=LOGS.filter(r=>{
+    if(action && r.acao!==action) return false;
+    if(q && !r.usuario.toLowerCase().includes(q) && !r.detalhe.toLowerCase().includes(q)) return false;
+    if(entity && r.entidade.toLowerCase()!==entity) return false;
+
+    if(period){
+      const dt=parseLogDate(r);
+      const diffDays=(REF_DATE-dt)/(1000*60*60*24);
+      if(period==='hoje' && !isSameDay(dt,REF_DATE)) return false;
+      if(period==='7dias' && (diffDays<0 || diffDays>7)) return false;
+      if(period==='mes' && (diffDays<0 || diffDays>30)) return false;
+    }
+    return true;
+  });
+  currentPage=1;
+  renderPage();
+}
+
+function clearFilters(){
+  document.getElementById('searchMain').value='';
+  document.getElementById('filterAction').value='';
+  document.getElementById('filterEntity').value='';
+  document.getElementById('filterPeriod').value='';
+  applyFilters();
+}
+
+// Renderiza a página atual (recorte paginado dos dados filtrados)
+function renderPage(){
+  const total=filteredData.length;
+  const totalPages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  if(currentPage>totalPages) currentPage=totalPages;
+  const start=(currentPage-1)*PAGE_SIZE;
+  const pageData=filteredData.slice(start,start+PAGE_SIZE);
+
+  renderTable(pageData);
+  renderPagination(totalPages,total,start,pageData.length);
+}
+
+function renderTable(data){
+  document.getElementById('row-count').textContent=filteredData.length;
+  const tbody=document.getElementById('log-body');
+  if(!data.length){
+    tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:50px 20px;color:var(--text-light);font-size:13px;font-style:italic">Nenhum registro encontrado para os filtros aplicados.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=data.map(r=>`
+    <tr>
+      <td><div class="user-cell"><div class="user-av ${r.avClass}">${r.iniciais}</div><div><div class="user-nm">${r.usuario}</div><div class="user-role-sm">${r.papel}</div></div></div></td>
+      <td><span class="pill ${r.acao}"><span class="pill-dot"></span>${r.acao.charAt(0).toUpperCase()+r.acao.slice(1)}</span></td>
+      <td><span class="pill entidade">${r.entidade}</span></td>
+      <td><div class="detail-text">${r.detalhe}</div></td>
+      <td><div class="time-cell"><span class="time-date">${r.data}</span><span class="time-hour">${r.hora}</span></div></td>
+    </tr>`).join('');
+}
+
+// Monta os controles de paginação dinamicamente, com base no total de páginas
+function renderPagination(totalPages,total,start,pageCount){
+  const rangeStart=total===0?0:start+1;
+  const rangeEnd=start+pageCount;
+  document.getElementById('footer-range').textContent=total===0?'0':`${rangeStart}–${rangeEnd}`;
+  document.getElementById('footer-total').textContent=total;
+
+  const wrap=document.getElementById('pagination');
+  let html=`<button class="pag-btn" ${currentPage===1?'disabled':''} onclick="goToPage(${currentPage-1})">‹</button>`;
+  for(let p=1;p<=totalPages;p++){
+    html+=`<button class="pag-btn ${p===currentPage?'active':''}" onclick="goToPage(${p})">${p}</button>`;
+  }
+  html+=`<button class="pag-btn" ${currentPage===totalPages?'disabled':''} onclick="goToPage(${currentPage+1})">›</button>`;
+  wrap.innerHTML=html;
+}
+
+function goToPage(p){
+  const totalPages=Math.max(1,Math.ceil(filteredData.length/PAGE_SIZE));
+  if(p<1||p>totalPages) return;
+  currentPage=p;
+  renderPage();
+}
+
+function toggleSidebar(){
+  const s=document.getElementById('sidebar');
+  const o=document.getElementById('overlay');
+  const open=s.classList.toggle('open');
+  o.style.display=open?'block':'none';
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').style.display='none';
+}
+window.addEventListener('resize',()=>{if(window.innerWidth>768)closeSidebar();});
+
+function capitalize(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+// Gera as linhas do relatório (sem avatar/foto), com Data e Hora bem separados por um espaçador visível
+function buildReportRows(data){
+  return data.map(r=>[
+    `${r.usuario} (${r.papel})`,
+    capitalize(r.acao),
+    r.entidade,
+    r.detalhe,
+    r.data,
+    r.hora
+  ]);
+}
+
+const REPORT_HEAD=['Usuário','Ação','Entidade','Detalhe','Data','Hora'];
+
+function mostrarAlerta(mensagem, tipo = "erro") {
+
+    let alerta = document.getElementById("feedbackBar");
+
+    if (!alerta) {
+        alerta = document.createElement("div");
+        alerta.id = "feedbackBar";
+        alerta.className = "feedback-bar";
+        document.querySelector(".right-panel").prepend(alerta);
+    }
+
+    alerta.classList.remove("loading");
+
+    if (tipo === "erro") {
+        alerta.style.background = "var(--error-bg)";
+        alerta.style.color = "var(--error)";
+    } else if (tipo === "aviso") {
+        alerta.style.background = "var(--pending-bg)";
+        alerta.style.color = "var(--pending)";
+    } else {
+        alerta.style.background = "var(--published-bg)";
+        alerta.style.color = "var(--published)";
+    }
+
+    alerta.innerHTML = mensagem;
+    alerta.style.display = "flex";
+
+    setTimeout(() => {
+        alerta.style.display = "none";
+    }, 4000);
+}
+
+/* ---------------- PDF ---------------- */
+function exportPDF(){
+    if(filteredData.length === 0){
+        mostrarAlerta(
+            "⚠️ Nenhum registro encontrado para exportar em PDF.",
+            "aviso"
+        );
+        return;
+    }
+
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(47,61,37);
+  doc.text('Sabor & Arte — Blog Editorial',14,16);
+  doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(74,82,64);
+  doc.text('Logs de Auditoria do Sistema',14,24);
+  doc.setFontSize(9);doc.setTextColor(138,148,128);
+  doc.text('Emitido em: '+new Date().toLocaleString('pt-BR')+' · '+filteredData.length+' registro(s) filtrado(s)',14,30);
+
+  // Tabela construída a partir dos dados (sem foto de perfil), com Data e Hora em colunas separadas
+  doc.autoTable({
+    head:[REPORT_HEAD],
+    body:buildReportRows(filteredData),
+    startY:36,
+    theme:'grid',
+    styles:{fontSize:8,cellPadding:3,valign:'middle'},
+    headStyles:{fillColor:[47,61,37],textColor:255,fontStyle:'bold'},
+    alternateRowStyles:{fillColor:[245,240,232]},
+    columnStyles:{
+      0:{cellWidth:32},
+      1:{cellWidth:20},
+      2:{cellWidth:20},
+      3:{cellWidth:'auto'},
+      4:{cellWidth:20,halign:'left'},
+      5:{cellWidth:15,halign:'left'}
+    }
+  });
+  doc.save('SaborArte_AuditLog_'+Date.now()+'.pdf');
+}
+
+/* ---------------- Excel ---------------- */
+function exportExcel(){
+    if(filteredData.length === 0){
+        mostrarAlerta(
+            "⚠️ Nenhum registro encontrado para exportar em Excel.",
+            "aviso"
+        );
+        return;
+    }
+
+  const rows=[REPORT_HEAD,...buildReportRows(filteredData)];
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Logs de Auditoria');
+  XLSX.writeFile(wb,'SaborArte_AuditLog_'+Date.now()+'.xlsx');
+}
+
+/* ---------------- Impressão (mesmo padrão visual do PDF) ---------------- */
+function buildPrintTable(data){
+  const rows=data.map(r=>`
+    <tr>
+      <td>${r.usuario} (${r.papel})</td>
+      <td>${capitalize(r.acao)}</td>
+      <td>${r.entidade}</td>
+      <td>${r.detalhe}</td>
+      <td class="print-date-hour">${r.data}&nbsp;&nbsp;&nbsp;${r.hora}</td>
+    </tr>`).join('');
+
+  return `
+    <div class="print-header">
+      <div class="print-title">Sabor &amp; Arte — Blog Editorial</div>
+      <div class="print-subtitle">Logs de Auditoria do Sistema</div>
+      <div class="print-meta">Emitido em: ${new Date().toLocaleString('pt-BR')} · ${data.length} registro(s) filtrado(s)</div>
+    </div>
+    <table class="print-table">
+      <thead>
+        <tr><th>Usuário</th><th>Ação</th><th>Entidade</th><th>Detalhe</th><th>Data&nbsp;&nbsp;&nbsp;Hora</th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function printReport(){
+
+    if(filteredData.length === 0){
+        mostrarAlerta(
+            "⚠️ Nenhum registro encontrado para impressão.",
+            "aviso"
+        );
+        return;
+    }
+
+    document.getElementById('printArea').innerHTML = buildPrintTable(filteredData);
+    window.print();
+}
+
+// Ao imprimir via Ctrl+P (sem passar pelo botão), monta a mesma área de impressão
+window.addEventListener('beforeprint',()=>{
+  document.getElementById('printArea').innerHTML=buildPrintTable(filteredData);
+});
+window.addEventListener('afterprint',()=>{
+  document.getElementById('printArea').innerHTML='';
+});
+
+renderPage();
+</script>
+</body>
+</html>

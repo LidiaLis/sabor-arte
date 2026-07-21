@@ -155,9 +155,10 @@
   .pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid var(--cream-dark);}
   .pag-info{font-size:12px;color:var(--text-light);font-weight:300;}
   .pag-btns{display:flex;gap:4px;}
-  .pag-btn{width:32px;height:32px;border:1.5px solid var(--cream-dark);background:var(--warm-white);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;color:var(--text-mid);font-family:'Nunito',sans-serif;font-weight:700;transition:all .15s;}
-  .pag-btn:hover{border-color:var(--moss);color:var(--moss);}
+  .pag-btn{min-width:32px;height:32px;padding:0 8px;border:1.5px solid var(--cream-dark);background:var(--warm-white);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;color:var(--text-mid);font-family:'Nunito',sans-serif;font-weight:700;transition:all .15s;}
+  .pag-btn:hover:not(:disabled){border-color:var(--moss);color:var(--moss);}
   .pag-btn.active{background:var(--moss);border-color:var(--moss);color:var(--cream);}
+  .pag-btn:disabled{opacity:.4;cursor:not-allowed;}
 
   /* FEEDBACK TOAST */
   .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--moss-dark);color:var(--cream);padding:11px 22px;border-radius:3px;font-size:13px;font-weight:500;opacity:0;visibility:hidden;transition:all .25s;z-index:2000;display:flex;align-items:center;gap:8px;}
@@ -255,6 +256,7 @@
   .field input::placeholder{color:var(--text-light);}
   .field-hint{font-size:11px;color:var(--text-light);margin-top:4px;font-weight:300;}
   .field-error{font-size:11px;color:var(--danger);margin-top:4px;font-weight:500;display:none;}
+  .field-error.show{display:block;}
   .roles-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-light);margin-bottom:10px;}
   .roles-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
   .role-card{border:1.5px solid var(--cream-dark);border-radius:2px;padding:12px 14px;cursor:pointer;transition:all .18s;background:var(--warm-white);}
@@ -316,9 +318,38 @@
   .badge-inline{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:2px;font-size:11px;font-weight:600;}
   .badge-inline.inactive{background:rgba(106,122,138,.15);color:var(--draft);}
   .badge-inline.active-badge{background:var(--published-bg);color:var(--published);}
+.pw-wrap{position:relative;}
+.pw-wrap .field input{padding-right:44px;}
+.pw-wrap input{padding-right:44px;}
+.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:var(--text-light);transition:color 0.2s;}
+.pw-eye:hover{color:var(--moss);}
 
+.pw-strength{margin:10px 0 2px;}
+.pw-strength-bars{display:flex;gap:4px;margin-bottom:5px;}
+.pw-bar{flex:1;height:4px;border-radius:2px;background:var(--cream-dark);transition:background 0.3s;}
+.pw-bar.active-1{background:var(--danger);}
+.pw-bar.active-2{background:var(--pending);}
+.pw-bar.active-3{background:var(--gold);}
+.pw-bar.active-4{background:var(--published);}
+.pw-strength-label{font-size:11px;font-weight:600;}
+/* Remove o olhinho nativo do Edge */
+.pw-wrap input[type="password"]::-ms-reveal,
+.pw-wrap input[type="password"]::-ms-clear {
+  display: none;
+}
+
+/* Remove ícone nativo de autofill/senha forte do Chrome/Edge (Chromium) */
+.pw-wrap input::-webkit-credentials-auto-fill-button,
+.pw-wrap input::-webkit-strong-password-auto-fill-button,
+.pw-wrap input::-webkit-contacts-auto-fill-button {
+  display: none !important;
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}
   @media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr);}}
-  @media(max-width:768px){.main{margin-left:0;}.content{padding:24px 16px;}.topbar{padding:0 20px;}.form-row{grid-template-columns:1fr;}}
+  @media(max-width:768px){.main{margin-left:0;}.content{padding:24px 16px;}.topbar{padding:0 20px;}.form-row{grid-template-columns:1fr;}.pagination{flex-direction:column;gap:10px;align-items:flex-start;}}
   @media(max-width:480px){.stats-row{grid-template-columns:1fr;}}
 </style>
 </head>
@@ -343,7 +374,6 @@
   <div class="content">
 
     <%-- ===== FEEDBACK DO SERVLET ===== --%>
-    <%-- O servlet pode setar request.setAttribute("msgSucesso","Usuário criado!") --%>
     <% if (msgSucesso != null) { %>
       <div id="serverToast" class="toast show"><%= msgSucesso %></div>
     <% } %>
@@ -362,7 +392,6 @@
     <div class="stats-row">
       <div class="stat-card moss">
         <div class="stat-icon">👥</div>
-        <%-- Valor dinâmico vindo do Java --%>
         <div class="stat-value"><%= totalUsuarios %></div>
         <div class="stat-label">Total de Usuários</div>
       </div>
@@ -378,7 +407,6 @@
       </div>
       <div class="stat-card blue">
         <div class="stat-icon">✨</div>
-        <%-- Idealmente vindo do servlet: request.getAttribute("novosEsteMes") --%>
 		<div class="stat-value">
 		  <%= request.getAttribute("novosEsteMes") != null ? request.getAttribute("novosEsteMes") : 0 %>
 		</div>        
@@ -422,14 +450,6 @@
           </tr>
         </thead>
         <tbody id="usersBody">
-          <%--
-              ═══════════════════════════════════════════════════════
-              AQUI ESTÁ A MAGIA DO JSP:
-              O Java itera a lista que o servlet colocou no request.
-              Cada <tr> é gerado pelo servidor antes de chegar no browser.
-              O JavaScript só lida com os modais, não com os dados.
-              ═══════════════════════════════════════════════════════
-          --%>
           <% if (usuarios.isEmpty()) { %>
             <tr>
               <td colspan="5" style="text-align:center;padding:40px;color:var(--text-light);font-size:13px;font-weight:300;">
@@ -480,8 +500,8 @@
                  String avatarClr = "admin".equals(role) ? "var(--moss-dark)" : "#fff";
                  
                  String fotoUrl = (u.getFoto_usuario() != null && !u.getFoto_usuario().isEmpty())
-                     ? _ctx + u.getFoto_usuario()
-                     : null;
+                		    ? _ctx + u.getFoto_usuario() + "?v=" + System.currentTimeMillis()
+                		    : null;
           %>
             <tr class="<%= isAtivo ? "" : "row-inactive" %>"
                 data-name="<%= nomeFull.toLowerCase() %>"
@@ -563,13 +583,9 @@
         </tbody>
       </table>
 
-      <div class="pagination">
-        <div class="pag-btns">
-          <button class="pag-btn">‹</button>
-          <button class="pag-btn active">1</button>
-          <button class="pag-btn">2</button>
-          <button class="pag-btn">›</button>
-        </div>
+      <div class="pagination" id="pagination">
+        <div class="pag-info" id="pagInfo">—</div>
+        <div class="pag-btns" id="pagBtns"></div>
       </div>
     </div>
   </div>
@@ -634,40 +650,55 @@
       <button class="modal-close" onclick="closeModal('modalAdd')">✕</button>
     </div>
 
-    <%--
-        O form envia para o servlet via POST.
-        O servlet lê os parâmetros com request.getParameter("nome"), etc.
-        e redireciona de volta com uma mensagem de sucesso ou erro.
-    --%>
-    <form method="POST" action="<%= _ctx %>/UsuarioController" onsubmit="return validarAdd()">
-      <input type="hidden" name="action" value="cadastrar">
+<form method="POST" action="<%= _ctx %>/UsuarioController" onsubmit="return validarAdd()" novalidate>
+      <input type="hidden" name="action" value="cadastrarAdmin">
 
       <div class="modal-body">
         <div class="form-row">
-          <div class="field">
-            <label>Nome completo <span class="req">*</span></label>
-            <input type="text" name="nome" id="addNome" placeholder="Ex: Ana Beatriz" required>
-          </div>
-          <div class="field">
-            <label>E-mail <span class="req">*</span></label>
-				<input type="email" name="email" id="addEmail" 
-				       placeholder="usuario@dominio.com" 
-				       pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
-				       title="Digite um e-mail válido"
-				       required>
-                 </div>
-        </div>
-        <div class="form-row">
-          <div class="field">
-            <label>Senha <span class="req">*</span></label>
-            <input type="password" name="senha" id="addSenha" placeholder="Mín. 8 caracteres" required>
-          </div>
-          <div class="field">
-            <label>Confirmar Senha <span class="req">*</span></label>
-            <input type="password" id="addConfirm" placeholder="Repita a senha">
-            <div class="field-error" id="errSenha">As senhas não coincidem</div>
-          </div>
-        </div>
+<div class="field">
+  <label>Nome completo <span class="req">*</span></label>
+  <input type="text" name="nome" id="addNome" placeholder="Ex: Ana Beatriz" oninput="validarNomeLive()" required>
+  <div class="field-error" id="errNome">Digite o nome completo</div>
+</div>
+<div class="field">
+  <label>E-mail <span class="req">*</span></label>
+  <input type="email" name="email" id="addEmail"
+         placeholder="usuario@dominio.com"
+         pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+         title="Digite um e-mail válido"
+         oninput="validarEmailLive()"
+         required>
+  <div class="field-error" id="errEmail">Digite um e-mail válido (ex: usuario@dominio.com)</div>
+</div>
+</div>
+<div class="form-row">
+ <div class="field">
+  <label>Senha <span class="req">*</span></label>
+  <div class="pw-wrap">
+    <input type="password" name="senha" id="addSenha" placeholder="Mín. 8 caracteres"
+           oninput="validarSenhaLive(); updateStrength(this.value,'add')" required>
+    <button type="button" class="pw-eye" onclick="togglePw('addSenha')">👁</button>
+  </div>
+  <div class="pw-strength">
+    <div class="pw-strength-bars">
+      <div class="pw-bar" id="add-pwb1"></div>
+      <div class="pw-bar" id="add-pwb2"></div>
+      <div class="pw-bar" id="add-pwb3"></div>
+      <div class="pw-bar" id="add-pwb4"></div>
+    </div>
+    <span class="pw-strength-label" id="add-pw-label" style="color:var(--text-light)">Digite uma senha</span>
+  </div>
+  <div class="field-error" id="errSenhaCurta">A senha precisa ter no mínimo 8 caracteres</div>
+</div>
+<div class="field">
+  <label>Confirmar Senha <span class="req">*</span></label>
+  <div class="pw-wrap">
+    <input type="password" id="addConfirm" placeholder="Repita a senha" oninput="validarSenhaLive()">
+    <button type="button" class="pw-eye" onclick="togglePw('addConfirm')">👁</button>
+  </div>
+  <div class="field-error" id="errSenha">As senhas não coincidem</div>
+</div>
+</div>
 
         <div class="roles-label">Função no sistema</div>
         <div class="roles-grid" id="rolesGrid">
@@ -728,7 +759,7 @@
       <button class="modal-close" onclick="closeModal('modalEdit')">✕</button>
     </div>
 
-    <form method="POST" action="<%= _ctx %>/UsuarioController">
+<form method="POST" action="<%= _ctx %>/UsuarioController" novalidate onsubmit="return validarEdit()">
       <input type="hidden" name="action" value="atualizar">
       <input type="hidden" name="id"     id="editId">
 
@@ -763,17 +794,6 @@
             <input type="tel" name="telefone" id="editTel" placeholder="(00) 00000-0000" oninput="phoneMask(this)">
           </div>
           <div style="margin-top:8px;">
-            <div class="roles-label">Zona de dados</div>
-            <div class="danger-zone-row" onclick="alert('Funcionalidade em desenvolvimento')">
-              <div class="danger-zone-left">
-                <span style="font-size:16px">🗑️</span>
-                <div>
-                  <div class="danger-zone-title">Limpar informações pessoais</div>
-                  <div class="danger-zone-sub">Remove bio, preferências e redes sociais</div>
-                </div>
-              </div>
-              <span style="color:var(--text-light);font-size:16px">›</span>
-            </div>
           </div>
         </div>
 
@@ -787,11 +807,24 @@
               <option value="viewer">Visitante</option>
             </select>
           </div>
-          <div class="field">
-            <label>Alterar Senha <span style="font-weight:300;text-transform:none;">(opcional)</span></label>
-            <input type="password" name="novaSenha" id="editSenha" placeholder="Deixe vazio para manter a atual">
-            <div class="field-hint">Mínimo 8 caracteres se preenchida</div>
-          </div>
+			<div class="field">
+			  <label>Alterar Senha <span style="font-weight:300;text-transform:none;">(opcional)</span></label>
+			  <div class="pw-wrap">
+			    <input type="password" name="novaSenha" id="editSenha" placeholder="Deixe vazio para manter a atual"
+			           oninput="validarSenhaEditLive(); updateStrength(this.value,'edit')">
+			    <button type="button" class="pw-eye" onclick="togglePw('editSenha')">👁</button>
+			  </div>
+			  <div class="pw-strength">
+			    <div class="pw-strength-bars">
+			      <div class="pw-bar" id="edit-pwb1"></div>
+			      <div class="pw-bar" id="edit-pwb2"></div>
+			      <div class="pw-bar" id="edit-pwb3"></div>
+			      <div class="pw-bar" id="edit-pwb4"></div>
+			    </div>
+			    <span class="pw-strength-label" id="edit-pw-label" style="color:var(--text-light)">Digite uma senha</span>
+			  </div>
+			  <div class="field-error" id="errEditSenha">A senha precisa ter no mínimo 8 caracteres</div>
+			</div>
         </div>
       </div>
 
@@ -858,34 +891,115 @@
 <!-- Toast de feedback client-side -->
 <div class="toast" id="toast"></div>
 
-<%--
-    ===== INCLUDE DO NOTIFICATIONS PANEL =====
-    Descomente quando tiver o arquivo criado:
-    <%@ include file="/WEB-INF/components/notifications.jsp" %>
---%>
-
 <script>
 /* ─────────────────────────────────────────
-   FILTRO CLIENT-SIDE (filtra as <tr> já
-   renderizadas pelo servidor sem recarregar)
+   FILTRO + PAGINAÇÃO CLIENT-SIDE
+   (filtra e pagina as <tr> já renderizadas
+   pelo servidor, sem recarregar a página)
 ───────────────────────────────────────── */
-function filterTable() {
+var PAGE_SIZE = 6;      // quantos usuários por página — ajuste à vontade
+var paginaAtual = 1;
+var todasLinhas = Array.from(document.querySelectorAll('#usersBody tr[data-name]'));
+
+function getLinhasFiltradas() {
   var s   = document.getElementById('searchInput').value.toLowerCase();
   var r   = document.getElementById('filterRole').value;
   var st  = document.getElementById('filterStatus').value;
-  var rows = document.querySelectorAll('#usersBody tr[data-name]');
-  var vis  = 0;
 
-  rows.forEach(function(row) {
+  return todasLinhas.filter(function(row) {
     var txt    = (row.dataset.name + ' ' + row.dataset.email + ' ' + row.dataset.role).toLowerCase();
     var matchS = !s  || txt.includes(s);
     var matchR = !r  || row.dataset.role   === r;
     var matchT = !st || row.dataset.status === st;
-    var show   = matchS && matchR && matchT;
-    row.style.display = show ? '' : 'none';
-    if (show) vis++;
+    return matchS && matchR && matchT;
   });
 }
+
+function filterTable() {
+  paginaAtual = 1;
+  renderPagina();
+}
+
+function renderPagina() {
+  var filtradas = getLinhasFiltradas();
+  var totalPaginas = Math.max(1, Math.ceil(filtradas.length / PAGE_SIZE));
+
+  if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+  if (paginaAtual < 1) paginaAtual = 1;
+
+  // esconde todas, mostra só a "fatia" da página atual
+  todasLinhas.forEach(function(row) { row.style.display = 'none'; });
+
+  var inicio = (paginaAtual - 1) * PAGE_SIZE;
+  var fim = inicio + PAGE_SIZE;
+  filtradas.slice(inicio, fim).forEach(function(row) { row.style.display = ''; });
+
+  renderInfo(filtradas.length, inicio, fim);
+  renderBotoes(totalPaginas);
+}
+
+function renderInfo(total, inicio, fim) {
+  var info = document.getElementById('pagInfo');
+  if (total === 0) {
+    info.textContent = 'Nenhum usuário encontrado';
+    return;
+  }
+  var mostrandoAte = Math.min(fim, total);
+  info.textContent = 'Mostrando ' + (inicio + 1) + '–' + mostrandoAte + ' de ' + total;
+}
+
+function renderBotoes(totalPaginas) {
+  var wrap = document.getElementById('pagBtns');
+  wrap.innerHTML = '';
+
+  function criarBtn(label, page, opts) {
+    opts = opts || {};
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pag-btn' + (opts.active ? ' active' : '');
+    b.textContent = label;
+    if (opts.disabled) b.disabled = true;
+    b.addEventListener('click', function() {
+      paginaAtual = page;
+      renderPagina();
+    });
+    wrap.appendChild(b);
+  }
+
+  criarBtn('‹', paginaAtual - 1, { disabled: paginaAtual === 1 });
+
+  for (var p = 1; p <= totalPaginas; p++) {
+    criarBtn(String(p), p, { active: p === paginaAtual });
+  }
+
+  criarBtn('›', paginaAtual + 1, { disabled: paginaAtual === totalPaginas });
+}
+
+function togglePw(id){
+	  var i = document.getElementById(id);
+	  i.type = i.type === 'password' ? 'text' : 'password';
+	}
+
+	function updateStrength(v, prefixo){
+	  var s = 0;
+	  if (v.length >= 8) s++;
+	  if (/[A-Z]/.test(v)) s++;
+	  if (/[0-9]/.test(v)) s++;
+	  if (/[^A-Za-z0-9]/.test(v)) s++;
+
+	  var cls = ['','active-1','active-2','active-3','active-4'];
+	  var lbs = ['','Fraca','Média','Boa','Forte'];
+	  var tc  = ['var(--text-light)','var(--danger)','var(--pending)','var(--gold)','var(--published)'];
+
+	  [1,2,3,4].forEach(function(i){
+	    var el = document.getElementById(prefixo + '-pwb' + i);
+	    el.className = 'pw-bar' + (i <= s ? ' ' + cls[s] : '');
+	  });
+
+	  var label = document.getElementById(prefixo + '-pw-label');
+	  label.textContent = v.length === 0 ? 'Digite uma senha' : lbs[s];
+	  label.style.color = v.length === 0 ? 'var(--text-light)' : tc[s];
+	}
 
 /* ─────────────────────────────────────────
    MODAIS: abrir / fechar
@@ -908,41 +1022,86 @@ function pickRole(card) {
   document.getElementById('addRole').value = card.dataset.role;
 }
 
-function validarAdd() {
-	  var s1    = document.getElementById('addSenha').value;
-	  var s2    = document.getElementById('addConfirm').value;
-	  var email = document.getElementById('addEmail').value;
-	  var err   = document.getElementById('errSenha');
+function validarNomeLive() {
+	  var nome = document.getElementById('addNome').value.trim();
+	  var err  = document.getElementById('errNome');
+	  var ok   = nome.length >= 2;
+	  err.classList.toggle('show', nome.length > 0 && !ok);
+	  return ok;
+	}
 
-	  // valida senhas
-	  if (s1 !== s2) {
-	    err.style.display = 'block';
+	function validarEmailLive() {
+	  var email = document.getElementById('addEmail').value.trim();
+	  var err   = document.getElementById('errEmail');
+	  var emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+	  var ok = emailRegex.test(email);
+	  err.classList.toggle('show', email.length > 0 && !ok);
+	  return ok;
+	}
+
+	function validarSenhaLive() {
+	  var s1  = document.getElementById('addSenha').value;
+	  var s2  = document.getElementById('addConfirm').value;
+	  var errCurta = document.getElementById('errSenhaCurta');
+	  var errMatch = document.getElementById('errSenha');
+
+	  var senhaOk = s1.length >= 8;
+	  errCurta.classList.toggle('show', s1.length > 0 && !senhaOk);
+
+	  var confirmOk = s2.length === 0 || s1 === s2;
+	  errMatch.classList.toggle('show', s2.length > 0 && s1 !== s2);
+
+	  return senhaOk && (s2.length > 0 && s1 === s2);
+	}
+
+	function validarAdd() {
+	  var nomeOk  = validarNomeLive();
+	  var emailOk = validarEmailLive();
+	  var senhaOk = validarSenhaLive();
+
+	  if (!nomeOk) {
+	    document.getElementById('addNome').focus();
 	    return false;
 	  }
-	  err.style.display = 'none';
-
-	  // valida email — TLD mínimo 2 letras E domínio conhecido
-	  var emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
-	  if (!emailRegex.test(email)) {
-	    alert('Digite um e-mail válido.');
+	  if (!emailOk) {
+	    document.getElementById('addEmail').focus();
 	    return false;
 	  }
-
-	  // bloqueia TLDs de 1-2 letras suspeitos (opcional)
-	  var tld = email.split('.').pop();
-	  if (tld.length < 2) {
-	    alert('Domínio de e-mail inválido.');
+	  if (!senhaOk) {
+	    document.getElementById('addSenha').focus();
 	    return false;
 	  }
-
 	  return true;
 	}
 
 /* ─────────────────────────────────────────
-   ;~~~~EDITAR
-   (recebe dados via parâmetros do onclick
-    que o JSP gerou com os valores do Java)
+   EDITAR
 ───────────────────────────────────────── */
+
+function validarSenhaEditLive() {
+	  var s1 = document.getElementById('editSenha').value;
+	  var err = document.getElementById('errEditSenha');
+
+	  // campo é opcional: se estiver vazio, não mostra erro nenhum
+	  if (s1.length === 0) {
+	    err.classList.remove('show');
+	    return true;
+	  }
+
+	  var senhaOk = s1.length >= 8;
+	  err.classList.toggle('show', !senhaOk);
+	  return senhaOk;
+	}
+	
+function validarEdit() {
+	  var senhaOk = validarSenhaEditLive();
+	  if (!senhaOk) {
+	    document.getElementById('editSenha').focus();
+	    return false;
+	  }
+	  return true;
+	}
+	
 function openEditModal(id, nome, email, role, status, ini, bg, clr, fotoUrl) {
 	  document.getElementById('editId').value    = id;
 	  document.getElementById('editNome').value  = nome;
@@ -959,7 +1118,6 @@ function openEditModal(id, nome, email, role, status, ini, bg, clr, fotoUrl) {
 
 	  var av = document.getElementById('editAvatar');
 
-	  // ← aplica foto se existir, senão mostra iniciais
 	  if (fotoUrl && fotoUrl !== '') {
 	    av.textContent   = '';
 	    av.style.background = 'none';
@@ -986,12 +1144,10 @@ function openStatusModal(id, nome, email, roleLabel, ini, bg, clr, isAtivo) {
   document.getElementById('statusId').value = id;
   document.getElementById('statusNovoValor').value = isAtivo ? 'inativo' : 'ativo';
 
-  /* ícone e título */
   document.getElementById('statusModalIcon').textContent  = isAtivo ? '🚫' : '✅';
   document.getElementById('statusModalIcon').className    = 'modal-header-icon ' + (isAtivo ? 'deactivate-icon' : 'reactivate-icon');
   document.getElementById('statusModalTitle').textContent = isAtivo ? 'Desativar Usuário' : 'Reativar Usuário';
 
-  /* prévia */
   var av = document.getElementById('statusAvatar');
   av.textContent      = ini;
   av.style.background = bg;
@@ -1003,7 +1159,6 @@ function openStatusModal(id, nome, email, roleLabel, ini, bg, clr, isAtivo) {
     ? '<span class="dot active"></span> Ativo'
     : '<span class="dot inactive"></span> Inativo';
 
-  /* consequências */
   var box   = document.getElementById('statusConseqBox');
   var title = document.getElementById('statusConseqTitle');
   var list  = document.getElementById('statusConseqList');
@@ -1021,7 +1176,6 @@ function openStatusModal(id, nome, email, roleLabel, ini, bg, clr, isAtivo) {
                       '<li>O histórico de atividades é mantido</li>';
   }
 
-  /* frase e botão */
   document.getElementById('statusConfirmSentence').innerHTML = isAtivo
     ? 'Deseja desativar <strong>' + nome + '</strong>? O status será alterado para <span class="badge-inline inactive">Inativo</span> imediatamente.'
     : 'Deseja reativar <strong>' + nome + '</strong>? O status será alterado para <span class="badge-inline active-badge">✅ Ativo</span> imediatamente.';
@@ -1032,8 +1186,6 @@ function openStatusModal(id, nome, email, roleLabel, ini, bg, clr, isAtivo) {
 
   openModal('modalStatus');
 }
-
-
 
 /* ─────────────────────────────────────────
    TABS
@@ -1058,34 +1210,30 @@ function phoneMask(input) {
 
 /* ─────────────────────────────────────────
    TOAST DE FEEDBACK DO SERVIDOR
-   (some automaticamente após 3s)
 ───────────────────────────────────────── */
 (function() {
   var t = document.getElementById('serverToast');
   if (t) setTimeout(function() { t.classList.remove('show'); }, 3000);
 })();
 
-//no final do <script>, após todas as funções
 document.addEventListener('DOMContentLoaded', function() {
-  filterTable();
+  renderPagina();
 });
 
 /* ── MODAL AVATAR ── */
 var avSelectedUrl  = null;
-var avUsuarioId    = null;  // id do usuário sendo editado
+var avUsuarioId    = null;
 
 function openAvatarModal(userId, ini, bg) {
   avUsuarioId = userId;
   avSelectedUrl = null;
 
-  // reseta tudo
   document.getElementById('avSuccess').classList.remove('show');
   document.getElementById('avError').classList.remove('show');
   document.getElementById('avFileInfo').classList.remove('show');
   document.getElementById('avFileInput').value = '';
   document.getElementById('avSaveBtn').disabled = true;
 
-  // mostra as iniciais do usuário no preview
   var ring = document.getElementById('avPreviewRing');
   var img  = document.getElementById('avPreviewImg');
   img.src = '';
@@ -1155,14 +1303,13 @@ function handleAvDrop(e) {
 		  btn.disabled = true;
 		  btn.textContent = '⏳ Salvando…';
 
-		  // redimensiona para 200x200 antes de enviar
 		  var canvas = document.createElement('canvas');
 		  canvas.width = 200; canvas.height = 200;
 		  var ctx = canvas.getContext('2d');
 		  var img = new Image();
 		  img.onload = function() {
 		    ctx.drawImage(img, 0, 0, 200, 200);
-		    var base64Reduzido = canvas.toDataURL('image/jpeg', 0.7); // qualidade 70%
+		    var base64Reduzido = canvas.toDataURL('image/jpeg', 0.7);
 
 		    var form = document.createElement('form');
 		    form.method = 'POST';

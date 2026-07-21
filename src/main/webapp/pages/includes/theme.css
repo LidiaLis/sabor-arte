@@ -1,0 +1,93 @@
+/* ============================================================
+   theme.css — Sistema de cores / temas do Sabor & Arte
+   Compartilhado por TODAS as páginas do painel.
+
+   Como usar em qualquer JSP:
+   1) Linkar no <head>:
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/pages/includes/theme.css">
+   2) O ThemeFilter já injeta a classe certa no body via request attribute:
+        <body class="${temaClasse}">
+      (temaClasse vem vazio pro tema Claro, "dark-mode" ou "high-contrast")
+   ============================================================ */
+
+  :root{--moss:#4a5e3a;--moss-dark:#2f3d25;--moss-light:#6b7f59;--sage:#a3b18a;--sage-light:#c8d5b9;--cream:#f5f0e8;--cream-dark:#e6dece;--warm-white:#faf8f4;--text-dark:#1e2718;--text-mid:#4a5240;--text-light:#8a9480;--gold:#c4a265;--gold-light:#dfc094;--published:#3a7a4a;--published-bg:#e8f4eb;--pending:#c4832a;--pending-bg:#fdf2e3;--error:#9b4444;--error-bg:#fdf0f0;--error-border:rgba(155,68,68,0.25);--sidebar-w:260px;}
+
+  /* ===== TEMA NOTURNO ===== */
+  body.dark-mode{
+    --cream:#1a1f16;--cream-dark:#252c1f;--warm-white:#1f2619;
+    --text-dark:#dde8d0;--text-mid:#a8b89a;--text-light:#8a9d7e;
+    --moss:#6b9c55;--moss-dark:#4a7a38;--moss-light:#88b870;
+    --sage:#4a5e3a;--sage-light:#5a7048;
+    --gold:#c4a265;--gold-light:#dfc094;
+  }
+  body.dark-mode .sidebar{background:#111810;}
+  body.dark-mode .sidebar .sb-title{color:#dde8d0;}
+  body.dark-mode .sidebar .sb-sub{color:#6b9c55;}
+  body.dark-mode .sidebar .sb-uname{color:#dde8d0;}
+  body.dark-mode .sidebar .sb-urole{color:#88b870;}
+  body.dark-mode .sidebar .sb-section{color:rgba(150,186,115,0.7);}
+  body.dark-mode .sidebar .sb-item{color:rgba(221,232,208,0.65);}
+  body.dark-mode .sidebar .sb-item:hover{color:#dde8d0;background:rgba(255,255,255,0.05);}
+  body.dark-mode .sidebar .sb-item.active{color:#dde8d0;background:rgba(107,156,85,0.14);}
+  body.dark-mode .sidebar .sb-logout{color:rgba(221,232,208,0.65);border-color:rgba(221,232,208,0.12);background:rgba(255,255,255,0.04);}
+  body.dark-mode .sidebar .sb-logout:hover{background:rgba(155,68,68,0.2);border-color:rgba(155,68,68,0.3);color:#e8a0a0;}
+  body.dark-mode .topbar{background:#1f2619;border-bottom-color:#252c1f;}
+  body.dark-mode .card{background:#1f2619;border-color:#252c1f;}
+  body.dark-mode .card-hd{border-bottom-color:#252c1f;}
+  body.dark-mode .tab-nav{background:#252c1f;}
+  body.dark-mode .tab-btn.active{background:#1f2619;}
+  body.dark-mode .fi,body.dark-mode .fs,body.dark-mode .fta{background:#252c1f;border-color:#2e3828;color:var(--text-dark);}
+  body.dark-mode .fi:focus,body.dark-mode .fs:focus{background:#1a1f16;}
+  body.dark-mode .fi::placeholder,body.dark-mode .fs::placeholder,body.dark-mode .fta::placeholder{color:var(--text-light);opacity:1;}
+  body.dark-mode .theme-card{background:#252c1f;border-color:#2e3828;color:var(--text-light);}
+  body.dark-mode .theme-card.selected{background:rgba(107,156,85,0.15);border-color:var(--moss);color:var(--moss);}
+  body.dark-mode .modal-box{background:#1f2619;}
+  body.dark-mode .tgl-slider{background:#2e3828;}
+  body.dark-mode .pw-bar{background:#2e3828;}
+
+  /* ===== TEMA ALTO CONTRASTE ===== */
+  body.high-contrast{
+    --cream:#000000;--cream-dark:#111111;--warm-white:#0a0a0a;
+    --text-dark:#FFFF00;--text-mid:#FFFF00;--text-light:#cccc00;
+    --moss:#FFFF00;--moss-dark:#cccc00;--moss-light:#FFFF00;
+    --sage:#888800;--sage-light:#aaaa00;
+    --gold:#FFFF00;--gold-light:#FFFF00;
+    --published:#FFFF00;--published-bg:#111100;
+    --pending:#FFFF00;--pending-bg:#111100;
+    --error:#ff4444;--error-bg:#110000;--error-border:#ff4444;
+  }
+  body.high-contrast .sidebar{background:#000;border-right:3px solid #FFFF00;}
+  body.high-contrast .sidebar .sb-title{color:#FFFF00;}
+  body.high-contrast .sidebar .sb-sub{color:#888800;}
+  body.high-contrast .sidebar .sb-uname{color:#FFFF00;}
+  body.high-contrast .sidebar .sb-urole{color:#aaaa00;}
+  body.high-contrast .sidebar .sb-avatar{background:#FFFF00;color:#000;}
+  body.high-contrast .sidebar .sb-section{color:#555500;}
+  body.high-contrast .sidebar .sb-item{color:rgba(255,255,0,0.7);border-left-color:transparent;}
+  body.high-contrast .sidebar .sb-item:hover{background:rgba(255,255,0,0.1);color:#FFFF00;border-left-color:#FFFF00;}
+  body.high-contrast .sidebar .sb-item.active{background:rgba(255,255,0,0.15);color:#FFFF00;border-left-color:#FFFF00;}
+  body.high-contrast .sidebar .sb-badge-count{background:#FFFF00;color:#000;}
+  body.high-contrast .sidebar .sb-logout{color:rgba(255,255,0,0.7);border-color:rgba(255,255,0,0.3);background:rgba(255,255,0,0.05);}
+  body.high-contrast .sidebar .sb-logout:hover{background:rgba(255,68,68,0.2);border-color:#ff4444;color:#ff8888;}
+  body.high-contrast .topbar{background:#000;border-bottom:3px solid #FFFF00;}
+  body.high-contrast .card{background:#0a0a0a;border:2px solid #FFFF00;}
+  body.high-contrast .card-hd{border-bottom:2px solid #FFFF00;}
+  body.high-contrast .tab-nav{background:#111;}
+  body.high-contrast .tab-btn{color:#FFFF00;}
+  body.high-contrast .tab-btn.active{background:#FFFF00;color:#000;}
+  body.high-contrast .fi,body.high-contrast .fs,body.high-contrast .fta{background:#000;border:2px solid #FFFF00;color:#FFFF00;}
+  body.high-contrast .fi::placeholder,body.high-contrast .fs::placeholder{color:#888800;}
+  body.high-contrast .fi:focus,body.high-contrast .fs:focus{box-shadow:0 0 0 3px rgba(255,255,0,0.3);}
+  body.high-contrast .btn-primary{background:#FFFF00;color:#000;border:2px solid #FFFF00;}
+  body.high-contrast .btn-ghost,body.high-contrast .btn-outline{color:#FFFF00;border-color:#FFFF00;}
+  body.high-contrast .btn-ghost:hover,body.high-contrast .btn-outline:hover{background:#FFFF00;color:#000;}
+  body.high-contrast .theme-card{background:#000;border:2px solid #FFFF00;color:#FFFF00;}
+  body.high-contrast .theme-card.selected{background:#FFFF00;color:#000;}
+  body.high-contrast .modal-box{background:#0a0a0a;border:3px solid #FFFF00;}
+  body.high-contrast .tgl-slider{background:#333;}
+  body.high-contrast .tgl input:checked+.tgl-slider{background:#FFFF00;}
+  body.high-contrast .tgl-slider::before{background:#FFFF00;}
+  body.high-contrast .tgl input:checked+.tgl-slider::before{background:#000;}
+  body.high-contrast .section-sep{border-bottom-color:#FFFF00;color:#FFFF00;}
+  body.high-contrast .toggle-row{border-bottom-color:#333;}
+  body.high-contrast .pw-bar{background:#333;}

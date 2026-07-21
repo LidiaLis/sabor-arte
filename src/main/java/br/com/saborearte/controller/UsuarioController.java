@@ -53,8 +53,8 @@ public class UsuarioController extends HttpServlet {
         // PRG: resgata mensagens da sessão e remove logo em seguida
         String sucesso = (String) session.getAttribute("sucesso");
         String erro    = (String) session.getAttribute("erro");
-        if (sucesso != null) { request.setAttribute("sucesso", sucesso); session.removeAttribute("sucesso"); }
-        if (erro    != null) { request.setAttribute("erro",    erro);    session.removeAttribute("erro");    }
+        if (sucesso != null) { request.setAttribute("msgSucesso", sucesso); session.removeAttribute("sucesso"); }
+        if (erro    != null) { request.setAttribute("msgErro",    erro);    session.removeAttribute("erro");    }
 
         try {
             List<Usuario> usuarios = usuarioDAO.listarUsuarios();
@@ -81,8 +81,9 @@ public class UsuarioController extends HttpServlet {
 
         try {
             switch (acao != null ? acao : "") {
-                case "cadastrar"  -> cadastrar(request, response);   // público (tela de login)
-                case "atualizar"  -> atualizar(request, response);   // painel admin
+            case "cadastrar"      -> cadastrar(request, response);       // público (tela de login)
+            case "cadastrarAdmin" -> cadastrarAdmin(request, response);  // painel admin                
+            case "atualizar"  -> atualizar(request, response);   // painel admin
                 case "status"    -> alterarStatus(request, response);     // painel admin
                 case "foto" -> salvarFoto(request, response); // painel admin
                 default           -> response.sendRedirect(request.getContextPath() + "/LoginController");
@@ -95,120 +96,199 @@ public class UsuarioController extends HttpServlet {
     }
 
     // ===== AÇÃO: CADASTRAR (público — vem do modal da tela de login) =====
+private void cadastrar(HttpServletRequest request, HttpServletResponse response)
+        throws Exception {
 
-    private void cadastrar(HttpServletRequest request, HttpServletResponse response)
-            throws Exception {
-    	System.out.println("1 - Entrou no cadastrar");
-        String nome  = request.getParameter("nome");
-        String email = request.getParameter("email");
-        String senha = request.getParameter("senha");
-        System.out.println("2 - Nome: " + nome);
-        System.out.println("3 - Email: " + email);
-        System.out.println("4 - Senha: " + senha);
-     // adicione no topo do método cadastrar
-        String emailRegex = "^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$";
-        if (!email.trim().matches(emailRegex)) {
-            String destino = (request.getSession(false) != null && 
-                              request.getSession(false).getAttribute("usuarioLogado") != null)
-                             ? "/UsuarioController" : "/LoginController";
-            request.getSession().setAttribute("erro", "E-mail inválido. Use um formato válido como usuario@dominio.com");
-            response.sendRedirect(request.getContextPath() + destino);
-            return;
-        }System.out.println("5 - Email válido");
-        
-        // Validações básicas no servidor
-        if (nome == null || nome.trim().isEmpty() ||
-            email == null || email.trim().isEmpty() ||
-            senha == null || senha.trim().isEmpty()) {
-            request.getSession().setAttribute("erro", "Preencha todos os campos.");
-            response.sendRedirect(request.getContextPath() + "/LoginController");
-            return;
-        }
+    String nome  = request.getParameter("nome");
+    String email = request.getParameter("email");
+    String senha = request.getParameter("senha");
 
-        if (senha.length() < 8) {
-            request.getSession().setAttribute("erro", "A senha deve ter no mínimo 8 caracteres.");
-            response.sendRedirect(request.getContextPath() + "/LoginController");
-            return;
-        }
+    String emailRegex = "^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$";
 
-        if (usuarioDAO.emailJaExiste(email.trim())) {
-            request.getSession().setAttribute("erro", "Este e-mail já está cadastrado.");
-            response.sendRedirect(request.getContextPath() + "/LoginController");
-            return;
-        }
-
-        // Monta o usuário com defaults: VISITANTE + ATIVO
-        // normalizarNome e gerarUsername são chamados dentro de cadastrarNovo()
-        Usuario novo = new Usuario();
-        novo.setNome_usuario(nome.trim());
-        novo.setEmail_usuario(email.trim());
-        novo.setSenha_usuario(senha);
-        // tipo_usuario  = VISITANTE (default do model)
-        // status_usuario = ATIVO    (default do model)
-        System.out.println("Chamando DAO...");
-        usuarioDAO.cadastrarUsuario(novo);
-
-        System.out.println("Novo usuário cadastrado: " + email.trim());
-        HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute("usuarioLogado") != null) {
-            session.setAttribute("sucesso", "Usuário criado com sucesso!");
-            response.sendRedirect(request.getContextPath() + "/UsuarioController");
-        } else {
-            session = request.getSession(true);
-            session.setAttribute("sucesso", "Conta criada! Faça login para continuar.");
-            response.sendRedirect(request.getContextPath() + "/LoginController");
-        }
+    if (nome == null || nome.trim().isEmpty() ||
+        email == null || email.trim().isEmpty() ||
+        senha == null || senha.trim().isEmpty()) {
+        request.getSession().setAttribute("erro", "Preencha todos os campos.");
+        response.sendRedirect(request.getContextPath() + "/LoginController");
+        return;
     }
 
+    if (!email.trim().matches(emailRegex)) {
+        request.getSession().setAttribute("erro", "E-mail inválido. Use um formato válido como usuario@dominio.com");
+        response.sendRedirect(request.getContextPath() + "/LoginController");
+        return;
+    }
+
+    if (senha.length() < 8) {
+        request.getSession().setAttribute("erro", "A senha deve ter no mínimo 8 caracteres.");
+        response.sendRedirect(request.getContextPath() + "/LoginController");
+        return;
+    }
+
+    if (usuarioDAO.emailJaExiste(email.trim())) {
+        request.getSession().setAttribute("erro", "Este e-mail já está cadastrado.");
+        response.sendRedirect(request.getContextPath() + "/LoginController");
+        return;
+    }
+
+    Usuario novo = new Usuario();
+    novo.setNome_usuario(nome.trim());
+    novo.setEmail_usuario(email.trim());
+    novo.setSenha_usuario(senha);
+
+    usuarioDAO.cadastrarUsuario(novo);
+
+    HttpSession session = request.getSession(true);
+    session.setAttribute("sucesso", "Conta criada! Faça login para continuar.");
+    response.sendRedirect(request.getContextPath() + "/LoginController");
+}    
+    // ===== AÇÃO: CADASTRAR ADMIN(Painel admin) =====
+
+private void cadastrarAdmin(HttpServletRequest request, HttpServletResponse response)
+        throws Exception {
+
+    System.out.println("========== INICIO CADASTRAR ADMIN ==========");
+
+    HttpSession session = request.getSession(false);
+    if (!isAdmin(session)) {
+        System.out.println(">>> BLOQUEADO: sessão não é admin");
+        response.sendRedirect(request.getContextPath() + "/LoginController");
+        return;
+    }
+
+    String nome  = request.getParameter("nome");
+    String email = request.getParameter("email");
+    String senha = request.getParameter("senha");
+    String role  = request.getParameter("role");
+
+    System.out.println("nome=[" + nome + "] email=[" + email + "] senha=[" + senha + "] role=[" + role + "]");
+
+    if (nome == null || nome.trim().isEmpty() ||
+        email == null || email.trim().isEmpty() ||
+        senha == null || senha.trim().isEmpty()) {
+        System.out.println(">>> FALHOU: campo vazio");
+        session.setAttribute("erro", "Preencha todos os campos.");
+        response.sendRedirect(request.getContextPath() + "/UsuarioController");
+        return;
+    }
+
+    String emailRegex = "^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$";
+    if (!email.trim().matches(emailRegex)) {
+        System.out.println(">>> FALHOU: e-mail não bate com regex");
+        session.setAttribute("erro", "E-mail inválido.");
+        response.sendRedirect(request.getContextPath() + "/UsuarioController");
+        return;
+    }
+
+    if (senha.length() < 8) {
+        System.out.println(">>> FALHOU: senha curta, tamanho=" + senha.length());
+        session.setAttribute("erro", "A senha deve ter no mínimo 8 caracteres.");
+        response.sendRedirect(request.getContextPath() + "/UsuarioController");
+        return;
+    }
+
+    boolean existe = usuarioDAO.emailJaExiste(email.trim());
+    System.out.println("emailJaExiste retornou: " + existe);
+
+    if (existe) {
+        System.out.println(">>> FALHOU: e-mail já cadastrado. Setando 'erro' na sessão e redirecionando.");
+        session.setAttribute("erro", "Este e-mail já está cadastrado.");
+        response.sendRedirect(request.getContextPath() + "/UsuarioController");
+        return;
+    }
+
+    System.out.println(">>> Passou em tudo. Chamando cadastrarUsuario...");
+
+    Usuario novo = new Usuario();
+    novo.setNome_usuario(nome.trim());
+    novo.setEmail_usuario(email.trim());
+    novo.setSenha_usuario(senha);
+    if (role != null && !role.isEmpty()) {
+        String tipoEnum = "author".equals(role) ? "AUTOR"
+                        : "viewer".equals(role) ? "VISITANTE"
+                        : role.toUpperCase();
+        novo.setTipo_usuario(TipoUsuario.valueOf(tipoEnum));
+    }
+
+    usuarioDAO.cadastrarUsuario(novo);
+    System.out.println(">>> cadastrarUsuario executado sem exceção.");
+
+    session.setAttribute("sucesso", "Usuário criado com sucesso!");
+    response.sendRedirect(request.getContextPath() + "/UsuarioController");
+
+    System.out.println("========== FIM CADASTRAR ADMIN ==========");
+}    
     // ===== AÇÃO: ATUALIZAR (painel admin) =====
 
-    private void atualizar(HttpServletRequest request, HttpServletResponse response)
-            throws Exception {
+private void atualizar(HttpServletRequest request, HttpServletResponse response)
+        throws Exception {
 
-        HttpSession session = request.getSession(false);
-        if (!isAdmin(session)) {
-            response.sendRedirect(request.getContextPath() + "/LoginController");
-            return;
-        }
-
-        int    id     = Integer.parseInt(request.getParameter("id"));
-        String nome   = request.getParameter("nome");
-        String email  = request.getParameter("email");
-        String tipo   = request.getParameter("role");
-        String status = request.getParameter("status_usuario");
-        String senha  = request.getParameter("novaSenha");
-
-        Usuario usuario = usuarioDAO.buscarUsuarioPorId(id);
-        if (usuario == null) {
-            request.getSession().setAttribute("erro", "Usuário não encontrado.");
-            response.sendRedirect(request.getContextPath() + "/UsuarioController");
-            return;
-        }
-
-        // Verifica se o novo e-mail já pertence a outro usuário
-        if (usuarioDAO.emailJaExiste(email.trim(), id)) {
-            request.getSession().setAttribute("erro", "Este e-mail já está em uso por outro usuário.");
-            response.sendRedirect(request.getContextPath() + "/UsuarioController");
-            return;
-        }
-
-        usuario.setNome_usuario(nome.trim());
-        usuario.setEmail_usuario(email.trim());
-        if (tipo != null && !tipo.trim().isEmpty()) {
-            usuario.setTipo_usuario(TipoUsuario.valueOf(tipo.toUpperCase()));
-        }
-        if (status != null && !status.trim().isEmpty()) {
-            usuario.setStatus_usuario(StatusUsuario.valueOf(status.toUpperCase()));
-        }
-        if (senha != null && !senha.trim().isEmpty()) {
-            usuario.setSenha_usuario(senha);
-        }
-
-        usuarioDAO.atualizarUsuario(usuario);
-
-        request.getSession().setAttribute("sucesso", "Usuário atualizado com sucesso!");
-        response.sendRedirect(request.getContextPath() + "/UsuarioController");
+    HttpSession session = request.getSession(false);
+    if (!isAdmin(session)) {
+        response.sendRedirect(request.getContextPath() + "/LoginController");
+        return;
     }
+
+    int    id     = Integer.parseInt(request.getParameter("id"));
+    String nome   = request.getParameter("nome");
+    String email  = request.getParameter("email");
+    String tipo   = request.getParameter("role");
+    String status = request.getParameter("status_usuario");
+    String senha  = request.getParameter("novaSenha");
+    String fotoBase64 = request.getParameter("fotoBase64"); // NOVO
+
+    Usuario usuario = usuarioDAO.buscarUsuarioPorId(id);
+    if (usuario == null) {
+        request.getSession().setAttribute("erro", "Usuário não encontrado.");
+        response.sendRedirect(request.getContextPath() + "/UsuarioController");
+        return;
+    }
+
+    if (usuarioDAO.emailJaExiste(email.trim(), id)) {
+        request.getSession().setAttribute("erro", "Este e-mail já está em uso por outro usuário.");
+        response.sendRedirect(request.getContextPath() + "/UsuarioController");
+        return;
+    }
+
+    usuario.setNome_usuario(nome.trim());
+    usuario.setEmail_usuario(email.trim());
+    if (tipo != null && !tipo.trim().isEmpty()) {
+        usuario.setTipo_usuario(TipoUsuario.valueOf(tipo.toUpperCase()));
+    }
+    if (status != null && !status.trim().isEmpty()) {
+        usuario.setStatus_usuario(StatusUsuario.valueOf(status.toUpperCase()));
+    }
+    if (senha != null && !senha.trim().isEmpty()) {
+        usuario.setSenha_usuario(senha);
+    }
+
+    // NOVO: processa foto se veio no request
+    if (fotoBase64 != null && !fotoBase64.isEmpty()) {
+        String nomeArquivo = "avatar_" + id + ".jpg";
+        String pastaRelativa = "/uploads/avatares/";
+        String pastaAbsoluta = getServletContext().getRealPath(pastaRelativa);
+
+        java.io.File pasta = new java.io.File(pastaAbsoluta);
+        if (!pasta.exists()) pasta.mkdirs();
+
+        String dadosBase64 = fotoBase64.replaceAll("^data:image/[a-z]+;base64,", "");
+        byte[] bytes = java.util.Base64.getDecoder().decode(dadosBase64);
+        java.nio.file.Files.write(java.nio.file.Paths.get(pastaAbsoluta + nomeArquivo), bytes);
+
+        usuario.setFoto_usuario(pastaRelativa + nomeArquivo); // confere o nome do setter no seu model
+    }
+
+    usuarioDAO.atualizarUsuario(usuario);
+
+    // Atualiza sessão se o admin editou a própria conta
+    Usuario logadoAtual = (Usuario) session.getAttribute("usuarioLogado");
+    if (logadoAtual != null && logadoAtual.getId_usuario() == id) {
+        session.setAttribute("usuarioLogado", usuario);
+    }
+
+    request.getSession().setAttribute("sucesso", "Usuário atualizado com sucesso!");
+    response.sendRedirect(request.getContextPath() + "/UsuarioController");
+}
     
     private void salvarFoto(HttpServletRequest request, HttpServletResponse response)
             throws Exception {

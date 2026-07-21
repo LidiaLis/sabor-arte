@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabor & Arte — Receitas</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --moss:         #4a5e3a;
+    --moss-dark:    #2f3d25;
+    --moss-mid:     #3d5030;
+    --moss-light:   #6b7f59;
+    --sage:         #a3b18a;
+    --sage-light:   #c8d5b9;
+    --cream:        #f5f0e8;
+    --cream-dark:   #e6dece;
+    --warm-white:   #faf8f4;
+    --text-dark:    #1e2718;
+    --text-mid:     #4a5240;
+    --text-light:   #8a9480;
+    --gold:         #c4a265;
+    --gold-light:   #dfc094;
+    --gold-pale:    #f5ead6;
+    --pending:      #c4832a;
+    --pending-bg:   #fdf2e3;
+    --published:    #3a7a4a;
+    --published-bg: #e8f4eb;
+    --draft:        #6a7a8a;
+    --draft-bg:     #eef1f4;
+    --archived:     #8a7a6a;
+    --archived-bg:  #f4f0ec;
+    --sidebar-w:    260px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    overflow-x: hidden;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--moss-dark);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 200% 60% at 50% 0%, rgba(74,94,58,0.5) 0%, transparent 60%),
+      radial-gradient(ellipse 100% 40% at 50% 100%, rgba(163,177,138,0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .sidebar-brand {
+    padding: 28px 24px 22px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    position: relative; z-index: 1;
+  }
+
+  .brand-row { display: flex; align-items: center; gap: 12px; }
+
+  .brand-badge {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--moss-light), var(--sage));
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+
+  .brand-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 700;
+    color: var(--cream); display: block; line-height: 1;
+  }
+
+  .brand-sub {
+    font-size: 10px; color: var(--sage);
+    text-transform: uppercase; letter-spacing: 1.2px;
+    margin-top: 3px; display: block; font-weight: 300;
+  }
+
+  .sidebar-user {
+    padding: 18px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    display: flex; align-items: center; gap: 12px;
+    position: relative; z-index: 1;
+  }
+
+  .user-avatar {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800; font-size: 13px;
+    color: var(--moss-dark); flex-shrink: 0;
+  }
+
+  .user-name { font-size: 13px; font-weight: 600; color: var(--cream); }
+  .user-role-badge { font-size: 10px; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 300; }
+
+  .sidebar-nav { flex: 1; padding: 16px 0; position: relative; z-index: 1; }
+
+  .nav-section-label {
+    font-size: 9px; text-transform: uppercase; letter-spacing: 1.8px;
+    color: rgba(163,177,138,0.5); padding: 16px 24px 6px; font-weight: 500;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 24px;
+    color: rgba(245,240,232,0.7);
+    text-decoration: none; font-size: 14px; font-weight: 400;
+    cursor: pointer; transition: all 0.2s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { color: var(--cream); background: rgba(255,255,255,0.06); border-left-color: var(--sage); }
+  .nav-item.active { color: var(--cream); background: rgba(163,177,138,0.15); border-left-color: var(--sage-light); font-weight: 500; }
+
+  .nav-icon { width: 22px; text-align: center; font-size: 16px; flex-shrink: 0; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--gold); color: var(--moss-dark);
+    font-family: 'Nunito', sans-serif;
+    font-size: 10px; font-weight: 800;
+    padding: 2px 7px; border-radius: 10px;
+  }
+
+  .sidebar-bottom {
+    padding: 16px 24px 24px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    position: relative; z-index: 1;
+  }
+
+  .btn-logout {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 10px 16px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 2px;
+    color: rgba(245,240,232,0.7);
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-logout:hover { background: rgba(155,68,68,0.2); border-color: rgba(155,68,68,0.3); color: #e8a0a0; }
+
+  /* ===== MAIN ===== */
+  .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+  .topbar {
+    background: var(--warm-white); border-bottom: 1px solid var(--cream-dark);
+    padding: 0 40px; height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+
+  .page-crumb { font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 6px; font-weight: 300; }
+  .page-crumb .current { color: var(--moss); font-weight: 500; }
+
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+
+  .notif-btn {
+    width: 36px; height: 36px; background: var(--cream);
+    border: 1.5px solid var(--cream-dark); border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px; position: relative; transition: all 0.2s;
+  }
+  .notif-btn:hover { background: var(--cream-dark); }
+  .notif-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background: var(--gold); border-radius: 50%; border: 2px solid var(--warm-white); }
+
+  /* ===== CONTENT ===== */
+  .content { flex: 1; padding: 24px 40px; }
+
+  .section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 500; color: var(--text-dark); line-height: 1; }
+  .section-title em { font-style: italic; color: var(--moss); }
+
+  /* ===== TOOLBAR (busca + filtro em listbox) ===== */
+  .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .search-bar {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--warm-white); border: 1.5px solid var(--cream-dark);
+    border-radius: 2px; padding: 8px 14px; flex: 1; max-width: 320px;
+  }
+  .search-bar:focus-within { border-color: var(--moss-light); }
+  .search-bar input { border: none; background: none; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-dark); outline: none; flex: 1; }
+  .search-bar input::placeholder { color: var(--text-light); }
+  .filter-select {
+    background: var(--warm-white); border: 1.5px solid var(--cream-dark);
+    border-radius: 2px; padding: 8px 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-dark);
+    cursor: pointer; outline: none; transition: border-color .2s;
+  }
+  .filter-select:focus { border-color: var(--moss-light); }
+  .toolbar-spacer { flex: 1; }
+
+  /* ===== RECEITAS GRID ===== */
+  .recipes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
+
+  .recipe-card {
+    background: var(--warm-white);
+    border: 1px solid var(--cream-dark);
+    border-radius: 6px; overflow: hidden;
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+  .recipe-card:hover { transform: translateY(-5px); box-shadow: 0 20px 48px rgba(47,61,37,0.16); }
+
+  .recipe-img-wrap { position: relative; overflow: hidden; height: 118px; }
+  .recipe-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .recipe-body { padding: 12px 16px 10px; }
+  .recipe-cat { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--moss-light); font-weight: 600; margin-bottom: 4px; }
+  .recipe-name { font-family: 'Playfair Display', serif; font-size: 14px; font-weight: 700; color: var(--text-dark); line-height: 1.3; margin-bottom: 8px; }
+
+  .recipe-author { display: flex; align-items: center; gap: 7px; }
+  .author-dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif;
+    font-size: 9px; font-weight: 800; color: white; flex-shrink: 0;
+  }
+  .author-name { font-size: 12px; color: var(--text-mid); font-weight: 400; }
+
+  .recipe-footer {
+    display: flex; align-items: center; gap: 6px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--cream-dark);
+    background: var(--cream);
+  }
+  .recipe-status { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-mid); margin-right: auto; }
+  .status-dot-sm { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .active-dot { background: var(--published); }
+  .inactive-dot { background: #9b4444; }
+  .footer-btn {
+    padding: 6px 12px; border: 1.5px solid var(--cream-dark);
+    background: var(--warm-white); border-radius: 2px;
+    font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500;
+    color: var(--text-mid); cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;
+  }
+  .footer-btn:hover { border-color: var(--moss); color: var(--moss); background: rgba(74,94,58,0.05); }
+  .footer-btn.reactivate:hover { border-color: var(--published); background: var(--published-bg); }
+  .footer-btn.toggle-status:not(.reactivate):hover { border-color: #9b4444; color: #9b4444; background: rgba(155,68,68,0.06); }
+
+  /* ===== EMPTY STATE ===== */
+  .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-light); }
+  .empty-state .empty-icon { font-size: 44px; margin-bottom: 14px; }
+  .empty-state h3 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--text-dark); margin-bottom: 6px; }
+  .empty-state p { font-size: 13px; font-weight: 300; }
+
+  /* ===== PAGINAÇÃO (mesmo padrão da tela de categorias) ===== */
+  .pagination { display: flex; align-items: center; justify-content: space-between; padding: 10px 4px 4px; margin-top: 4px; }
+  .pag-info { font-size: 12px; color: var(--text-light); font-weight: 300; }
+  .pag-btns { display: flex; gap: 4px; }
+  .pag-btn {
+    min-width: 32px; height: 32px; padding: 0 8px;
+    border: 1.5px solid var(--cream-dark); background: var(--warm-white);
+    border-radius: 2px; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; cursor: pointer; color: var(--text-mid);
+    font-family: 'Nunito', sans-serif; font-weight: 700; transition: all 0.15s;
+  }
+  .pag-btn:hover:not(:disabled) { border-color: var(--moss); color: var(--moss); }
+  .pag-btn.active { background: var(--moss); border-color: var(--moss); color: var(--cream); }
+  .pag-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 1100px) { .recipes-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 768px)  { .sidebar { display: none; } .main { margin-left: 0; } .content { padding: 24px 20px; } .topbar { padding: 0 20px; } .pagination { flex-direction: column; gap: 10px; align-items: flex-start; } }
+  @media (max-width: 580px)  { .recipes-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ADMIN (estático) ===== -->
+<aside class="sidebar" id="sidebar" data-role="admin">
+
+    <div class="sidebar-brand">
+        <div class="brand-row">
+            <div class="brand-badge">🌿</div>
+            <div>
+                <span class="brand-title">Sabor &amp; Arte</span>
+                <span class="brand-sub">Blog Editorial</span>
+            </div>
+        </div>
+    </div>
+
+    <a href="perfil-admin.html" class="sidebar-user" title="Meu perfil">
+        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+			<img src="/saborearte/img/g.png"
+			     style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+			     alt="A">        
+	    </div>
+        <div class="user-info">
+            <div class="user-name">Ana Silva</div>
+            <div class="user-role-badge">👑 Administrador</div>
+        </div>
+    </a>
+
+    <nav class="sidebar-nav">
+
+        <!-- ===== SEÇÃO VISÃO GERAL ===== -->
+        <div class="nav-section-label">Principal</div>
+
+        <a href="dashboard-admin.html" class="nav-item ">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </a>
+
+        <!-- ===== SEÇÃO GESTÃO ===== -->
+        <div class="nav-section-label">Gestão</div>
+
+        <a href="/saborearte/UsuarioController" class="nav-item">
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">Usuários</span>
+        </a>
+
+        <a href="/saborearte/CategoriaController" class="nav-item">
+            <span class="nav-icon">🏷️</span>
+            <span class="nav-label">Categorias</span>
+        </a>
+
+        <a href="receita-admin.html" class="nav-item active">
+            <span class="nav-icon">📝</span>
+            <span class="nav-label">Receitas</span>
+        </a>
+
+        <!-- ===== SEÇÃO ANÁLISE ===== -->
+        <div class="nav-section-label">Análise</div>
+
+        <a href="relatorio-admin.html" class="nav-item">
+            <span class="nav-icon">📈</span>
+            <span class="nav-label">Relatórios</span>
+        </a>
+
+        <a href="log-admin.html" class="nav-item">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-label">Auditoria</span>
+        </a>
+
+        <!-- ===== SEÇÃO CONTA ===== -->
+        <div class="nav-section-label">Conta</div>
+
+        <a href="/saborearte/ConfiguracaoController" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Configurações</span>
+        </a>
+
+    </nav>
+	
+	<div class="sidebar-bottom">
+	    <a href="/saborearte/LogoutController" class="btn-logout">
+	        <span class="nav-icon">🚪</span>
+	        <span>Sair</span>
+	    </a>
+	</div>
+
+</aside>
+
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-crumb">
+      <span>Gestão</span>
+      <span style="color:var(--cream-dark)">/</span>
+      <span class="current">Receitas</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="section-header">
+      <div>
+        <div class="section-title">Todas as <em>Receitas</em></div>
+      </div>
+    </div>
+
+    <!-- ===== TOOLBAR: BUSCA + FILTRO (listbox) ===== -->
+    <div class="toolbar">
+      <div class="search-bar">
+        <span style="font-size:14px;color:var(--text-light)">🔍</span>
+        <input type="text" id="campoBusca" placeholder="Buscar receitas…">
+      </div>
+      <select class="filter-select" id="filterStatus">
+        <option value="ativo" selected>Ativo</option>
+        <option value="inativo">Inativo</option>
+        <option value="">Todos os status</option>
+      </select>
+      <!--
+        Em produção: SELECT id_categoria, nome_categoria, emoji_categoria FROM categoria
+        (aqui os valores estão fixos, extraídos das categorias já usadas nos cards abaixo)
+      -->
+      <select class="filter-select" id="filterCategoria">
+        <option value="" selected>Todas as categorias</option>
+        <option value="Massas">🍝 Massas</option>
+        <option value="Sobremesas">🎂 Sobremesas</option>
+        <option value="Saladas">🥗 Saladas</option>
+        <option value="Sopas">🥣 Sopas</option>
+        <option value="Café da Manhã">🥞 Café da Manhã</option>
+        <option value="Confeitaria">🍬 Confeitaria</option>
+        <option value="Tortas">🥧 Tortas</option>
+        <option value="Bowls">🫐 Bowls</option>
+        <option value="Frutos do Mar">🐟 Frutos do Mar</option>
+      </select>
+      <div class="toolbar-spacer"></div>
+    </div>
+
+    <!-- GRID -->
+    <div class="recipes-grid" id="recipesGrid">
+
+      <div class="recipe-card" data-status="pendente" data-name="Risoto de Cogumelos Selvagens" data-ativo="true" data-cat="Massas">
+        <div class="recipe-img-wrap">
+          <img src="https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=600&q=80" alt="Risoto">
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-cat">🍝 Massas</div>
+          <div class="recipe-name">Risoto de Cogumelos Selvagens</div>
+          <div class="recipe-author">
+            <div class="author-dot" style="background:linear-gradient(135deg,#4a5e3a,#6b7f59)">CA</div>
+            <span class="author-name">Carlos Andrade</span>
+          </div>
+        </div>
+        <div class="recipe-footer">
+          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
+			<button class="footer-btn" onclick="window.location.href='receita-detalhe-admin.html'">👁 Ver</button>          
+			<button class="footer-btn toggle-status">🚫 Inativar</button>
+        </div>
+      </div>
+
+      <div class="recipe-card" data-status="publicado" data-name="Bolo de Cenoura com Calda de Chocolate" data-ativo="true" data-cat="Sobremesas">
+        <div class="recipe-img-wrap">
+          <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&q=80" alt="Bolo">
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-cat">🎂 Sobremesas</div>
+          <div class="recipe-name">Bolo de Cenoura com Calda de Chocolate</div>
+          <div class="recipe-author">
+            <div class="author-dot" style="background:linear-gradient(135deg,#c4a265,#dfc094)">MA</div>
+            <span class="author-name">Maria Andrade</span>
+          </div>
+        </div>
+        <div class="recipe-footer">
+          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
+          <button class="footer-btn">👁 Ver</button>
+          <button class="footer-btn toggle-status">🚫 Inativar</button>
+        </div>
+      </div>
+
+
+      <div class="recipe-card" data-status="pendente" data-name="Salada Mediterrânea Fresca com Feta" data-ativo="true" data-cat="Saladas">
+        <div class="recipe-img-wrap">
+          <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80" alt="Salada">
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-cat">🥗 Saladas</div>
+          <div class="recipe-name">Salada Mediterrânea Fresca com Feta</div>
+          <div class="recipe-author">
+            <div class="author-dot" style="background:linear-gradient(135deg,#7a6aa0,#9a8ac0)">JP</div>
+            <span class="author-name">João Pedro</span>
+          </div>
+        </div>
+        <div class="recipe-footer">
+          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
+          <button class="footer-btn">👁 Ver</button>
+          <button class="footer-btn toggle-status">🚫 Inativar</button>
+        </div>
+      </div>
+
+      <div class="recipe-card" data-status="publicado" data-name="Sopa de Abóbora Cremosa com Gengibre" data-ativo="true" data-cat="Sopas">
+        <div class="recipe-img-wrap">
+          <img src="https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=80" alt="Sopa">
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-cat">🥣 Sopas</div>
+          <div class="recipe-name">Sopa de Abóbora Cremosa com Gengibre</div>
+          <div class="recipe-author">
+            <div class="author-dot" style="background:linear-gradient(135deg,#c46042,#e08060)">FT</div>
+            <span class="author-name">Fernanda Torres</span>
+          </div>
+        </div>
+        <div class="recipe-footer">
+          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
+          <button class="footer-btn">👁 Ver</button>
+          <button class="footer-btn toggle-status">🚫 Inativar</button>
+        </div>
+      </div>
+
+      <div class="recipe-card" data-status="rascunho" data-name="Espaguete ao Pesto de Manjericão Fresco" data-ativo="true" data-cat="Massas">
+        <div class="recipe-img-wrap">
+          <img src="https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=600&q=80" alt="Espaguete">
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-cat">🍝 Massas</div>
+          <div class="recipe-name">Espaguete ao Pesto de Manjericão Fresco</div>
+          <div class="recipe-author">
+            <div class="author-dot" style="background:linear-gradient(135deg,#3a7a8a,#5a9aaa)">RB</div>
+            <span class="author-name">Rafael Braga</span>
+          </div>
+        </div>
+        <div class="recipe-footer">
+          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
+          <button class="footer-btn">👁 Ver</button>
+          <button class="footer-btn toggle-status">🚫 Inativar</button>
+        </div>
+      </div>
+
+      <div class="recipe-card" data-status="publicado" data-name="Tapioca Recheada com Queijo Coalho e Mel" data-ativo="true" data-cat="Café da Manhã">
+        <div class="recipe-img-wrap">
+          <img src="https://images.unsplash.com/photo-1587314168485-3236d6710814?w=600&q=80" alt="Tapioca">
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-cat">🥞 Café da Manhã</div>
+          <div class="recipe-name">Tapioca Recheada com Queijo Coalho e Mel</div>
+          <div class="recipe-author">
+            <div class="author-dot" style="background:linear-gradient(135deg,#a05a3a,#c07a5a)">AM</div>
+            <span class="author-name">Ana Moura</span>
+          </div>
+        </div>
+        <div class="recipe-footer">
+          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
+          <button class="footer-btn">👁 Ver</button>
+          <button class="footer-btn toggle-status">🚫 Inativar</button>
+        </div>
+      </div>
+
+      <div class="recipe-card" data-status="publicado" data-name="Brigadeiro Gourmet de Pistache" data-ativo="false" data-cat="Confeitaria">
+        <div class="recipe-img-wrap">
+          <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&q=80" alt="Brigadeiro">
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-cat">🍬 Confeitaria</div>
+          <div class="recipe-name">Brigadeiro Gourmet de Pistache</div>
+          <div class="recipe-author">
+            <div class="author-dot" style="background:linear-gradient(135deg,#c4a265,#dfc094)">MA</div>
+            <span class="author-name">Maria Andrade</span>
+          </div>
+        </div>
+        <div class="recipe-footer">
+          <span class="recipe-status"><span class="status-dot-sm inactive-dot"></span>Inativa</span>
+          <button class="footer-btn">👁 Ver</button>
+          <button class="footer-btn toggle-status reactivate">🔄 Ativar</button>
+        </div>
+      </div>
+
+      <div class="recipe-card" data-status="pendente" data-name="Quiche de Alho Poró e Gruyère" data-ativo="true" data-cat="Tortas">
+        <div class="recipe-img-wrap">
+          <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80" alt="Quiche">
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-cat">🥧 Tortas</div>
+          <div class="recipe-name">Quiche de Alho Poró e Gruyère</div>
+          <div class="recipe-author">
+            <div class="author-dot" style="background:linear-gradient(135deg,#6a9a5a,#8aba7a)">PL</div>
+            <span class="author-name">Paula Lima</span>
+          </div>
+        </div>
+        <div class="recipe-footer">
+          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
+          <button class="footer-btn">👁 Ver</button>
+          <button class="footer-btn toggle-status">🚫 Inativar</button>
+        </div>
+      </div>
+
+      <div class="recipe-card" data-status="rascunho" data-name="Açaí na Tigela com Granola Artesanal" data-ativo="true" data-cat="Bowls">
+        <div class="recipe-img-wrap">
+          <img src="https://images.unsplash.com/photo-1590301157890-4810ed352733?w=600&q=80" alt="Açaí">
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-cat">🫐 Bowls</div>
+          <div class="recipe-name">Açaí na Tigela com Granola Artesanal</div>
+          <div class="recipe-author">
+            <div class="author-dot" style="background:linear-gradient(135deg,#6a5a9a,#8a7aba)">VR</div>
+            <span class="author-name">Vitor Reis</span>
+          </div>
+        </div>
+        <div class="recipe-footer">
+          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
+          <button class="footer-btn">👁 Ver</button>
+          <button class="footer-btn toggle-status">🚫 Inativar</button>
+        </div>
+      </div>
+
+      <div class="recipe-card" data-status="publicado" data-name="Moqueca de Peixe Baiana" data-ativo="true" data-cat="Frutos do Mar">
+        <div class="recipe-img-wrap">
+          <img src="https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600&q=80" alt="Moqueca">
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-cat">🐟 Frutos do Mar</div>
+          <div class="recipe-name">Moqueca de Peixe Baiana</div>
+          <div class="recipe-author">
+            <div class="author-dot" style="background:linear-gradient(135deg,#c46042,#e08060)">FT</div>
+            <span class="author-name">Fernanda Torres</span>
+          </div>
+        </div>
+        <div class="recipe-footer">
+          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
+          <button class="footer-btn">👁 Ver</button>
+          <button class="footer-btn toggle-status">🚫 Inativar</button>
+        </div>
+      </div>
+
+      <div class="recipe-card" data-status="arquivado" data-name="Mousse de Maracujá Clássico" data-ativo="false" data-cat="Sobremesas">
+        <div class="recipe-img-wrap">
+          <img src="https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&q=80" alt="Mousse">
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-cat">🍮 Sobremesas</div>
+          <div class="recipe-name">Mousse de Maracujá Clássico</div>
+          <div class="recipe-author">
+            <div class="author-dot" style="background:linear-gradient(135deg,#4a5e3a,#6b7f59)">CA</div>
+            <span class="author-name">Carlos Andrade</span>
+          </div>
+        </div>
+        <div class="recipe-footer">
+          <span class="recipe-status"><span class="status-dot-sm inactive-dot"></span>Inativa</span>
+          <button class="footer-btn">👁 Ver</button>
+          <button class="footer-btn toggle-status reactivate">🔄 Ativar</button>
+        </div>
+      </div>
+
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <div class="empty-icon">🍽️</div>
+        <h3>Nenhuma receita encontrada</h3>
+        <p>Tente ajustar os filtros ou o termo de busca.</p>
+      </div>
+
+    </div><!-- /recipes-grid -->
+
+    <!-- ===== PAGINAÇÃO ===== -->
+    <div class="pagination" id="pagination">
+      <div class="pag-info" id="pagInfo">—</div>
+      <div class="pag-btns" id="pagBtns"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+(function() {
+  var PAGE_SIZE = 6;
+  var paginaAtual = 1;
+  var todosCards = Array.from(document.querySelectorAll('#recipesGrid .recipe-card'));
+
+  function getCardsFiltrados() {
+    var termo = document.getElementById('campoBusca').value.trim().toLowerCase();
+    var status = document.getElementById('filterStatus').value;
+    var categoria = document.getElementById('filterCategoria').value;
+
+    return todosCards.filter(function(card) {
+      var nome = card.dataset.name.toLowerCase();
+      var bateNome = nome.indexOf(termo) !== -1;
+      var ativo = card.dataset.ativo === 'true';
+      var bateStatus = status === '' || (status === 'ativo' && ativo) || (status === 'inativo' && !ativo);
+      var bateCategoria = categoria === '' || card.dataset.cat === categoria;
+      return bateNome && bateStatus && bateCategoria;
+    });
+  }
+
+  function renderPagina() {
+    var filtrados = getCardsFiltrados();
+    var totalPaginas = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE));
+
+    if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+    if (paginaAtual < 1) paginaAtual = 1;
+
+    todosCards.forEach(function(card) { card.style.display = 'none'; });
+
+    var inicio = (paginaAtual - 1) * PAGE_SIZE;
+    var fim = inicio + PAGE_SIZE;
+    filtrados.slice(inicio, fim).forEach(function(card) { card.style.display = ''; });
+
+    document.getElementById('emptyState').style.display = filtrados.length === 0 ? '' : 'none';
+
+    renderInfo(filtrados.length, inicio, fim);
+    renderBotoes(totalPaginas);
+  }
+
+  function renderInfo(total, inicio, fim) {
+    var info = document.getElementById('pagInfo');
+    if (total === 0) {
+      info.textContent = 'Nenhuma receita encontrada';
+      return;
+    }
+    var mostrandoAte = Math.min(fim, total);
+    info.textContent = 'Mostrando ' + (inicio + 1) + '–' + mostrandoAte + ' de ' + total;
+  }
+
+  function renderBotoes(totalPaginas) {
+    var wrap = document.getElementById('pagBtns');
+    wrap.innerHTML = '';
+
+    function criarBtn(label, page, opts) {
+      opts = opts || {};
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pag-btn' + (opts.active ? ' active' : '');
+      b.textContent = label;
+      if (opts.disabled) b.disabled = true;
+      b.addEventListener('click', function() {
+        paginaAtual = page;
+        renderPagina();
+      });
+      wrap.appendChild(b);
+    }
+
+    criarBtn('‹', paginaAtual - 1, { disabled: paginaAtual === 1 });
+    for (var p = 1; p <= totalPaginas; p++) {
+      criarBtn(String(p), p, { active: p === paginaAtual });
+    }
+    criarBtn('›', paginaAtual + 1, { disabled: paginaAtual === totalPaginas });
+  }
+
+  document.getElementById('campoBusca').addEventListener('input', function() {
+    paginaAtual = 1;
+    renderPagina();
+  });
+  document.getElementById('filterStatus').addEventListener('change', function() {
+    paginaAtual = 1;
+    renderPagina();
+  });
+  document.getElementById('filterCategoria').addEventListener('change', function() {
+    paginaAtual = 1;
+    renderPagina();
+  });
+
+  document.getElementById('recipesGrid').addEventListener('click', function(e) {
+    var btn = e.target.closest('.toggle-status');
+    if (!btn) return;
+    var card = btn.closest('.recipe-card');
+    var statusSpan = card.querySelector('.recipe-status');
+    var dot = statusSpan.querySelector('.status-dot-sm');
+    var ativo = card.dataset.ativo === 'true';
+
+    if (ativo) {
+      card.dataset.ativo = 'false';
+      dot.classList.remove('active-dot');
+      dot.classList.add('inactive-dot');
+      statusSpan.lastChild.textContent = 'Inativa';
+      btn.textContent = '🔄 Ativar';
+      btn.classList.add('reactivate');
+    } else {
+      card.dataset.ativo = 'true';
+      dot.classList.remove('inactive-dot');
+      dot.classList.add('active-dot');
+      statusSpan.lastChild.textContent = 'Ativa';
+      btn.textContent = '🚫 Inativar';
+      btn.classList.remove('reactivate');
+    }
+
+    renderPagina();
+  });
+
+  renderPagina();
+})();
+</script>
+</body>
+</html>

@@ -80,14 +80,15 @@
     z-index: 0;
   }
 
-  .login-card {
-    position: relative; z-index: 1;
-    width: 100%; max-width: 480px; margin: 24px;
-    background: var(--warm-white);
-    border-radius: 2px; overflow: hidden;
-    box-shadow: 0 0 0 1px rgba(74,94,58,0.15), 0 40px 80px rgba(0,0,0,0.4), 0 8px 20px rgba(0,0,0,0.2);
-    animation: cardReveal 0.8s cubic-bezier(0.16,1,0.3,1) both;
-  }
+	.login-card {
+	  position: relative; z-index: 1;
+	  width: 100%; max-width: 480px; min-height: 750px; margin: 24px;
+	  background: var(--warm-white);
+	  border-radius: 2px; overflow: hidden;
+	  box-shadow: 0 0 0 1px rgba(74,94,58,0.15), 0 40px 80px rgba(0,0,0,0.4), 0 8px 20px rgba(0,0,0,0.2);
+	  animation: cardReveal 0.8s cubic-bezier(0.16,1,0.3,1) both;
+	  display: flex; flex-direction: column;
+	}
 
   @keyframes cardReveal {
     from { opacity: 0; transform: translateY(32px) scale(0.97); }
@@ -108,7 +109,7 @@
   .card-title em { font-style: italic; color: var(--moss); }
   .card-subtitle { font-size: 14px; color: var(--text-light); margin-top: 6px; font-weight: 300; animation: fadeUp 0.6s 0.28s both; }
 
-  .card-body { padding: 36px 48px 44px; }
+  .card-body { padding: 36px 48px 44px; display: flex; flex-direction: column; flex: 1; }
 
   .form-group { margin-bottom: 22px; animation: fadeUp 0.6s both; }
   .form-group:nth-child(2) { animation-delay: 0.32s; }
@@ -165,8 +166,7 @@
   }
   .btn-register:hover { background: rgba(74,94,58,0.06); border-color: var(--moss-light); }
 
-  .version-tag { text-align: center; margin-top: 20px; animation: fadeUp 0.6s 0.6s both; }
-  .version-tag span { font-size: 11px; color: var(--text-light); font-weight: 300; letter-spacing: 0.5px; }
+  .version-tag { text-align: center; margin-top: auto; padding-top: 20px; animation: fadeUp 0.6s 0.6s both; }  .version-tag span { font-size: 11px; color: var(--text-light); font-weight: 300; letter-spacing: 0.5px; }
   .version-tag strong { font-size: 11px; color: var(--moss-light); font-weight: 500; }
 
   .error-msg { background: rgba(155,68,68,0.08); border: 1px solid rgba(155,68,68,0.25); border-left: 3px solid var(--error); border-radius: 2px; padding: 10px 14px; font-size: 13px; color: var(--error); margin-bottom: 18px; }
@@ -293,6 +293,10 @@
           <button class="toggle-pass" type="button" onclick="toggleSenha()" title="Mostrar senha">👁</button>
         </div>
       </div>
+
+	    <div class="form-footer">
+	      <a href="/saborearte/pages/html/admin/esqueci-senha.html" class="forgot-link">Esqueceu a senha?</a>
+	    </div>
 
       <button type="submit" class="btn-login">
         Entrar <span class="btn-arrow">→</span>

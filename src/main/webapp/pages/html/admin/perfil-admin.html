@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabor & Arte — Meu Perfil</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --moss:         #4a5e3a;
+    --moss-dark:    #2f3d25;
+    --moss-light:   #6b7f59;
+    --sage:         #a3b18a;
+    --sage-light:   #c8d5b9;
+    --cream:        #f5f0e8;
+    --cream-dark:   #e6dece;
+    --warm-white:   #faf8f4;
+    --text-dark:    #1e2718;
+    --text-mid:     #4a5240;
+    --text-light:   #8a9480;
+    --gold:         #c4a265;
+    --gold-light:   #dfc094;
+    --published:    #3a7a4a;
+    --published-bg: #e8f4eb;
+    --error:        #9b4444;
+    --error-bg:     #fdf0f0;
+    --sidebar-w:    260px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text-dark); min-height: 100vh; display: flex; }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--moss-dark);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow-y: auto;
+  }
+  .sidebar::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 200% 60% at 50% 0%, rgba(74,94,58,0.5) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .sidebar-brand { padding: 28px 24px 22px; border-bottom: 1px solid rgba(255,255,255,0.08); position: relative; z-index: 1; }
+  .brand-row { display: flex; align-items: center; gap: 12px; }
+  .brand-badge { width: 38px; height: 38px; background: linear-gradient(135deg, var(--moss-light), var(--sage)); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .brand-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--cream); display: block; line-height: 1; }
+  .brand-sub { font-size: 10px; color: var(--sage); text-transform: uppercase; letter-spacing: 1.2px; margin-top: 3px; display: block; font-weight: 300; }
+  .sidebar-user { padding: 18px 24px; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; cursor: pointer; }
+  .user-avatar {
+    width: 38px; height: 38px; background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 13px; color: var(--moss-dark);
+    flex-shrink: 0; overflow: hidden; position: relative;
+  }
+  .user-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+  .user-avatar img.visible { display: block; }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--cream); }
+  .user-role-badge { font-size: 10px; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 300; }
+  .sidebar-nav { flex: 1; padding: 16px 0; position: relative; z-index: 1; }
+  .nav-section-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.8px; color: rgba(163,177,138,0.5); padding: 16px 24px 6px; font-weight: 500; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 24px; color: rgba(245,240,232,0.7); text-decoration: none; font-size: 14px; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
+  .nav-item:hover { color: var(--cream); background: rgba(255,255,255,0.06); border-left-color: var(--sage); }
+  .nav-item.active { color: var(--cream); background: rgba(163,177,138,0.15); border-left-color: var(--sage-light); font-weight: 500; }
+  .nav-icon { width: 22px; text-align: center; font-size: 16px; }
+  .nav-badge { margin-left: auto; background: var(--gold); color: var(--moss-dark); font-family: 'Nunito', sans-serif; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 10px; }
+  .sidebar-bottom { padding: 16px 24px 24px; border-top: 1px solid rgba(255,255,255,0.08); position: relative; z-index: 1; }
+  .btn-logout { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 2px; color: rgba(245,240,232,0.7); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .btn-logout:hover { background: rgba(155,68,68,0.2); border-color: rgba(155,68,68,0.3); color: #e8a0a0; }
+
+  /* ===== MAIN ===== */
+  .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+  .topbar { background: var(--warm-white); border-bottom: 1px solid var(--cream-dark); padding: 0 40px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .page-crumb { font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 6px; }
+  .page-crumb .current { color: var(--moss); font-weight: 500; }
+
+  /* ===== CONTENT ===== */
+  .content { flex: 1; padding: 28px 40px 32px; display: flex; flex-direction: column; }
+
+  /* ===== HERO BANNER (compacto) ===== */
+  .perfil-hero {
+    background: linear-gradient(135deg, var(--moss-dark) 0%, var(--moss) 60%, var(--moss-light) 100%);
+    border-radius: 4px; padding: 0; margin-bottom: 24px;
+    box-shadow: 0 6px 20px rgba(47,61,37,0.2);
+    position: relative; overflow: hidden; flex-shrink: 0;
+  }
+  .perfil-hero::before {
+    content: ''; position: absolute; top: -80px; right: -80px;
+    width: 260px; height: 260px; border-radius: 50%;
+    background: rgba(163,177,138,0.12);
+  }
+  .perfil-hero::after {
+    content: ''; position: absolute; bottom: -40px; left: 30%;
+    width: 160px; height: 160px; border-radius: 50%;
+    background: rgba(196,162,101,0.08);
+  }
+  .hero-inner { padding: 44px 48px; display: flex; align-items: center; gap: 32px; position: relative; z-index: 1; }
+  .avatar-upload-wrap { position: relative; flex-shrink: 0; }
+  .hero-avatar-big {
+    width: 108px; height: 108px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif; font-size: 40px; font-weight: 800;
+    color: var(--moss-dark); border: 4px solid rgba(255,255,255,0.25);
+    cursor: pointer; transition: filter 0.2s; overflow: hidden; position: relative;
+  }
+  .hero-avatar-big:hover { filter: brightness(0.85); }
+  .hero-avatar-big img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+  .hero-avatar-big img.visible { display: block; }
+  .avatar-upload-btn {
+    position: absolute; bottom: 2px; right: 2px;
+    width: 28px; height: 28px;
+    background: var(--gold); border: 2px solid var(--warm-white);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; cursor: pointer; transition: background 0.2s;
+  }
+  .avatar-upload-btn:hover { background: var(--gold-light); }
+  .hero-text { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .hero-text-main { min-width: 0; }
+  .hero-name { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; color: white; margin-bottom: 6px; line-height: 1.1; }
+  .hero-role-pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); padding: 5px 16px; border-radius: 20px; font-size: 13px; color: rgba(255,255,255,0.9); font-weight: 500; margin-bottom: 8px; }
+  .hero-email { font-size: 14px; color: rgba(255,255,255,0.6); font-weight: 300; }
+  .hero-stats { display: flex; gap: 32px; flex-shrink: 0; }
+  .hero-stat { text-align: center; }
+  .hero-stat-val { font-family: 'Nunito', sans-serif; font-size: 26px; font-weight: 800; color: white; line-height: 1; }
+  .hero-stat-lbl { font-size: 11px; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.7px; margin-top: 4px; font-weight: 300; }
+
+  /* ===== GRID ===== */
+  .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: stretch; }
+  .card-full { grid-column: 1 / -1; }
+
+  /* ===== CARD ===== */
+  .card { background: var(--warm-white); border: 1px solid var(--cream-dark); border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; }
+  .card-head { padding: 16px 24px; border-bottom: 1px solid var(--cream-dark); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .card-head-title { font-size: 14px; font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 9px; }
+  .card-head-title .card-icon { font-size: 16px; }
+  .card-body { padding: 22px 24px; }
+
+  /* ===== FORM ===== */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { margin-bottom: 18px; }
+  .form-group:last-child { margin-bottom: 0; }
+  .form-label { display: block; font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; }
+  .form-input, .form-select, .form-textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--cream-dark); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-dark); background: var(--cream); transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+  .form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--moss); background: var(--warm-white); box-shadow: 0 0 0 3px rgba(74,94,58,0.1); }
+  .form-input.readonly { background: var(--cream-dark) !important; color: var(--text-light) !important; cursor: not-allowed; }
+  .form-input.invalid { border-color: var(--error) !important; background: var(--error-bg) !important; }
+  .form-input.invalid:focus { box-shadow: 0 0 0 3px rgba(155,68,68,0.12); }
+  .form-hint { font-size: 10px; color: var(--text-light); margin-top: 4px; font-weight: 300; }
+  .field-error { font-size: 10px; color: var(--error); margin-top: 4px; font-weight: 500; min-height: 13px; }
+
+  /* ===== BOTÕES ===== */
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: var(--moss); color: var(--cream); }
+  .btn-primary:hover { background: var(--moss-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(47,61,37,0.25); }
+  .btn-primary:disabled { background: var(--sage); cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-outline { background: none; color: var(--moss); border: 1.5px solid var(--moss); }
+  .btn-outline:hover { background: rgba(74,94,58,0.06); }
+  .btn-danger { background: none; color: var(--error); border: 1.5px solid rgba(155,68,68,0.3); }
+  .btn-danger:hover { background: var(--error-bg); border-color: var(--error); }
+  .btn-sm { padding: 7px 14px; font-size: 12px; }
+
+  /* ===== ROLE BADGE ===== */
+  .role-badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(74,94,58,0.1); border: 1.5px solid rgba(74,94,58,0.2); padding: 7px 14px; border-radius: 2px; font-size: 12px; font-weight: 600; color: var(--moss); }
+
+  /* ===== RECEITAS ===== */
+  .public-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .public-mini { border-radius: 4px; overflow: hidden; border: 1px solid var(--cream-dark); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+  .public-mini:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(47,61,37,0.12); }
+  .public-mini img { width: 100%; height: 90px; object-fit: cover; display: block; }
+  .public-mini-body { padding: 8px 10px; background: var(--warm-white); }
+  .public-mini-title { font-size: 11px; font-weight: 600; color: var(--text-dark); line-height: 1.3; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .public-mini-cat { font-size: 10px; color: var(--text-light); }
+
+  /* ===== LOG DE ATIVIDADES ===== */
+  .log-list { display: flex; flex-direction: column; }
+  .log-item { display: flex; align-items: flex-start; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--cream-dark); }
+  .log-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .log-item:first-child { padding-top: 0; }
+  .log-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .log-dot.green  { background: #3a7a4a; }
+  .log-dot.blue   { background: #3a6f9b; }
+  .log-dot.gold   { background: var(--gold); }
+  .log-dot.red    { background: var(--error); }
+  .log-text { font-size: 13px; color: var(--text-dark); line-height: 1.4; }
+  .log-text b { font-weight: 600; }
+  .log-time { font-size: 11px; color: var(--text-light); margin-top: 2px; font-weight: 300; }
+
+  /* ===== MODAL GENÉRICO ===== */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: var(--warm-white); border-radius: 4px; padding: 32px 36px; text-align: center; min-width: 320px; box-shadow: 0 12px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease; }
+  .modal-icon { font-size: 48px; margin-bottom: 12px; }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; }
+  .modal-msg { font-size: 13px; color: var(--text-light); margin-bottom: 22px; font-weight: 300; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== MODAL AVATAR ===== */
+  .avatar-modal-box {
+    background: var(--warm-white); border-radius: 6px;
+    width: 100%; max-width: 480px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.25);
+    animation: slideUp 0.28s ease;
+    overflow: hidden; text-align: left; padding: 0;
+  }
+  .avatar-modal-header {
+    background: linear-gradient(135deg, var(--moss-dark), var(--moss));
+    padding: 18px 24px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .avatar-modal-title { color: white; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .avatar-modal-close {
+    background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
+    width: 30px; height: 30px; color: white; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: background 0.2s; line-height: 1;
+  }
+  .avatar-modal-close:hover { background: rgba(255,255,255,0.28); }
+  .avatar-modal-body { padding: 24px; }
+  .avatar-modal-footer { padding: 16px 24px; border-top: 1px solid var(--cream-dark); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+  .avatar-preview-area { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .avatar-preview-ring {
+    width: 96px; height: 96px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif; font-size: 36px; font-weight: 800; color: var(--moss-dark);
+    border: 4px solid var(--sage-light); overflow: hidden; position: relative; transition: border-color 0.25s;
+  }
+  .avatar-preview-ring.has-img { border-color: var(--moss); }
+  .avatar-preview-ring img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+  .avatar-preview-ring img.visible { display: block; }
+  .avatar-preview-lbl { font-size: 12px; color: var(--text-light); }
+
+  .drop-zone {
+    border: 2px dashed var(--cream-dark); border-radius: 6px;
+    padding: 24px 20px; text-align: center; cursor: pointer;
+    background: var(--cream); position: relative; transition: all 0.2s;
+  }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--moss); background: rgba(74,94,58,0.04); }
+  .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .drop-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+  .drop-title { font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; }
+  .drop-sub { font-size: 12px; color: var(--text-light); }
+  .drop-sub span { color: var(--moss); font-weight: 500; cursor: pointer; }
+
+  .file-info-bar {
+    display: none; background: rgba(74,94,58,0.08); border: 1.5px solid rgba(74,94,58,0.22);
+    border-radius: 4px; padding: 10px 14px; margin-top: 10px;
+    align-items: center; gap: 10px;
+  }
+  .file-info-bar.show { display: flex; }
+  .file-info-name { font-size: 13px; color: var(--moss); font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-info-size { font-size: 11px; color: var(--text-light); flex-shrink: 0; }
+  .file-info-rm { background: none; border: none; color: var(--error); font-size: 18px; cursor: pointer; line-height: 1; }
+
+  .quick-section { margin-top: 18px; }
+  .quick-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); font-weight: 500; margin-bottom: 10px; }
+  .quick-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .quick-av {
+    width: 44px; height: 44px; border-radius: 50%; overflow: hidden; cursor: pointer;
+    border: 2.5px solid transparent; transition: all 0.2s; flex-shrink: 0;
+  }
+  .quick-av:hover { border-color: var(--moss); transform: scale(1.08); }
+  .quick-av.selected { border-color: var(--gold); }
+  .quick-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .av-error { display: none; font-size: 12px; color: var(--error); margin-top: 8px; }
+  .av-error.show { display: block; }
+  .av-success {
+    display: none; background: var(--published-bg); border: 1.5px solid #7fc98a;
+    border-radius: 4px; padding: 10px 14px; font-size: 13px; color: var(--published);
+    font-weight: 500; align-items: center; gap: 8px; margin-bottom: 14px;
+  }
+  .av-success.show { display: flex; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 1100px) { .cards-grid { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } }
+  @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; } .content { padding: 20px; } .topbar { padding: 0 20px; } .hero-stats { display: none; } }
+  @media (max-width: 480px) { .hero-inner { flex-direction: column; text-align: center; } .hero-text { flex-direction: column; align-items: center; } .public-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ADMIN (estático) ===== -->
+<aside class="sidebar" id="sidebar" data-role="admin">
+
+    <div class="sidebar-brand">
+        <div class="brand-row">
+            <div class="brand-badge">🌿</div>
+            <div>
+                <span class="brand-title">Sabor &amp; Arte</span>
+                <span class="brand-sub">Blog Editorial</span>
+            </div>
+        </div>
+    </div>
+
+    <a href="perfil-admin.html" class="sidebar-user" title="Meu perfil">
+        <div id="sidebarAvatar"
+     class="user-avatar"
+     style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+
+    <img id="sidebarAvatarImg"
+         src="/saborearte/img/g.png"
+         class="visible"
+         alt="A">
+</div>
+
+        <div class="user-info">
+            <div class="user-name">Ana Silva</div>
+            <div class="user-role-badge">👑 Administrador</div>
+        </div>
+    </a>
+
+    <nav class="sidebar-nav">
+F
+        <!-- ===== SEÇÃO VISÃO GERAL ===== -->
+        <div class="nav-section-label">Principal</div>
+
+        <a href="dashboard-admin.html" class="nav-item ">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </a>
+
+        <!-- ===== SEÇÃO GESTÃO ===== -->
+        <div class="nav-section-label">Gestão</div>
+
+        <a href="/saborearte/UsuarioController" class="nav-item">
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">Usuários</span>
+        </a>
+
+        <a href="/saborearte/CategoriaController" class="nav-item">
+            <span class="nav-icon">🏷️</span>
+            <span class="nav-label">Categorias</span>
+        </a>
+
+        <a href="receita-admin.html" class="nav-item">
+            <span class="nav-icon">📝</span>
+            <span class="nav-label">Receitas</span>
+        </a>
+
+        <!-- ===== SEÇÃO ANÁLISE ===== -->
+        <div class="nav-section-label">Análise</div>
+
+        <a href="relatorio-admin.html" class="nav-item">
+            <span class="nav-icon">📈</span>
+            <span class="nav-label">Relatórios</span>
+        </a>
+
+        <a href="log-admin.html" class="nav-item">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-label">Auditoria</span>
+        </a>
+
+        <!-- ===== SEÇÃO CONTA ===== -->
+        <div class="nav-section-label">Conta</div>
+
+        <a href="/saborearte/ConfiguracaoController" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Configurações</span>
+        </a>
+
+    </nav>
+	
+	<div class="sidebar-bottom">
+	    <a href="/saborearte/LogoutController" class="btn-logout">
+	        <span class="nav-icon">🚪</span>
+	        <span>Sair</span>
+	    </a>
+	</div>
+
+</aside>
+
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-crumb">
+      <span>Painel</span>
+      <span style="color:var(--cream-dark)">/</span>
+      <span class="current">Meu Perfil</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="perfil-hero">
+      <div class="hero-inner">
+        <div class="avatar-upload-wrap">
+          <div class="hero-avatar-big" id="heroAvatar" onclick="openAvatarModal()" title="Clique para alterar foto">
+                     <img id="heroAvatarImg" alt="Foto de perfil"
+                              src="/saborearte/img/g.png"
+         class="visible"
+         alt="A">
+          </div>
+          <div class="avatar-upload-btn" onclick="openAvatarModal()" title="Alterar foto">📷</div>
+        </div>
+        <div class="hero-text">
+          <div class="hero-text-main">
+            <div class="hero-role-pill">🔑 Administradora</div>
+            <div class="hero-name">Maria Andrade</div>
+            <div class="hero-email">maria.andrade@saborarte.com.br</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DADOS GERAIS -->
+    <div class="cards-grid">
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-title"><span class="card-icon">📋</span> Informações Básicas</div>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nome de Exibição</label>
+              <input type="text" class="form-input readonly" value="Maria Andrade" readonly>
+              <div class="form-hint">O nome de exibição não pode ser alterado.</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nome de Usuário</label>
+              <input type="text" class="form-input readonly" value="@maria.andrade" readonly>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">E-mail de Acesso</label>
+              <input type="email" class="form-input readonly" value="maria.andrade@saborarte.com.br" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Telefone</label>
+              <input type="tel" class="form-input" id="telInput" placeholder="(71) 9 0000-0000"
+                inputmode="numeric" maxlength="16" oninput="formatPhone(this)">
+              <div class="field-error" id="telError"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Localização</label>
+            <input type="text" class="form-input" id="locInput" value="Salvador, BA"
+              placeholder="Cidade, UF" oninput="formatLocation(this)">
+            <div class="field-error" id="locError"></div>
+          </div>
+          <button class="btn btn-primary" onclick="saveDados()">💾 Atualizar Dados</button>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:22px">
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-title"><span class="card-icon">🔑</span> Cargo &amp; Permissão</div>
+          </div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Nível de Acesso</label>
+                <div class="role-badge">🛡️ Administradora</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Membro desde</label>
+                <input class="form-input readonly" value="Janeiro de 2024" readonly>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-title"><span class="card-icon">📋</span> Log de Atividades</div>
+            <a href="log-admin.html" style="font-size:12px;color:var(--moss-light);text-decoration:none">Ver tudo</a>
+          </div>
+          <div class="card-body" style="padding-top:14px;padding-bottom:14px">
+            <div class="log-list">
+              <div class="log-item">
+                <span class="log-dot green"></span>
+                <div>
+                  <div class="log-text">Publicou a receita <b>Bolo de Cenoura</b></div>
+                  <div class="log-time">há 2 horas</div>
+                </div>
+              </div>
+              <div class="log-item">
+                <span class="log-dot blue"></span>
+                <div>
+                  <div class="log-text">Editou o usuário <b>@joao.silva</b></div>
+                  <div class="log-time">há 5 horas</div>
+                </div>
+              </div>
+              <div class="log-item">
+                <span class="log-dot gold"></span>
+                <div>
+                  <div class="log-text">Aprovou comentário em <b>Risoto de Cogumelos</b></div>
+                  <div class="log-time">ontem, 18:42</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- MODAL GENÉRICO -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-icon" id="mIcon">✅</div>
+    <div class="modal-title" id="mTitle">Sucesso!</div>
+    <div class="modal-msg" id="mMsg">Operação concluída.</div>
+    <button class="btn btn-primary" onclick="closeModal()">OK</button>
+  </div>
+</div>
+
+<!-- MODAL AVATAR -->
+<div class="modal-overlay" id="avatarModal">
+  <div class="avatar-modal-box">
+    <div class="avatar-modal-header">
+      <div class="avatar-modal-title">📷 Alterar foto de perfil</div>
+      <button class="avatar-modal-close" onclick="closeAvatarModal()">×</button>
+    </div>
+
+    <div class="avatar-modal-body">
+      <div class="av-success" id="avSuccess">✅ Foto de perfil atualizada com sucesso!</div>
+
+      <div class="avatar-preview-area">
+        <div class="avatar-preview-ring" id="avPreviewRing">
+          M
+          <img id="avPreviewImg" alt="Preview">
+        </div>
+        <span class="avatar-preview-lbl">Pré-visualização</span>
+      </div>
+
+      <div class="drop-zone" id="avDropZone"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleAvDrop(event)">
+        <input type="file" id="avFileInput" accept="image/*" onchange="handleAvFile(this.files[0])">
+        <span class="drop-icon">🖼️</span>
+        <div class="drop-title">Arraste sua foto aqui</div>
+        <div class="drop-sub">ou <span onclick="document.getElementById('avFileInput').click()">clique para selecionar</span></div>
+        <div class="drop-sub" style="margin-top:4px">JPG, PNG, WEBP — máx. 5 MB</div>
+      </div>
+
+      <div class="av-error" id="avError"></div>
+
+      <div class="file-info-bar" id="avFileInfo">
+        <span>📎</span>
+        <span class="file-info-name" id="avFileName"></span>
+        <span class="file-info-size" id="avFileSize"></span>
+        <button class="file-info-rm" onclick="clearAvPreview()">×</button>
+      </div>
+
+      <div class="quick-section">
+        <div class="quick-lbl">Avatares rápidos</div>
+        <div class="quick-row" id="avQuickRow">
+          <div class="quick-av" data-url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=80" onclick="setAvQuick(this)"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=80" alt="Avatar 1"></div>
+          <div class="quick-av" data-url="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&q=80" onclick="setAvQuick(this)"><img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&q=80" alt="Avatar 2"></div>
+          <div class="quick-av" data-url="https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=120&q=80" onclick="setAvQuick(this)"><img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=120&q=80" alt="Avatar 3"></div>
+          <div class="quick-av" data-url="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=80" onclick="setAvQuick(this)"><img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=80" alt="Avatar 4"></div>
+          <div class="quick-av" data-url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80" onclick="setAvQuick(this)"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80" alt="Avatar 5"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="avatar-modal-footer">
+      <button class="btn btn-outline" onclick="closeAvatarModal()">Cancelar</button>
+      <button class="btn btn-primary" id="avSaveBtn" disabled onclick="saveAvatar()">💾 Salvar foto</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ===== VALIDAÇÃO: TELEFONE ===== */
+  function formatPhone(el) {
+    var digits = el.value.replace(/\D/g, '').slice(0, 11); // DDD + 9 dígitos
+    var out = '';
+    if (digits.length > 0) out = '(' + digits.substring(0, 2);
+    if (digits.length >= 2) out += ') ';
+    if (digits.length > 2) out += digits.substring(2, 3);
+    if (digits.length > 3) out += ' ' + digits.substring(3, 7);
+    if (digits.length > 7) out += '-' + digits.substring(7, 11);
+    el.value = out;
+
+    var err = document.getElementById('telError');
+    var valid = digits.length === 0 || digits.length === 10 || digits.length === 11;
+    if (!valid) {
+      el.classList.add('invalid');
+      err.textContent = 'Telefone incompleto. Use o formato (71) 9 0000-0000.';
+    } else {
+      el.classList.remove('invalid');
+      err.textContent = '';
+    }
+  }
+
+  /* ===== VALIDAÇÃO: LOCALIZAÇÃO (Cidade, UF) ===== */
+  var UF_LIST = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+
+  function formatLocation(el) {
+    var raw = el.value;
+    var err = document.getElementById('locError');
+
+    // Auto-maiúscula na sigla do estado após a vírgula, sem travar a digitação da cidade
+    var commaIdx = raw.indexOf(',');
+    if (commaIdx !== -1) {
+      var cidade = raw.substring(0, commaIdx);
+      var uf = raw.substring(commaIdx + 1).toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
+      el.value = cidade + ', ' + uf;
+    }
+
+    if (raw.trim() === '') { el.classList.remove('invalid'); err.textContent = ''; return; }
+
+    var pattern = /^[A-Za-zÀ-ÖØ-öø-ÿ' -]+,\s[A-Z]{2}$/;
+    var match = pattern.test(el.value);
+    var ufValid = match && UF_LIST.includes(el.value.split(',')[1].trim());
+
+    if (!match) {
+      el.classList.add('invalid');
+      err.textContent = 'Formato: Cidade, UF (ex: Salvador, BA).';
+    } else if (!ufValid) {
+      el.classList.add('invalid');
+      err.textContent = 'Sigla de estado inválida.';
+    } else {
+      el.classList.remove('invalid');
+      err.textContent = '';
+    }
+  }
+
+  /* ===== SALVAR DADOS COM VALIDAÇÃO ===== */
+  function saveDados() {
+    var tel = document.getElementById('telInput');
+    var loc = document.getElementById('locInput');
+    formatPhone(tel);
+    formatLocation(loc);
+
+    if (tel.classList.contains('invalid') || loc.classList.contains('invalid')) {
+      showModal('⚠️', 'Verifique os campos', 'Corrija o telefone e/ou a localização antes de salvar.');
+      return;
+    }
+    showModal('✅', 'Dados atualizados!', 'Suas informações foram salvas.');
+  }
+
+  /* ===== MODAL GENÉRICO ===== */
+  function showModal(icon, title, msg) {
+    document.getElementById('mIcon').textContent = icon;
+    document.getElementById('mTitle').textContent = title;
+    document.getElementById('mMsg').textContent = msg;
+    document.getElementById('modalOverlay').classList.add('show');
+  }
+  function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+  document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+  /* ===== MODAL AVATAR ===== */
+  var avSelectedUrl = null;
+
+  function openAvatarModal() {
+    document.getElementById('avSuccess').classList.remove('show');
+    document.getElementById('avatarModal').classList.add('show');
+  }
+  function closeAvatarModal() {
+    document.getElementById('avatarModal').classList.remove('show');
+  }
+  document.getElementById('avatarModal').addEventListener('click', function(e) { if (e.target === this) closeAvatarModal(); });
+
+  function setAvPreview(src) {
+    var img = document.getElementById('avPreviewImg');
+    img.src = src;
+    img.classList.add('visible');
+    document.getElementById('avPreviewRing').classList.add('has-img');
+    document.getElementById('avSaveBtn').disabled = false;
+    document.getElementById('avError').classList.remove('show');
+    document.getElementById('avSuccess').classList.remove('show');
+    avSelectedUrl = src;
+  }
+
+  function clearAvPreview() {
+    var img = document.getElementById('avPreviewImg');
+    img.src = '';
+    img.classList.remove('visible');
+    document.getElementById('avPreviewRing').classList.remove('has-img');
+    document.getElementById('avSaveBtn').disabled = true;
+    document.getElementById('avFileInfo').classList.remove('show');
+    document.getElementById('avFileInput').value = '';
+    document.querySelectorAll('.quick-av').forEach(a => a.classList.remove('selected'));
+    avSelectedUrl = null;
+  }
+
+  function handleAvFile(file) {
+    if (!file) return;
+    var err = document.getElementById('avError');
+    if (!file.type.startsWith('image/')) { err.textContent = 'Arquivo inválido. Use JPG, PNG ou WEBP.'; err.classList.add('show'); return; }
+    if (file.size > 5 * 1024 * 1024) { err.textContent = 'O arquivo excede 5 MB. Escolha uma imagem menor.'; err.classList.add('show'); return; }
+    err.classList.remove('show');
+    document.querySelectorAll('.quick-av').forEach(a => a.classList.remove('selected'));
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      setAvPreview(e.target.result);
+      document.getElementById('avFileName').textContent = file.name;
+      var kb = file.size / 1024;
+      document.getElementById('avFileSize').textContent = kb > 1024 ? (kb/1024).toFixed(1)+' MB' : Math.round(kb)+' KB';
+      document.getElementById('avFileInfo').classList.add('show');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleAvDrop(e) {
+    e.preventDefault();
+    document.getElementById('avDropZone').classList.remove('drag-over');
+    handleAvFile(e.dataTransfer.files[0]);
+  }
+
+  function setAvQuick(el) {
+    document.querySelectorAll('.quick-av').forEach(a => a.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('avFileInfo').classList.remove('show');
+    document.getElementById('avFileInput').value = '';
+    setAvPreview(el.dataset.url);
+  }
+
+  function applyAvatarEverywhere(src) {
+    /* Hero */
+    var heroImg = document.getElementById('heroAvatarImg');
+    heroImg.src = src;
+    heroImg.classList.add('visible');
+    document.getElementById('heroAvatar').style.fontSize = '0';
+
+    /* Sidebar */
+    var sbImg = document.getElementById('sidebarAvatarImg');
+    sbImg.src = src;
+    sbImg.classList.add('visible');
+    document.getElementById('sidebarAvatar').style.fontSize = '0';
+  }
+
+  function saveAvatar() {
+    if (!avSelectedUrl) return;
+    var btn = document.getElementById('avSaveBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Salvando…';
+    setTimeout(function() {
+      applyAvatarEverywhere(avSelectedUrl);
+      document.getElementById('avSuccess').classList.add('show');
+      btn.textContent = '💾 Salvar foto';
+      btn.disabled = false;
+      setTimeout(closeAvatarModal, 1000);
+    }, 800);
+  }
+</script>
+</body>
+</html>

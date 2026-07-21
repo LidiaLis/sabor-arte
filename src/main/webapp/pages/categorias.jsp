@@ -95,14 +95,17 @@
   .cat-card-body{padding:16px 20px;}
   .cat-desc{font-size:12px;color:var(--text-mid);font-weight:300;line-height:1.5;}
   .cat-card-footer{display:flex;align-items:center;gap:6px;padding:12px 20px;background:var(--cream);border-top:1px solid var(--cream-dark);flex-wrap:wrap;}
-  .cat-status{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-mid);margin-right:auto;}
-  .status-dot-sm{width:6px;height:6px;border-radius:50%;}
-  .active-dot{background:var(--published);}
-  .inactive-dot{background:var(--inactive);}
-  .footer-act-btn{padding:6px 12px;border:1.5px solid var(--cream-dark);background:var(--warm-white);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;color:var(--text-mid);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px;}
-  .footer-act-btn:hover{border-color:var(--moss);color:var(--moss);}
-  .footer-act-btn.danger:hover{border-color:#9b4444;color:#9b4444;}
-  .form-inline{display:inline;margin:0;}
+	.cat-status{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-mid);margin-right:auto;}
+	.status-dot-sm{width:6px;height:6px;border-radius:50%;}
+	.active-dot{background:var(--published);}
+	.inactive-dot{background:var(--inactive);}
+	.form-inline{display:inline;margin:0;}
+	
+	.action-group{display:flex;align-items:center;gap:6px;}
+	.act-btn{width:30px;height:30px;border:1.5px solid var(--cream-dark);background:var(--warm-white);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:all .15s;}
+	.act-btn:hover{border-color:var(--moss);background:rgba(74,94,58,.05);}
+	.act-btn.danger:hover{border-color:var(--inactive);background:rgba(155,68,68,.06);}
+	.act-btn.reactivate:hover{border-color:var(--published);background:var(--published-bg);}
 
   .empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-light);}
   .empty-state .empty-icon{font-size:44px;margin-bottom:14px;}
@@ -196,11 +199,20 @@
 .search-bar input::placeholder{color:var(--text-light);}
 .toolbar-spacer{flex:1;}
 
+/* PAGINAÇÃO (mesmo padrão visual da tela de usuários) */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:18px 4px 4px;margin-top:8px;}
+.pag-info{font-size:12px;color:var(--text-light);font-weight:300;}
+.pag-btns{display:flex;gap:4px;}
+.pag-btn{min-width:32px;height:32px;padding:0 8px;border:1.5px solid var(--cream-dark);background:var(--warm-white);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;color:var(--text-mid);font-family:'Nunito',sans-serif;font-weight:700;transition:all .15s;}
+.pag-btn:hover:not(:disabled){border-color:var(--moss);color:var(--moss);}
+.pag-btn.active{background:var(--moss);border-color:var(--moss);color:var(--cream);}
+.pag-btn:disabled{opacity:.4;cursor:not-allowed;}
+
 @media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:480px){.stats-row{grid-template-columns:1fr;}}
 
   @media(max-width:1100px){.cat-grid{grid-template-columns:1fr 1fr;}}
-  @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;}.content{padding:20px;}.topbar{padding:0 20px;}.cat-grid{grid-template-columns:1fr;}}
+  @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;}.content{padding:20px;}.topbar{padding:0 20px;}.cat-grid{grid-template-columns:1fr;}.pagination{flex-direction:column;gap:10px;align-items:flex-start;}}
 </style>
 </head>
 <body>
@@ -285,25 +297,23 @@
             <%= statusLabel %>
           </span>
 
-          <button class="footer-act-btn btn-editar" type="button"
-                  data-id="<%= cat.getId_categoria() %>"
-                  data-nome="<%= esc(cat.getNome_categoria()) %>"
-                  data-desc="<%= esc(cat.getDescricao_categoria()) %>"
-                  data-emoji="<%= esc(cat.getEmoji_categoria()) %>"
-                  data-cor="<%= esc(cat.getCor_categoria()) %>">✏️ Editar</button>
+          <div class="action-group">
+            <button class="act-btn btn-editar" type="button" title="Editar"
+                    data-id="<%= cat.getId_categoria() %>"
+                    data-nome="<%= esc(cat.getNome_categoria()) %>"
+                    data-desc="<%= esc(cat.getDescricao_categoria()) %>"
+                    data-emoji="<%= esc(cat.getEmoji_categoria()) %>"
+                    data-cor="<%= esc(cat.getCor_categoria()) %>">✏️</button>
 
-          <form class="form-inline" method="post" action="<%= ctx %>/CategoriaController">
-            <input type="hidden" name="action" value="status">
-            <input type="hidden" name="id" value="<%= cat.getId_categoria() %>">
-            <input type="hidden" name="novoStatus" value="<%= novoStatus %>">
-            <button class="footer-act-btn" type="submit"><%= toggleLabel %></button>
-          </form>
+            <form class="form-inline" method="post" action="<%= ctx %>/CategoriaController">
+              <input type="hidden" name="action" value="status">
+              <input type="hidden" name="id" value="<%= cat.getId_categoria() %>">
+              <input type="hidden" name="novoStatus" value="<%= novoStatus %>">
+              <button class="act-btn <%= ativa ? "danger" : "reactivate" %>" type="submit"
+                      title="<%= ativa ? "Desativar" : "Ativar" %>"><%= ativa ? "🚫" : "🔄" %></button>
+            </form>
 
-          <form class="form-inline form-excluir" method="post" action="<%= ctx %>/CategoriaController">
-            <input type="hidden" name="action" value="excluir">
-            <input type="hidden" name="id" value="<%= cat.getId_categoria() %>">
-            <button class="footer-act-btn danger" type="submit" data-nome="<%= esc(cat.getNome_categoria()) %>">🗑️</button>
-          </form>
+          </div>
         </div>
       </div>
 <%
@@ -319,6 +329,13 @@
     }
 %>
     </div><%-- /cat-grid --%>
+
+    <%-- ===== PAGINAÇÃO ===== --%>
+    <div class="pagination" id="pagination">
+      <div class="pag-info" id="pagInfo">—</div>
+      <div class="pag-btns" id="pagBtns"></div>
+    </div>
+
   </div><%-- /content --%>
 </main>
 
@@ -481,8 +498,6 @@
   var MSG_ERRO = "<%= jsEsc(msgErro) %>";
 
   // ─── LISTA FIXA DE EMOJIS (pré-definida aqui no JSP, não vem do banco) ──
-  // Usada apenas no picker "+", para o usuário escolher um ícone extra além
-  // dos que já estão cadastrados em categoria_emoji.
   var EMOJI_DB = {
     food:   ['🍔','🍕','🌮','🌯','🥙','🫔','🥗','🍜','🍝','🍲','🥘','🫕','🍛','🍣','🍤','🍱','🥟','🍗','🍖','🥩','🥚','🧆','🥞','🧇'],
     drink:  ['🥤','🍹','🍸','🍷','🍺','🧃','☕','🍵','🧋','🥛','🫖','🍶','🥂','🍻'],
@@ -516,7 +531,6 @@
     return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
   }
 
-  // Aplica a cor de fundo (com transparência) em cada ícone de categoria já renderizado
   document.querySelectorAll('.cat-emoji-box[data-cor]').forEach(function(box) {
     box.style.background = hexToRgba(box.dataset.cor, 0.14);
   });
@@ -624,24 +638,90 @@ document.getElementById("btnCancelarEditarCat")
     m.addEventListener('click', function(e) { if (e.target === m) closeModal(m); });
   });
 
-//─── BUSCA + FILTRO DE STATUS ───────────────────────────────────────────
-  function filterCards() {
+//─── BUSCA + FILTRO DE STATUS + PAGINAÇÃO ───────────────────────────────
+  var PAGE_SIZE = 6;      // quantos cards por página — ajuste à vontade
+  var paginaAtual = 1;
+  var todosCards = Array.from(document.querySelectorAll('#catGrid .cat-card'));
+
+  // Retorna os cards que batem com busca + filtro de status (sem mexer no DOM ainda)
+  function getCardsFiltrados() {
     var termo = document.getElementById('campoBusca').value.trim().toLowerCase();
     var status = document.getElementById('filterStatus').value;
 
-    document.querySelectorAll('#catGrid .cat-card').forEach(function(card) {
+    return todosCards.filter(function(card) {
       var nome = (card.querySelector('.cat-card-name') || {}).textContent || '';
       var bateNome = nome.toLowerCase().indexOf(termo) !== -1;
       var bateStatus = !status || card.dataset.status === status;
-      card.style.display = (bateNome && bateStatus) ? '' : 'none';
+      return bateNome && bateStatus;
     });
   }
 
-  document.getElementById('campoBusca').addEventListener('input', filterCards);
-  document.getElementById('filterStatus').addEventListener('change', filterCards);
+  function renderPagina() {
+    var filtrados = getCardsFiltrados();
+    var totalPaginas = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE));
 
-  // aplica o filtro padrão (Ativa) assim que a página carrega
-  filterCards();
+    if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+    if (paginaAtual < 1) paginaAtual = 1;
+
+    // esconde todos, depois mostra só o "fatia" da página atual
+    todosCards.forEach(function(card) { card.style.display = 'none'; });
+
+    var inicio = (paginaAtual - 1) * PAGE_SIZE;
+    var fim = inicio + PAGE_SIZE;
+    filtrados.slice(inicio, fim).forEach(function(card) { card.style.display = ''; });
+
+    renderInfo(filtrados.length, inicio, fim);
+    renderBotoes(totalPaginas);
+  }
+
+  function renderInfo(total, inicio, fim) {
+    var info = document.getElementById('pagInfo');
+    if (total === 0) {
+      info.textContent = 'Nenhuma categoria encontrada';
+      return;
+    }
+    var mostrandoAte = Math.min(fim, total);
+    info.textContent = 'Mostrando ' + (inicio + 1) + '–' + mostrandoAte + ' de ' + total;
+  }
+
+  function renderBotoes(totalPaginas) {
+    var wrap = document.getElementById('pagBtns');
+    wrap.innerHTML = '';
+
+    function criarBtn(label, page, opts) {
+      opts = opts || {};
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pag-btn' + (opts.active ? ' active' : '');
+      b.textContent = label;
+      if (opts.disabled) b.disabled = true;
+      b.addEventListener('click', function() {
+        paginaAtual = page;
+        renderPagina();
+      });
+      wrap.appendChild(b);
+    }
+
+    criarBtn('‹', paginaAtual - 1, { disabled: paginaAtual === 1 });
+
+    for (var p = 1; p <= totalPaginas; p++) {
+      criarBtn(String(p), p, { active: p === paginaAtual });
+    }
+
+    criarBtn('›', paginaAtual + 1, { disabled: paginaAtual === totalPaginas });
+  }
+
+  document.getElementById('campoBusca').addEventListener('input', function() {
+    paginaAtual = 1;
+    renderPagina();
+  });
+  document.getElementById('filterStatus').addEventListener('change', function() {
+    paginaAtual = 1;
+    renderPagina();
+  });
+
+  // primeira renderização ao carregar a página
+  renderPagina();
   
 //================= EMOJI PICKER =================
 
