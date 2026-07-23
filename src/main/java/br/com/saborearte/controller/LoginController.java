@@ -60,13 +60,16 @@ public class LoginController extends HttpServlet {
                 // 4. Redireciona conforme o perfil
                 TipoUsuario tipo = usuario.getTipo_usuario();
 
-                if (tipo == TipoUsuario.ADMIN ||
-                    tipo == TipoUsuario.EDITOR ||
-                    tipo == TipoUsuario.AUTOR) {
+                if (tipo == TipoUsuario.ADMIN){
                    response.sendRedirect(request.getContextPath() + "/pages/html/admin/dashboard-admin.html");
+                } else if (tipo == TipoUsuario.EDITOR) {
+                    response.sendRedirect(request.getContextPath() + "/pages/html/editor/dashboard-editor.html");
+
+                } else if (tipo == TipoUsuario.AUTOR) {
+                    response.sendRedirect(request.getContextPath() + "/pages/html/autor/dashboard-autor.html");
 
                 } else if (tipo == TipoUsuario.VISITANTE) {
-                    response.sendRedirect(request.getContextPath() + "/pages/HTML/receitas-visitante.jsp");
+                    response.sendRedirect(request.getContextPath() + "/pages/html/visitante/home-visitante.html");
 
                 } else {
                     session.setAttribute("erro", "Perfil não reconhecido. Fale com o administrador.");

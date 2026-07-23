@@ -84,6 +84,15 @@
     text-transform: uppercase; letter-spacing: 1.2px;
     margin-top: 3px; display: block; font-weight: 300;
   }
+/* Bloco de autenticação no lugar do "sidebar-user" (visitante não está logado) */
+  .sidebar-auth{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;gap:8px;position:relative;z-index:1;}
+  .sidebar-auth-hint{font-size:11px;color:rgba(245,240,232,0.55);font-weight:300;margin-bottom:2px;}
+  .btn-sidebar{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:9px 14px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;transition:all 0.2s;}
+  .btn-sidebar-solid{background:var(--gold);color:var(--moss-dark);}
+  .btn-sidebar-solid:hover{background:var(--gold-light);}
+  .btn-sidebar-outline{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(245,240,232,0.85);}
+  .btn-sidebar-outline:hover{background:rgba(255,255,255,0.12);}
+  .sidebar-bottom{padding:16px 24px 24px;border-top:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;font-size:11px;color:rgba(245,240,232,0.45);font-weight:300;}
 
   .sidebar-nav { flex: 1; padding: 16px 0; position: relative; z-index: 1; }
 
@@ -607,8 +616,8 @@
   card de informação nutricional.
 -->
 
-<!-- ===== SIDEBAR ADMIN (estático) ===== -->
-<aside class="sidebar" id="sidebar" data-role="admin">
+<!-- ===== SIDEBAR PÚBLICA (mesmo padrão visual do admin, itens diferentes) ===== -->
+<aside class="sidebar" id="sidebar" data-role="visitante">
 
     <div class="sidebar-brand">
         <div class="brand-row">
@@ -620,83 +629,47 @@
         </div>
     </div>
 
-    <!-- usuario.nome_usuario / usuario.foto_usuario do usuário da sessão -->
-    <a href="perfil-admin.html" class="sidebar-user" title="Meu perfil">
-        <div id="sidebarAvatar"
-             class="user-avatar"
-             style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
-
-            <img id="sidebarAvatarImg"
-                 src="/saborearte/img/g.png"
-                 class="visible"
-                 alt="A">
-        </div>
-
-        <div class="user-info">
-            <div class="user-name">Ana Silva</div>
-            <div class="user-role-badge">👑 Administrador</div>
-        </div>
-    </a>
+    <!-- No lugar do sidebar-user (visitante não está logado) -->
+    <div class="sidebar-auth">
+        <div class="sidebar-auth-hint">Faça parte da nossa comunidade</div>
+        <a href="/saborearte/login.jsp" class="btn-sidebar btn-sidebar-solid">Cadastre-se</a>
+        <a href="/saborearte/login.jsp" class="btn-sidebar btn-sidebar-outline">Entrar</a>
+    </div>
 
     <nav class="sidebar-nav">
 
-        <!-- ===== SEÇÃO VISÃO GERAL ===== -->
         <div class="nav-section-label">Principal</div>
 
-        <a href="dashboard-admin.html" class="nav-item ">
-            <span class="nav-icon">📊</span>
-            <span class="nav-label">Dashboard</span>
+        <a href="/saborearte/home-publico.html" class="nav-item ">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Início</span>
         </a>
 
-        <!-- ===== SEÇÃO GESTÃO ===== -->
-        <div class="nav-section-label">Gestão</div>
-
-        <a href="/saborearte/UsuarioController" class="nav-item">
-            <span class="nav-icon">👥</span>
-            <span class="nav-label">Usuários</span>
-        </a>
-
-        <a href="/saborearte/CategoriaController" class="nav-item">
-            <span class="nav-icon">🏷️</span>
-            <span class="nav-label">Categorias</span>
-        </a>
-
-        <a href="receita-admin.html" class="nav-item active">
+        <a href="receitas-publico.html" class="nav-item active">
             <span class="nav-icon">📝</span>
             <span class="nav-label">Receitas</span>
         </a>
 
-        <!-- ===== SEÇÃO ANÁLISE ===== -->
-        <div class="nav-section-label">Análise</div>
-
-        <a href="relatorio-admin.html" class="nav-item">
-            <span class="nav-icon">📈</span>
-            <span class="nav-label">Relatórios</span>
+        <a href="autores-publico.html" class="nav-item">
+            <span class="nav-icon">👩‍🍳</span>
+            <span class="nav-label">Autores</span>
         </a>
 
-        <a href="log-admin.html" class="nav-item">
-            <span class="nav-icon">🔍</span>
-            <span class="nav-label">Auditoria</span>
-        </a>
+        <div class="nav-section-label">Sobre</div>
 
-        <!-- ===== SEÇÃO CONTA ===== -->
-        <div class="nav-section-label">Conta</div>
-
-        <a href="/saborearte/ConfiguracaoController" class="nav-item">
-            <span class="nav-icon">⚙️</span>
-            <span class="nav-label">Configurações</span>
+        <a href="sobre.html" class="nav-item">
+            <span class="nav-icon">ℹ️</span>
+            <span class="nav-label">Sobre o Sabor &amp; Arte</span>
         </a>
 
     </nav>
 
     <div class="sidebar-bottom">
-        <a href="/saborearte/LogoutController" class="btn-logout">
-            <span class="nav-icon">🚪</span>
-            <span>Sair</span>
-        </a>
+        © 2026 Sabor &amp; Arte
     </div>
 
 </aside>
+
 
 <!-- MAIN -->
 <main class="main">
@@ -956,30 +929,6 @@
       </div>
     </div>
     </div><!-- /commentsList -->
-
-    <!-- Formulário -->
-    <div class="comment-form">
-      <div class="form-title">✍️ Deixe seu comentário</div>
-      <div id="commentErr" style="display:none;font-size:12px;color:var(--gold);background:#fdf3e3;border-left:3px solid var(--gold);padding:8px 12px;margin-bottom:14px;border-radius:0 4px 4px 0;"></div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Avaliação</label>
-          <div class="star-rating" id="starRating">
-            <span onclick="setStars(1)">★</span>
-            <span onclick="setStars(2)">★</span>
-            <span onclick="setStars(3)">★</span>
-            <span onclick="setStars(4)">★</span>
-            <span onclick="setStars(5)">★</span>
-          </div>
-        </div>
-      </div>
-      <div class="form-group" style="margin-bottom:16px">
-        <label>Comentário</label>
-        <textarea id="commentText" rows="4" placeholder="Conte como ficou, dicas que deu certo, variações…"></textarea>
-      </div>
-      <button type="button" class="btn-comment" id="btnPublicarComentario">💬 Publicar comentário</button>
-    </div>
-  </div>
 
 </main>
 

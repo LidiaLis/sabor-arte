@@ -8,6 +8,29 @@
         return;
     }
 
+    // Define qual sidebar incluir de acordo com o perfil do usuário
+
+    String sidebarPage;
+
+    switch (usuarioLogado.getTipo_usuario()) {
+        case ADMIN:
+            sidebarPage = "/pages/includes/sidebar-editor-admin.jsp";
+            break;
+        case EDITOR:
+            sidebarPage = "/pages/includes/sidebar-editor.html";
+            break;
+        case AUTOR:
+            sidebarPage = "/pages/includes/sidebar-autor.html";
+            break;
+        case VISITANTE:
+            sidebarPage = "/pages/includes/sidebar-visitante.html";
+            break;
+        default:
+            sidebarPage = "/pages/includes/sidebar-editor-admin.jsp"; // fallback de segurança
+            break;
+    }
+    request.setAttribute("sidebarPage", sidebarPage);
+    
     // Iniciais do avatar (ex: "Maria Andrade" -> "MA")
     String nome = usuarioLogado.getNome_usuario() != null ? usuarioLogado.getNome_usuario() : "";
     String[] partes = nome.trim().split("\\s+");
@@ -224,7 +247,8 @@
 </head>
 <body class="${temaAtual == 'DARK' ? 'dark-mode' : (temaAtual == 'HIGH_CONTRAST' ? 'high-contrast' : '')}">
 
-<jsp:include page="/pages/includes/sidebar-editor-admin.jsp" />
+
+<jsp:include page="${sidebarPage}" />
 
 <main class="main">
   <div class="topbar">
@@ -304,11 +328,7 @@
           <div class="card-body">
             <div class="form-row">
               <div class="fg">
-                <label class="fl">Senha Atual</label>
-                <div class="pw-wrap">
-                  <input type="password" class="fi" id="pw0" name="senhaAtual" placeholder="••••••••" required>
-                  <button type="button" class="pw-eye" onclick="togglePw('pw0')">👁</button>
-                </div>
+          
               </div>
               <div></div>
               <div class="fg">

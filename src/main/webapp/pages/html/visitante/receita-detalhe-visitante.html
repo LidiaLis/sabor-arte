@@ -549,7 +549,22 @@
     border-color: var(--moss-light);
     box-shadow: 0 0 0 3px rgba(74,94,58,0.08);
   }
+  .btn-logout{display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:2px;color:rgba(245,240,232,0.7);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;}
+  .btn-logout:hover{background:rgba(155,68,68,0.2);border-color:rgba(155,68,68,0.3);color:#e8a0a0;}
 
+.sidebar-user{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
+
+a.sidebar-user,
+a.sidebar-user:link,
+a.sidebar-user:visited,
+a.sidebar-user:hover,
+a.sidebar-user:active {
+  text-decoration: none;
+  color: inherit;
+}  .user-avatar{width:38px;height:38px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--moss-dark);flex-shrink:0;}
+  .user-name{font-size:13px;font-weight:600;color:var(--cream);}
+  .user-role-badge{font-size:10px;color:var(--gold-light);text-transform:uppercase;letter-spacing:0.8px;font-weight:300;}
+  .sidebar-bottom{padding:16px 24px 24px;border-top:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;font-size:11px;color:rgba(245,240,232,0.45);font-weight:300;}
   .star-rating { display: flex; gap: 4px; }
   .star-rating span {
     font-size: 22px; cursor: pointer;
@@ -607,8 +622,8 @@
   card de informação nutricional.
 -->
 
-<!-- ===== SIDEBAR ADMIN (estático) ===== -->
-<aside class="sidebar" id="sidebar" data-role="admin">
+<!-- ===== SIDEBAR VISITANTE (estático) ===== -->
+<aside class="sidebar" id="sidebar">
 
     <div class="sidebar-brand">
         <div class="brand-row">
@@ -620,68 +635,44 @@
         </div>
     </div>
 
-    <!-- usuario.nome_usuario / usuario.foto_usuario do usuário da sessão -->
-    <a href="perfil-admin.html" class="sidebar-user" title="Meu perfil">
-        <div id="sidebarAvatar"
-             class="user-avatar"
-             style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
-
-            <img id="sidebarAvatarImg"
-                 src="/saborearte/img/g.png"
-                 class="visible"
-                 alt="A">
-        </div>
-
+    <!-- Avatar do visitante -->
+    <a href="perfil-visitante.html" class="sidebar-user" title="Meu perfil">
+        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+			<img src="/saborearte/img/y.png"
+			     style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+			     alt="A">        
+	    </div>
         <div class="user-info">
-            <div class="user-name">Ana Silva</div>
-            <div class="user-role-badge">👑 Administrador</div>
+            <div class="user-name">Thiago Ferreira</div>
+            <div class="user-role-badge">Visitante</div>
         </div>
     </a>
 
     <nav class="sidebar-nav">
+        <div class="nav-section-label">Explorar</div>
 
-        <!-- ===== SEÇÃO VISÃO GERAL ===== -->
-        <div class="nav-section-label">Principal</div>
-
-        <a href="dashboard-admin.html" class="nav-item ">
-            <span class="nav-icon">📊</span>
-            <span class="nav-label">Dashboard</span>
+        
+        <a href="home-visitante.html" class="nav-item ">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Home</span>
         </a>
 
-        <!-- ===== SEÇÃO GESTÃO ===== -->
-        <div class="nav-section-label">Gestão</div>
-
-        <a href="/saborearte/UsuarioController" class="nav-item">
-            <span class="nav-icon">👥</span>
-            <span class="nav-label">Usuários</span>
-        </a>
-
-        <a href="/saborearte/CategoriaController" class="nav-item">
-            <span class="nav-icon">🏷️</span>
-            <span class="nav-label">Categorias</span>
-        </a>
-
-        <a href="receita-admin.html" class="nav-item active">
+	<a href="receitas-visitante.html" class="nav-item active">
             <span class="nav-icon">📝</span>
             <span class="nav-label">Receitas</span>
         </a>
 
-        <!-- ===== SEÇÃO ANÁLISE ===== -->
-        <div class="nav-section-label">Análise</div>
-
-        <a href="relatorio-admin.html" class="nav-item">
-            <span class="nav-icon">📈</span>
-            <span class="nav-label">Relatórios</span>
+        <a href="autores-visitante.html" class="nav-item">
+            <span class="nav-icon">✍️</span>
+            <span class="nav-label">Autores</span>
         </a>
 
-        <a href="log-admin.html" class="nav-item">
-            <span class="nav-icon">🔍</span>
-            <span class="nav-label">Auditoria</span>
+        <a href="receitas-favoritas.html" class="nav-item ">
+            <span class="nav-icon">⭐</span>
+            <span class="nav-label">Favoritas</span>
         </a>
 
-        <!-- ===== SEÇÃO CONTA ===== -->
         <div class="nav-section-label">Conta</div>
-
         <a href="/saborearte/ConfiguracaoController" class="nav-item">
             <span class="nav-icon">⚙️</span>
             <span class="nav-label">Configurações</span>
@@ -690,13 +681,14 @@
     </nav>
 
     <div class="sidebar-bottom">
-        <a href="/saborearte/LogoutController" class="btn-logout">
-            <span class="nav-icon">🚪</span>
-            <span>Sair</span>
-        </a>
+	    <a href="/saborearte/LogoutController" class="btn-logout">
+	        <span class="nav-icon">🚪</span>
+	        <span>Sair</span>
+	    </a>
     </div>
 
 </aside>
+
 
 <!-- MAIN -->
 <main class="main">

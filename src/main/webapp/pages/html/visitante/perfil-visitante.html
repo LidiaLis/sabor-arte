@@ -46,17 +46,21 @@
   .brand-badge { width: 38px; height: 38px; background: linear-gradient(135deg, var(--moss-light), var(--sage)); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
   .brand-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--cream); display: block; line-height: 1; }
   .brand-sub { font-size: 10px; color: var(--sage); text-transform: uppercase; letter-spacing: 1.2px; margin-top: 3px; display: block; font-weight: 300; }
-  .sidebar-user { padding: 18px 24px; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; cursor: pointer; }
-  .user-avatar {
-    width: 38px; height: 38px; background: linear-gradient(135deg, var(--gold), var(--gold-light));
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 13px; color: var(--moss-dark);
-    flex-shrink: 0; overflow: hidden; position: relative;
-  }
-  .user-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
-  .user-avatar img.visible { display: block; }
-  .user-name { font-size: 13px; font-weight: 600; color: var(--cream); }
-  .user-role-badge { font-size: 10px; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 300; }
+
+.sidebar-user{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
+
+a.sidebar-user,
+a.sidebar-user:link,
+a.sidebar-user:visited,
+a.sidebar-user:hover,
+a.sidebar-user:active {
+  text-decoration: none;
+  color: inherit;
+}  .user-avatar{width:38px;height:38px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--moss-dark);flex-shrink:0;}
+  .user-name{font-size:13px;font-weight:600;color:var(--cream);}
+  .user-role-badge{font-size:10px;color:var(--gold-light);text-transform:uppercase;letter-spacing:0.8px;font-weight:300;}
+  .sidebar-bottom{padding:16px 24px 24px;border-top:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;font-size:11px;color:rgba(245,240,232,0.45);font-weight:300;}
+
   .sidebar-nav { flex: 1; padding: 16px 0; position: relative; z-index: 1; }
   .nav-section-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.8px; color: rgba(163,177,138,0.5); padding: 16px 24px 6px; font-weight: 500; }
   .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 24px; color: rgba(245,240,232,0.7); text-decoration: none; font-size: 14px; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
@@ -145,10 +149,7 @@
   .form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
   .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--moss); background: var(--warm-white); box-shadow: 0 0 0 3px rgba(74,94,58,0.1); }
   .form-input.readonly { background: var(--cream-dark) !important; color: var(--text-light) !important; cursor: not-allowed; }
-  .form-input.invalid { border-color: var(--error) !important; background: var(--error-bg) !important; }
-  .form-input.invalid:focus { box-shadow: 0 0 0 3px rgba(155,68,68,0.12); }
   .form-hint { font-size: 10px; color: var(--text-light); margin-top: 4px; font-weight: 300; }
-  .field-error { font-size: 10px; color: var(--error); margin-top: 4px; font-weight: 500; min-height: 13px; }
 
   /* ===== BOTÕES ===== */
   .btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
@@ -172,20 +173,6 @@
   .public-mini-body { padding: 8px 10px; background: var(--warm-white); }
   .public-mini-title { font-size: 11px; font-weight: 600; color: var(--text-dark); line-height: 1.3; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .public-mini-cat { font-size: 10px; color: var(--text-light); }
-
-  /* ===== LOG DE ATIVIDADES ===== */
-  .log-list { display: flex; flex-direction: column; }
-  .log-item { display: flex; align-items: flex-start; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--cream-dark); }
-  .log-item:last-child { border-bottom: none; padding-bottom: 0; }
-  .log-item:first-child { padding-top: 0; }
-  .log-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
-  .log-dot.green  { background: #3a7a4a; }
-  .log-dot.blue   { background: #3a6f9b; }
-  .log-dot.gold   { background: var(--gold); }
-  .log-dot.red    { background: var(--error); }
-  .log-text { font-size: 13px; color: var(--text-dark); line-height: 1.4; }
-  .log-text b { font-weight: 600; }
-  .log-time { font-size: 11px; color: var(--text-light); margin-top: 2px; font-weight: 300; }
 
   /* ===== MODAL GENÉRICO ===== */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; align-items: center; justify-content: center; }
@@ -281,8 +268,8 @@
 </head>
 <body>
 
-<!-- ===== SIDEBAR ADMIN (estático) ===== -->
-<aside class="sidebar" id="sidebar" data-role="admin">
+<!-- ===== SIDEBAR VISITANTE (estático) ===== -->
+<aside class="sidebar" id="sidebar">
 
     <div class="sidebar-brand">
         <div class="brand-row">
@@ -294,80 +281,57 @@
         </div>
     </div>
 
-    <a href="perfil-admin.html" class="sidebar-user" title="Meu perfil">
-        <div id="sidebarAvatar"
-     class="user-avatar"
-     style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
-
-    <img id="sidebarAvatarImg"
-         src="/saborearte/img/g.png"
-         class="visible"
-         alt="A">
-</div>
-
+    <!-- Avatar do visitante -->
+    <a href="perfil-visitante.html" class="sidebar-user" title="Meu perfil">
+        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+			<img src="/saborearte/img/y.png"
+			     style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+			     alt="A">        
+	    </div>
         <div class="user-info">
-            <div class="user-name">Ana Silva</div>
-            <div class="user-role-badge">👑 Administrador</div>
+            <div class="user-name">Thiago Ferreira</div>
+            <div class="user-role-badge">Visitante</div>
         </div>
     </a>
 
     <nav class="sidebar-nav">
-F
-        <!-- ===== SEÇÃO VISÃO GERAL ===== -->
-        <div class="nav-section-label">Principal</div>
+        <div class="nav-section-label">Explorar</div>
 
-        <a href="dashboard-admin.html" class="nav-item ">
-            <span class="nav-icon">📊</span>
-            <span class="nav-label">Dashboard</span>
+        
+        <a href="home-visitante.html" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Home</span>
         </a>
 
-        <!-- ===== SEÇÃO GESTÃO ===== -->
-        <div class="nav-section-label">Gestão</div>
-
-        <a href="/saborearte/UsuarioController" class="nav-item">
-            <span class="nav-icon">👥</span>
-            <span class="nav-label">Usuários</span>
-        </a>
-
-        <a href="/saborearte/CategoriaController" class="nav-item">
-            <span class="nav-icon">🏷️</span>
-            <span class="nav-label">Categorias</span>
-        </a>
-
-        <a href="receita-admin.html" class="nav-item">
+	<a href="receitas-visitante.html" class="nav-item ">
             <span class="nav-icon">📝</span>
             <span class="nav-label">Receitas</span>
         </a>
 
-        <!-- ===== SEÇÃO ANÁLISE ===== -->
-        <div class="nav-section-label">Análise</div>
-
-        <a href="relatorio-admin.html" class="nav-item">
-            <span class="nav-icon">📈</span>
-            <span class="nav-label">Relatórios</span>
+        <a href="autores-visitante.html" class="nav-item">
+            <span class="nav-icon">✍️</span>
+            <span class="nav-label">Autores</span>
         </a>
 
-        <a href="log-admin.html" class="nav-item">
-            <span class="nav-icon">🔍</span>
-            <span class="nav-label">Auditoria</span>
+        <a href="receitas-favoritas.html" class="nav-item">
+            <span class="nav-icon">⭐</span>
+            <span class="nav-label">Favoritas</span>
         </a>
 
-        <!-- ===== SEÇÃO CONTA ===== -->
         <div class="nav-section-label">Conta</div>
-
         <a href="/saborearte/ConfiguracaoController" class="nav-item">
             <span class="nav-icon">⚙️</span>
             <span class="nav-label">Configurações</span>
         </a>
 
     </nav>
-	
-	<div class="sidebar-bottom">
+
+    <div class="sidebar-bottom">
 	    <a href="/saborearte/LogoutController" class="btn-logout">
 	        <span class="nav-icon">🚪</span>
 	        <span>Sair</span>
 	    </a>
-	</div>
+    </div>
 
 </aside>
 
@@ -380,6 +344,7 @@ F
       <span style="color:var(--cream-dark)">/</span>
       <span class="current">Meu Perfil</span>
     </div>
+    <button class="btn btn-primary btn-sm" onclick="showModal('✅','Dados salvos!','Suas informações foram atualizadas com sucesso.')">💾 Salvar alterações</button>
   </div>
 
   <div class="content">
@@ -389,18 +354,21 @@ F
       <div class="hero-inner">
         <div class="avatar-upload-wrap">
           <div class="hero-avatar-big" id="heroAvatar" onclick="openAvatarModal()" title="Clique para alterar foto">
-                     <img id="heroAvatarImg" alt="Foto de perfil"
-                              src="/saborearte/img/g.png"
-         class="visible"
-         alt="A">
+            M
+            <img id="heroAvatarImg" alt="Foto de perfil">
           </div>
           <div class="avatar-upload-btn" onclick="openAvatarModal()" title="Alterar foto">📷</div>
         </div>
         <div class="hero-text">
           <div class="hero-text-main">
-            <div class="hero-role-pill">Administradora</div>
-            <div class="hero-name">Ana Silva</div>
-            <div class="hero-email">ana.silva@saborarte.com.br</div>
+            <div class="hero-role-pill">👤 Visitante</div>
+            <div class="hero-name">Maria Andrade</div>
+            <div class="hero-email">maria.andrade@saborarte.com.br</div>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat"><div class="hero-stat-val">47</div><div class="hero-stat-lbl">Receitas</div></div>
+            <div class="hero-stat"><div class="hero-stat-val">128</div><div class="hero-stat-lbl">Comentários</div></div>
+            <div class="hero-stat"><div class="hero-stat-val">2.4k</div><div class="hero-stat-lbl">Visualizações</div></div>
           </div>
         </div>
       </div>
@@ -417,8 +385,7 @@ F
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Nome de Exibição</label>
-              <input type="text" class="form-input readonly" value="Maria Andrade" readonly>
-              <div class="form-hint">O nome de exibição não pode ser alterado.</div>
+              <input type="text" class="form-input" value="Maria Andrade">
             </div>
             <div class="form-group">
               <label class="form-label">Nome de Usuário</label>
@@ -432,18 +399,20 @@ F
             </div>
             <div class="form-group">
               <label class="form-label">Telefone</label>
-              <input type="tel" class="form-input" id="telInput" placeholder="(71) 9 0000-0000"
-                inputmode="numeric" maxlength="16" oninput="formatPhone(this)">
-              <div class="field-error" id="telError"></div>
+              <input type="tel" class="form-input" placeholder="(71) 9 0000-0000">
             </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Localização</label>
-            <input type="text" class="form-input" id="locInput" value="Salvador, BA"
-              placeholder="Cidade, UF" oninput="formatLocation(this)">
-            <div class="field-error" id="locError"></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Localização</label>
+              <input type="text" class="form-input" value="Salvador, BA">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Instagram</label>
+              <input type="text" class="form-input" placeholder="@seuinstagram">
+            </div>
           </div>
-          <button class="btn btn-primary" onclick="saveDados()">💾 Atualizar Dados</button>
+          <button class="btn btn-primary" onclick="showModal('✅','Dados atualizados!','Suas informações foram salvas.')">💾 Atualizar Dados</button>
         </div>
       </div>
 
@@ -457,7 +426,7 @@ F
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Nível de Acesso</label>
-                <div class="role-badge">🛡️ Administradora</div>
+                <div class="role-badge">👤 Visitante</div>
               </div>
               <div class="form-group">
                 <label class="form-label">Membro desde</label>
@@ -469,31 +438,22 @@ F
 
         <div class="card">
           <div class="card-head">
-            <div class="card-head-title"><span class="card-icon">📋</span> Log de Atividades</div>
-            <a href="log-admin.html" style="font-size:12px;color:var(--moss-light);text-decoration:none">Ver tudo</a>
+            <div class="card-head-title"><span class="card-icon">❤️</span> Minhas Receitas Favoritadas</div>
+            <a href="receitas-favoritas.html" style="font-size:12px;color:var(--moss-light);text-decoration:none">Ver todas</a>
           </div>
-          <div class="card-body" style="padding-top:14px;padding-bottom:14px">
-            <div class="log-list">
-              <div class="log-item">
-                <span class="log-dot green"></span>
-                <div>
-                  <div class="log-text">Publicou a receita <b>Bolo de Cenoura</b></div>
-                  <div class="log-time">há 2 horas</div>
-                </div>
+          <div class="card-body" style="padding:12px">
+            <div class="public-grid">
+              <div class="public-mini">
+                <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=300&q=80" alt="Bolo de Cenoura">
+                <div class="public-mini-body"><div class="public-mini-title">Bolo de Cenoura</div><div class="public-mini-cat">🎂 Sobremesas</div></div>
               </div>
-              <div class="log-item">
-                <span class="log-dot blue"></span>
-                <div>
-                  <div class="log-text">Editou o usuário <b>@joao.silva</b></div>
-                  <div class="log-time">há 5 horas</div>
-                </div>
+              <div class="public-mini">
+                <img src="https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=300&q=80" alt="Risoto de Cogumelos">
+                <div class="public-mini-body"><div class="public-mini-title">Risoto de Cogumelos</div><div class="public-mini-cat">🍝 Massas</div></div>
               </div>
-              <div class="log-item">
-                <span class="log-dot gold"></span>
-                <div>
-                  <div class="log-text">Aprovou comentário em <b>Risoto de Cogumelos</b></div>
-                  <div class="log-time">ontem, 18:42</div>
-                </div>
+              <div class="public-mini">
+                <img src="https://images.unsplash.com/photo-1547592180-85f173990554?w=300&q=80" alt="Sopa de Abóbora">
+                <div class="public-mini-body"><div class="public-mini-title">Sopa de Abóbora</div><div class="public-mini-cat">🥣 Sopas</div></div>
               </div>
             </div>
           </div>
@@ -574,75 +534,6 @@ F
 </div>
 
 <script>
-  /* ===== VALIDAÇÃO: TELEFONE ===== */
-  function formatPhone(el) {
-    var digits = el.value.replace(/\D/g, '').slice(0, 11); // DDD + 9 dígitos
-    var out = '';
-    if (digits.length > 0) out = '(' + digits.substring(0, 2);
-    if (digits.length >= 2) out += ') ';
-    if (digits.length > 2) out += digits.substring(2, 3);
-    if (digits.length > 3) out += ' ' + digits.substring(3, 7);
-    if (digits.length > 7) out += '-' + digits.substring(7, 11);
-    el.value = out;
-
-    var err = document.getElementById('telError');
-    var valid = digits.length === 0 || digits.length === 10 || digits.length === 11;
-    if (!valid) {
-      el.classList.add('invalid');
-      err.textContent = 'Telefone incompleto. Use o formato (71) 9 0000-0000.';
-    } else {
-      el.classList.remove('invalid');
-      err.textContent = '';
-    }
-  }
-
-  /* ===== VALIDAÇÃO: LOCALIZAÇÃO (Cidade, UF) ===== */
-  var UF_LIST = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
-
-  function formatLocation(el) {
-    var raw = el.value;
-    var err = document.getElementById('locError');
-
-    // Auto-maiúscula na sigla do estado após a vírgula, sem travar a digitação da cidade
-    var commaIdx = raw.indexOf(',');
-    if (commaIdx !== -1) {
-      var cidade = raw.substring(0, commaIdx);
-      var uf = raw.substring(commaIdx + 1).toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
-      el.value = cidade + ', ' + uf;
-    }
-
-    if (raw.trim() === '') { el.classList.remove('invalid'); err.textContent = ''; return; }
-
-    var pattern = /^[A-Za-zÀ-ÖØ-öø-ÿ' -]+,\s[A-Z]{2}$/;
-    var match = pattern.test(el.value);
-    var ufValid = match && UF_LIST.includes(el.value.split(',')[1].trim());
-
-    if (!match) {
-      el.classList.add('invalid');
-      err.textContent = 'Formato: Cidade, UF (ex: Salvador, BA).';
-    } else if (!ufValid) {
-      el.classList.add('invalid');
-      err.textContent = 'Sigla de estado inválida.';
-    } else {
-      el.classList.remove('invalid');
-      err.textContent = '';
-    }
-  }
-
-  /* ===== SALVAR DADOS COM VALIDAÇÃO ===== */
-  function saveDados() {
-    var tel = document.getElementById('telInput');
-    var loc = document.getElementById('locInput');
-    formatPhone(tel);
-    formatLocation(loc);
-
-    if (tel.classList.contains('invalid') || loc.classList.contains('invalid')) {
-      showModal('⚠️', 'Verifique os campos', 'Corrija o telefone e/ou a localização antes de salvar.');
-      return;
-    }
-    showModal('✅', 'Dados atualizados!', 'Suas informações foram salvas.');
-  }
-
   /* ===== MODAL GENÉRICO ===== */
   function showModal(icon, title, msg) {
     document.getElementById('mIcon').textContent = icon;

@@ -257,7 +257,7 @@
         <span class="brand-tagline">Blog Culinário Editorial</span>
       </div>
     </div>
-    <div class="card-title">Bem-vindo de <em>volta</em></div>
+    <div class="card-title">Bem-vindo</div>
     <div class="card-subtitle">Acesse sua conta para continuar</div>
   </div>
 
