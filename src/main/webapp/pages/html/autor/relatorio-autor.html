@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabor & Arte — Relatórios</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --moss:         #4a5e3a;
+    --moss-dark:    #2f3d25;
+    --moss-light:   #6b7f59;
+    --sage:         #a3b18a;
+    --sage-light:   #c8d5b9;
+    --cream:        #f5f0e8;
+    --cream-dark:   #e6dece;
+    --warm-white:   #faf8f4;
+    --text-dark:    #1e2718;
+    --text-mid:     #4a5240;
+    --text-light:   #8a9480;
+    --gold:         #c4a265;
+    --gold-light:   #dfc094;
+    --published:    #3a7a4a;
+    --published-bg: #e8f4eb;
+    --pending:      #c4832a;
+    --pending-bg:   #fdf2e3;
+    --draft:        #6a7a8a;
+    --draft-bg:     #eef1f4;
+    --error:        #9b4444;
+    --error-bg:     #fdf0f0;
+    --sidebar-w:    260px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text-dark); min-height: 100vh; display: flex; }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--moss-dark);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow-y: auto;
+  }
+  .sidebar::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 200% 60% at 50% 0%, rgba(74,94,58,0.5) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .sidebar-brand { padding: 28px 24px 22px; border-bottom: 1px solid rgba(255,255,255,0.08); position: relative; z-index: 1; }
+  .brand-row { display: flex; align-items: center; gap: 12px; }
+  .brand-badge { width: 38px; height: 38px; background: linear-gradient(135deg, var(--moss-light), var(--sage)); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .brand-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--cream); display: block; line-height: 1; }
+  .brand-sub { font-size: 10px; color: var(--sage); text-transform: uppercase; letter-spacing: 1.2px; margin-top: 3px; display: block; font-weight: 300; }
+  .sidebar-user { padding: 18px 24px; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
+  .user-avatar { width: 38px; height: 38px; background: linear-gradient(135deg, var(--gold), var(--gold-light)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 13px; color: var(--moss-dark); }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--cream); }
+  .user-role-badge { font-size: 10px; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 300; }
+  .sidebar-nav { flex: 1; padding: 16px 0; position: relative; z-index: 1; }
+  .nav-section-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.8px; color: rgba(163,177,138,0.5); padding: 16px 24px 6px; font-weight: 500; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 24px; color: rgba(245,240,232,0.7); text-decoration: none; font-size: 14px; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
+  .nav-item:hover { color: var(--cream); background: rgba(255,255,255,0.06); border-left-color: var(--sage); }
+  .nav-item.active { color: var(--cream); background: rgba(163,177,138,0.15); border-left-color: var(--sage-light); font-weight: 500; }
+  .nav-icon { width: 22px; text-align: center; font-size: 16px; }
+  .nav-badge { margin-left: auto; background: var(--gold); color: var(--moss-dark); font-family: 'Nunito', sans-serif; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 10px; }
+  .sidebar-bottom { padding: 16px 24px 24px; border-top: 1px solid rgba(255,255,255,0.08); position: relative; z-index: 1; }
+  .btn-logout { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 2px; color: rgba(245,240,232,0.7); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .btn-logout:hover { background: rgba(155,68,68,0.2); border-color: rgba(155,68,68,0.3); color: #e8a0a0; }
+
+  /* ===== MAIN ===== */
+  .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* ===== TOP BAR ===== */
+  .topbar {
+    background: var(--warm-white); border-bottom: 1px solid var(--cream-dark);
+    padding: 0 40px; height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .menu-toggle { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-dark); padding: 4px; }
+  .page-crumb { font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 6px; }
+  .page-crumb .current { color: var(--moss); font-weight: 500; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+  /* ===== EXPORT BUTTONS ===== */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 16px; border: none; border-radius: 2px;
+    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.12); }
+  .btn-pdf   { background: #fdeaea; color: var(--error); }
+  .btn-excel { background: var(--published-bg); color: var(--published); }
+  .btn-print { background: var(--draft-bg); color: var(--draft); }
+  .btn-primary { background: var(--moss); color: var(--cream); }
+  .btn-primary:hover { background: var(--moss-dark); }
+  .btn-outline { background: none; color: var(--moss); border: 1.5px solid var(--moss); }
+  .btn-outline:hover { background: rgba(74,94,58,0.06); }
+  .btn-sm { padding: 6px 12px; font-size: 11px; }
+
+  /* ===== CONTENT ===== */
+  .content { flex: 1; padding: 32px 40px; }
+
+  /* ===== PAGE HEADER ===== */
+  .page-header { margin-bottom: 28px; }
+  .page-title-main { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 500; color: var(--text-dark); line-height: 1; }
+  .page-title-main em { font-style: italic; color: var(--moss); }
+  .page-subtitle { font-size: 13px; color: var(--text-light); font-weight: 300; margin-top: 5px; }
+
+  /* ===== MAIN GRID ===== */
+  .report-layout { display: grid; grid-template-columns: 270px 1fr; gap: 24px; align-items: start; }
+
+  /* ===== LEFT PANEL ===== */
+  .left-panel { display: flex; flex-direction: column; gap: 18px; position: sticky; top: 80px; }
+
+  .panel-card { background: var(--warm-white); border: 1px solid var(--cream-dark); border-radius: 4px; overflow: hidden; }
+
+  .panel-head { padding: 14px 18px; border-bottom: 1px solid var(--cream-dark); font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 1.2px; }
+
+  /* Category items */
+  .cat-item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 12px 18px; cursor: pointer; transition: all 0.18s;
+    border-left: 3px solid transparent; color: var(--text-mid);
+    font-size: 13px; font-weight: 400;
+  }
+  .cat-item:hover { background: var(--cream); border-left-color: var(--sage); color: var(--text-dark); }
+  .cat-item.active { background: rgba(74,94,58,0.08); border-left-color: var(--moss); color: var(--moss); font-weight: 600; }
+  .cat-item-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+  .cat-item-count { margin-left: auto; font-family: 'Nunito', sans-serif; font-size: 11px; font-weight: 700; background: var(--cream-dark); color: var(--text-light); padding: 2px 8px; border-radius: 10px; }
+  .cat-item.active .cat-item-count { background: rgba(74,94,58,0.15); color: var(--moss); }
+
+  /* Filter fields */
+  .filter-body { padding: 16px 18px; }
+  .filter-group { margin-bottom: 14px; }
+  .filter-group:last-child { margin-bottom: 0; }
+  .filter-label { display: block; font-size: 10px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .filter-input, .filter-select {
+    width: 100%; padding: 9px 12px;
+    border: 1.5px solid var(--cream-dark); border-radius: 2px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    color: var(--text-dark); background: var(--cream);
+    transition: border-color 0.2s, box-shadow 0.2s; outline: none;
+  }
+  .filter-input:focus, .filter-select:focus { border-color: var(--moss); background: var(--warm-white); box-shadow: 0 0 0 3px rgba(74,94,58,0.08); }
+  .btn-generate {
+    width: 100%; margin-top: 16px; padding: 11px;
+    background: var(--moss); color: var(--cream);
+    border: none; border-radius: 2px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-generate:hover { background: var(--moss-dark); }
+
+  /* ===== RIGHT PANEL ===== */
+  .right-panel { display: flex; flex-direction: column; gap: 18px; }
+
+  /* Stats mini row */
+  .mini-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+  .mini-stat {
+    background: var(--warm-white); border: 1px solid var(--cream-dark);
+    border-radius: 4px; padding: 16px 18px;
+    position: relative; overflow: hidden;
+    transition: transform 0.2s;
+  }
+  .mini-stat:hover { transform: translateY(-2px); }
+  .mini-stat::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .mini-stat.a::before { background: linear-gradient(90deg, var(--moss), var(--sage)); }
+  .mini-stat.b::before { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+  .mini-stat.c::before { background: linear-gradient(90deg, var(--pending), #e8a84a); }
+  .mini-stat.d::before { background: linear-gradient(90deg, var(--published), #5ab870); }
+  .mini-stat-val { font-family: 'Nunito', sans-serif; font-size: 28px; font-weight: 800; color: var(--text-dark); line-height: 1; }
+  .mini-stat-lbl { font-size: 10px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; font-weight: 500; }
+
+  /* Result card */
+  .result-card { background: var(--warm-white); border: 1px solid var(--cream-dark); border-radius: 4px; overflow: hidden; }
+
+  .result-head { padding: 16px 22px; border-bottom: 1px solid var(--cream-dark); display: flex; align-items: center; justify-content: space-between; }
+  .result-title { font-size: 15px; font-weight: 600; color: var(--text-dark); }
+  .result-meta { font-size: 11px; color: var(--text-light); font-weight: 300; }
+
+  .export-row { display: flex; gap: 8px; }
+
+  /* Feedback banner */
+  .feedback-bar {
+    display: none; margin: 0; padding: 12px 22px;
+    border-bottom: 1px solid var(--cream-dark);
+    font-size: 13px; font-weight: 500;
+    background: var(--published-bg); color: var(--published);
+    align-items: center; gap: 8px;
+  }
+  .feedback-bar.show { display: flex; }
+  .feedback-bar.loading { background: var(--pending-bg); color: var(--pending); }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+  .data-table thead th {
+    padding: 10px 18px; text-align: left;
+    background: var(--cream); border-bottom: 2px solid var(--cream-dark);
+    font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-light); font-weight: 700; white-space: nowrap;
+  }
+
+  .data-table tbody tr { border-bottom: 1px solid var(--cream-dark); transition: background 0.12s; }
+  .data-table tbody tr:last-child { border-bottom: none; }
+  .data-table tbody tr:hover { background: rgba(245,240,232,0.7); }
+  .data-table td { padding: 12px 18px; color: var(--text-mid); vertical-align: middle; }
+
+  /* Status pills in table */
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 2px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .pill-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .pill.publicado  { background: var(--published-bg); color: var(--published); }
+  .pill.pendente   { background: var(--pending-bg);   color: var(--pending); }
+  .pill.rascunho   { background: var(--draft-bg);     color: var(--draft); }
+  .pill.arquivado  { background: #f4f0ec;              color: #8a7a6a; }
+  .pill.ativo      { background: var(--published-bg); color: var(--published); }
+  .pill.inativo    { background: var(--error-bg);     color: var(--error); }
+  .pill.aprovado   { background: var(--published-bg); color: var(--published); }
+  .pill.rejeitado  { background: var(--error-bg);     color: var(--error); }
+
+  /* Empty state */
+  .empty-state { text-align: center; padding: 60px 30px; }
+  .empty-icon { font-size: 48px; margin-bottom: 14px; opacity: 0.4; }
+  .empty-text { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--text-light); font-style: italic; margin-bottom: 6px; }
+  .empty-sub { font-size: 13px; color: var(--text-light); font-weight: 300; }
+
+  /* Table footer */
+  .table-footer { padding: 12px 22px; border-top: 1px solid var(--cream-dark); display: flex; align-items: center; justify-content: space-between; }
+  .table-count { font-size: 12px; color: var(--text-light); font-weight: 300; }
+  .table-count strong { font-family: 'Nunito', sans-serif; font-weight: 700; color: var(--text-mid); }
+
+  /* ===== ÁREA EXCLUSIVA DE IMPRESSÃO (mesmo padrão visual do PDF) ===== */
+  #printArea { display: none; }
+  .print-header { margin-bottom: 4px; }
+  .print-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--moss-dark); }
+  .print-subtitle { font-family: 'DM Sans', sans-serif; font-size: 11px; color: var(--text-mid); margin-top: 2px; }
+  .print-meta { font-family: 'DM Sans', sans-serif; font-size: 9px; color: var(--text-light); margin-top: 2px; margin-bottom: 14px; }
+  .print-table { width: 100%; border-collapse: collapse; font-size: 10px; font-family: 'DM Sans', sans-serif; }
+  .print-table th { background: var(--moss-dark); color: #fff; text-align: left; padding: 7px 8px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 700; border: 1px solid var(--moss-dark); }
+  .print-table td { padding: 6px 8px; border: 1px solid #ddd; color: var(--text-dark); vertical-align: top; }
+  .print-table tbody tr:nth-child(even) { background: #f5f0e8; }
+
+  @media print {
+    body > *:not(#printArea) { display: none !important; }
+    #printArea { display: block !important; }
+    @page { margin: 16mm 12mm; }
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 1100px) { .report-layout { grid-template-columns: 240px 1fr; } .mini-stats { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 900px)  { .report-layout { grid-template-columns: 1fr; } .left-panel { position: static; } .mini-stats { grid-template-columns: repeat(4,1fr); } }
+  @media (max-width: 768px)  { .sidebar { transform: translateX(-100%); transition: transform 0.3s; } .sidebar.open { transform: translateX(0); } .main { margin-left: 0; } .content { padding: 20px; } .topbar { padding: 0 20px; } .menu-toggle { display: block; } .mini-stats { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px)  { .topbar-right { display: none; } }
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ADMIN (estático) ===== -->
+<aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-brand">
+        <div class="brand-row">
+            <div class="brand-badge">🌿</div>
+            <div>
+                <span class="brand-title">Sabor &amp; Arte</span>
+                <span class="brand-sub">Blog editorial</span>
+            </div>
+        </div>
+    </div>
+
+    <a href="perfil-autor.html" class="sidebar-user" title="Meu perfil">
+        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+			<img src="/saborearte/img/v.png"
+			     style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+			     alt="A">        
+	    </div>
+        <div class="user-info">
+            <div class="user-name">Rafael Costa</div>
+            <div class="user-role-badge">✍️ Autor</div>
+        </div>
+    </a>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">Visão Geral</div>
+
+        <a href="dashboard-autor.html" class="nav-item ">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </a>
+
+        <div class="nav-section-label">Conteúdo</div>
+
+        <a href="receitas-autor.html" class="nav-item">
+            <span class="nav-icon">📖</span>
+            <span class="nav-label">Minhas Receitas</span>
+        </a>
+        <a href="mensagens-autor.html" class="nav-item">     
+            <span class="nav-icon">💬</span>
+            <span class="nav-label">Mensagens</span>
+        </a>
+
+        <div class="nav-section-label">Análise</div>
+
+        <a href="relatorio-autor.html" class="nav-item active">
+          <span class="nav-icon">📈</span>
+          <span class="nav-label">Relatórios</span>
+        </a>
+
+        <div class="nav-section-label">Conta</div>
+        <a href="/saborearte/ConfiguracaoController" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Configurações</span>
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+	    <a href="/saborearte/LogoutController" class="btn-logout">
+	        <span class="nav-icon">🚪</span>
+	        <span>Sair</span>
+	    </a>
+    </div>
+
+</aside>
+
+
+<!-- OVERLAY MOBILE -->
+<div id="overlay" onclick="closeSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99"></div>
+
+<!-- MAIN -->
+<main class="main">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+      <div class="page-crumb">
+        <span>Análise</span>
+        <span style="color:var(--cream-dark)">/</span>
+        <span class="current">Relatórios</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-pdf"   onclick="exportPDF()">⬇ PDF</button>
+      <button class="btn btn-excel" onclick="exportExcel()">⬇ Excel</button>
+      <button class="btn btn-print" onclick="printReport()">🖨 Imprimir</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-title-main">Relatórios</div>
+      <div class="page-subtitle">Análises editoriais e relatórios do Blog de Receitas</div>
+    </div>
+
+    <div class="report-layout">
+
+      <!-- LEFT: categories + filters -->
+      <div class="left-panel">
+
+        <div class="panel-card">
+          <div class="panel-head">Relatórios</div>
+          <div id="cat-list">
+            <div class="cat-item active" data-type="receitas" onclick="setCategory(this)">
+              <span class="cat-item-icon">📝</span> Receitas do Blog
+            </div>
+            <div class="cat-item" data-type="comentarios" onclick="setCategory(this)">
+              <span class="cat-item-icon">💬</span> Comentários &amp; Avaliações
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-head">Filtros</div>
+          <div class="filter-body">
+            <div id="dynamic-filters">
+              <!-- Rendered by JS -->
+            </div>
+            <button class="btn-generate" onclick="generateReport()">
+              🔍 Gerar Visualização
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: KPIs + results -->
+      <div class="right-panel">
+
+        <!-- Cards superiores -->
+
+        <div class="result-card">
+
+          <div class="result-head">
+            <div>
+              <div class="result-title" id="result-title">📝 Receitas do Blog</div>
+              <div class="result-meta" id="result-meta">Selecione os filtros e clique em Gerar Visualização</div>
+            </div>
+          </div>
+
+          <div class="feedback-bar" id="feedbackBar"></div>
+
+          <div id="table-container">
+            <div class="empty-state">
+              <div class="empty-icon">📊</div>
+              <div class="empty-text">Nenhum dado gerado ainda</div>
+              <div class="empty-sub">Selecione uma categoria, defina os filtros e clique em Gerar Visualização</div>
+            </div>
+          </div>
+
+          <div class="table-footer" id="table-footer" style="display:none">
+            <div class="table-count">Exibindo <strong id="row-count">0</strong> registros</div>
+            <div style="font-size:11px;color:var(--text-light);font-weight:300" id="gen-time"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- Área usada apenas na impressão (Ctrl+P / botão Imprimir), com o mesmo padrão visual do PDF -->
+<div id="printArea"></div>
+
+<script>
+  // ===== DATA =====
+  const DB = {
+    receitas: [
+      { titulo: 'Cheesecake de Frutas Vermelhas', categoria: '🎂 Sobremesas', autor: 'Maria Andrade', visualizacoes: 3102, comentarios: 214, avaliacao: 4.9 },
+      { titulo: 'Bolo de Cenoura com Calda',       categoria: '🎂 Sobremesas', autor: 'Maria Andrade', visualizacoes: 2341, comentarios: 176, avaliacao: 4.8 },
+      { titulo: 'Sopa de Abóbora Cremosa',          categoria: '🥣 Sopas',      autor: 'Fernanda Torres', visualizacoes: 1876, comentarios: 98,  avaliacao: 4.7 },
+      { titulo: 'Risoto de Cogumelos Selvagens',    categoria: '🍝 Massas',     autor: 'Carlos Andrade', visualizacoes: 842,  comentarios: 61,  avaliacao: 4.5 },
+      { titulo: 'Strogonoff de Palmito',            categoria: '🍗 Carnes',     autor: 'Carlos Andrade', visualizacoes: 556,  comentarios: 34,  avaliacao: 4.3 },
+      { titulo: 'Salada Mediterrânea com Feta',     categoria: '🥗 Saladas',    autor: 'João Pedro',    visualizacoes: 401,  comentarios: 22,  avaliacao: 4.6 },
+      { titulo: 'Espaguete ao Pesto',                categoria: '🍝 Massas',     autor: 'Rafael Braga',  visualizacoes: 289,  comentarios: 15,  avaliacao: 4.2 },
+      { titulo: 'Frango ao Limão Siciliano',        categoria: '🍗 Carnes',     autor: 'Luisa Silva',   visualizacoes: 198,  comentarios: 9,   avaliacao: 4.4 },
+    ],
+    comentarios: [
+      { usuario: 'Ana Lima',      receita: 'Cheesecake de Frutas Vermelhas', avaliacao: '⭐⭐⭐⭐⭐', data: '13/05/2026', status: 'aprovado' },
+      { usuario: 'Pedro Souza',   receita: 'Sopa de Abóbora Cremosa',        avaliacao: '⭐⭐⭐⭐⭐', data: '12/05/2026', status: 'aprovado' },
+      { usuario: 'Carla Menezes', receita: 'Risoto de Cogumelos Selvagens',  avaliacao: '⭐⭐⭐',     data: '11/05/2026', status: 'pendente' },
+      { usuario: 'Marcos Faria',  receita: 'Salada Mediterrânea com Feta',   avaliacao: '⭐⭐⭐⭐',   data: '10/05/2026', status: 'aprovado' },
+      { usuario: 'Juliana Costa', receita: 'Bolo de Cenoura com Calda',       avaliacao: '⭐⭐⭐⭐⭐', data: '09/05/2026', status: 'aprovado' },
+      { usuario: 'Rodrigo Alves', receita: 'Espaguete ao Pesto',              avaliacao: '⭐⭐',       data: '08/05/2026', status: 'pendente' },
+    ]
+  };
+
+  const CONFIGS = {
+    receitas: {
+      title: '📝 Receitas do Blog — Mais Populares',
+      plainTitle: 'Receitas Mais Populares',
+      headers: ['Receita', 'Categoria', 'Autor', 'Visualizações', 'Comentários', 'Avaliação Média'],
+      filters: [
+        { id: 'f-cat',   label: 'Categoria', type: 'select', options: ['Todas', '🎂 Sobremesas', '🍝 Massas', '🥗 Saladas', '🥣 Sopas', '🍗 Carnes'] },
+        { id: 'f-autor', label: 'Autor', type: 'text', placeholder: 'Buscar por autor…' }
+      ],
+      renderRow: r => `<td><strong>${r.titulo}</strong></td><td>${r.categoria}</td><td>${r.autor}</td><td style="font-family:'Nunito',sans-serif;font-weight:700">${r.visualizacoes.toLocaleString('pt-BR')}</td><td style="font-family:'Nunito',sans-serif;font-weight:700">${r.comentarios}</td><td style="font-family:'Nunito',sans-serif;font-weight:800;color:var(--moss)">${r.avaliacao.toFixed(1)} ⭐</td>`,
+      reportRow: r => [r.titulo, r.categoria, r.autor, r.visualizacoes, r.comentarios, r.avaliacao.toFixed(1)]
+    },
+    comentarios: {
+      title: '💬 Comentários & Avaliações — Últimos Comentários',
+      plainTitle: 'Últimos Comentários',
+      headers: ['Usuário', 'Receita', 'Avaliação', 'Data', 'Status'],
+      filters: [
+        { id: 'f-status', label: 'Status', type: 'select', options: ['Todos', 'Aprovado', 'Pendente'] },
+        { id: 'f-data',   label: 'Período', type: 'select', options: ['Todos os períodos', 'Última semana', 'Último mês'] }
+      ],
+      renderRow: r => `<td><strong>${r.usuario}</strong></td><td>${r.receita}</td><td style="font-size:14px">${r.avaliacao}</td><td>${r.data}</td><td>${pill(r.status)}</td>`,
+      reportRow: r => [r.usuario, r.receita, r.avaliacao, r.data, capitalize(r.status)]
+    }
+  };
+
+  let currentType = 'receitas';
+  // Guarda os dados atualmente gerados na tela, usados por PDF/Excel/Impressão
+  let currentData = [];
+
+  // ===== HELPERS =====
+  function capitalize(s) { return String(s).charAt(0).toUpperCase() + String(s).slice(1); }
+
+  function pill(status) {
+    const s = status.toLowerCase();
+    return `<span class="pill ${s}"><span class="pill-dot"></span>${status.charAt(0).toUpperCase()+status.slice(1)}</span>`;
+  }
+
+  // ===== FILTROS: aplica os filtros selecionados sobre os dados =====
+  function applyFilters(type, data) {
+    let result = data.slice();
+
+    if (type === 'receitas') {
+      const catSel = document.getElementById('f-cat');
+      const autorInput = document.getElementById('f-autor');
+      if (catSel && catSel.value !== 'Todas') {
+        result = result.filter(r => r.categoria === catSel.value);
+      }
+      if (autorInput && autorInput.value.trim()) {
+        const q = autorInput.value.trim().toLowerCase();
+        result = result.filter(r => r.autor.toLowerCase().includes(q));
+      }
+    }
+
+    if (type === 'comentarios') {
+      const statusSel = document.getElementById('f-status');
+      if (statusSel) {
+        const val = statusSel.value;
+        if (val === 'Aprovado') result = result.filter(r => r.status === 'aprovado');
+        if (val === 'Pendente') result = result.filter(r => r.status === 'pendente');
+      }
+    }
+
+    return result;
+  }
+
+  function mostrarAlerta(mensagem, tipo = "erro") {
+      const fb = document.getElementById("feedbackBar");
+
+      fb.classList.remove("loading");
+
+      if (tipo === "erro") {
+          fb.style.background = "var(--error-bg)";
+          fb.style.color = "var(--error)";
+      } else if (tipo === "sucesso") {
+          fb.style.background = "var(--published-bg)";
+          fb.style.color = "var(--published)";
+      } else if (tipo === "aviso") {
+          fb.style.background = "var(--pending-bg)";
+          fb.style.color = "var(--pending)";
+      }
+
+      fb.innerHTML = mensagem;
+      fb.classList.add("show");
+
+      setTimeout(() => {
+          fb.classList.remove("show");
+      }, 4000);
+  }
+
+  // ===== CATEGORY SWITCH =====
+  function setCategory(el) {
+    document.querySelectorAll('.cat-item').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    currentType = el.dataset.type;
+    currentData = [];
+    renderFilters();
+    // Clear results
+    document.getElementById('result-title').textContent = CONFIGS[currentType].title;
+    document.getElementById('result-meta').textContent = 'Filtros atualizados. Clique em Gerar Visualização.';
+    document.getElementById('table-container').innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Pronto para gerar</div><div class="empty-sub">Clique em "Gerar Visualização" para ver os dados</div></div>`;
+    document.getElementById('table-footer').style.display = 'none';
+    document.getElementById('feedbackBar').classList.remove('show', 'loading');
+  }
+
+  // ===== RENDER FILTERS =====
+  function renderFilters() {
+    const cfg = CONFIGS[currentType];
+    const container = document.getElementById('dynamic-filters');
+    container.innerHTML = cfg.filters.map(f => {
+      if (f.type === 'select') {
+        return `<div class="filter-group">
+          <label class="filter-label">${f.label}</label>
+          <select class="filter-select" id="${f.id}">
+            ${f.options.map(o => `<option>${o}</option>`).join('')}
+          </select>
+        </div>`;
+      }
+      return `<div class="filter-group">
+        <label class="filter-label">${f.label}</label>
+        <input type="text" class="filter-input" id="${f.id}" placeholder="${f.placeholder||''}">
+      </div>`;
+    }).join('');
+  }
+
+  // ===== GENERATE REPORT =====
+  function generateReport() {
+    const fb = document.getElementById('feedbackBar');
+    fb.className = 'feedback-bar show loading';
+    fb.textContent = '⏳ Gerando ' + CONFIGS[currentType].title + '…';
+
+    setTimeout(() => {
+      fb.className = 'feedback-bar show';
+      fb.textContent = '✅ Visualização gerada com sucesso! ' + new Date().toLocaleTimeString('pt-BR');
+
+      const data = applyFilters(currentType, DB[currentType]);
+      const cfg = CONFIGS[currentType];
+      currentData = data;
+
+      document.getElementById('result-title').textContent = cfg.title;
+      document.getElementById('result-meta').textContent = `${data.length} registros · Gerado em ${new Date().toLocaleString('pt-BR')}`;
+
+      // Standard table mode
+      let html = '<div class="table-wrap"><table class="data-table" id="main-table"><thead><tr>';
+      cfg.headers.forEach(h => html += `<th>${h}</th>`);
+      html += '</tr></thead><tbody>';
+      data.forEach(r => {
+        html += `<tr>${cfg.renderRow(r)}</tr>`;
+      });
+      html += '</tbody></table></div>';
+
+      document.getElementById('table-container').innerHTML = html;
+      document.getElementById('row-count').textContent = data.length;
+      document.getElementById('gen-time').textContent = 'Última atualização: ' + new Date().toLocaleTimeString('pt-BR');
+      document.getElementById('table-footer').style.display = 'flex';
+    }, 600);
+  }
+
+  /* ---------------- PDF (mesma lógica do relatorio-admin: autoTable a partir dos dados) ---------------- */
+  function exportPDF() {
+    if (!currentData.length) {
+        mostrarAlerta(
+            "⚠️ Gere uma visualização antes de exportar o relatório em PDF.",
+            "aviso"
+        );
+        return;
+    }
+    const cfg = CONFIGS[currentType];
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(47, 61, 37);
+    doc.text('Sabor & Arte — Blog Editorial', 14, 16);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(74, 82, 64);
+    doc.text(cfg.plainTitle, 14, 24);
+    doc.setFontSize(9); doc.setTextColor(138, 148, 128);
+    doc.text('Emitido em: ' + new Date().toLocaleString('pt-BR') + ' · ' + currentData.length + ' registro(s)', 14, 30);
+
+    doc.autoTable({
+      head: [cfg.headers],
+      body: currentData.map(cfg.reportRow),
+      startY: 36,
+      theme: 'grid',
+      styles: { fontSize: 9, cellPadding: 4, valign: 'middle' },
+      headStyles: { fillColor: [47, 61, 37], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 240, 232] }
+    });
+    doc.save('SaborArte_' + currentType + '_' + Date.now() + '.pdf');
+  }
+
+  /* ---------------- Excel (mesma lógica do relatorio-admin: linhas a partir dos dados) ---------------- */
+  function exportExcel() {
+    if (!currentData.length) {
+        mostrarAlerta(
+            "⚠️ Gere uma visualização antes de exportar o relatório para Excel.",
+            "aviso"
+        );
+        return;
+    }
+    const cfg = CONFIGS[currentType];
+    const rows = [cfg.headers, ...currentData.map(cfg.reportRow)];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, cfg.plainTitle.substring(0, 31));
+    XLSX.writeFile(wb, 'SaborArte_' + currentType + '_' + Date.now() + '.xlsx');
+  }
+
+  /* ---------------- Impressão (mesmo padrão visual do PDF / do relatorio-admin) ---------------- */
+  function buildPrintTable(type, data) {
+    const cfg = CONFIGS[type];
+    const headCells = cfg.headers.map(h => `<th>${h}</th>`).join('');
+    const rows = data.map(r => `<tr>${cfg.reportRow(r).map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+
+    return `
+      <div class="print-header">
+        <div class="print-title">Sabor &amp; Arte — Blog Editorial</div>
+        <div class="print-subtitle">${cfg.plainTitle}</div>
+        <div class="print-meta">Emitido em: ${new Date().toLocaleString('pt-BR')} · ${data.length} registro(s)</div>
+      </div>
+      <table class="print-table">
+        <thead><tr>${headCells}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  function printReport() {
+    if (!currentData.length) {
+        mostrarAlerta(
+            "⚠️ Gere uma visualização antes de imprimir o relatório.",
+            "aviso"
+        );
+        return;
+    }
+    document.getElementById('printArea').innerHTML = buildPrintTable(currentType, currentData);
+    window.print();
+  }
+
+  // Ao imprimir via Ctrl+P (sem passar pelo botão), monta a mesma área de impressão
+  window.addEventListener('beforeprint', () => {
+    if (currentData.length) {
+      document.getElementById('printArea').innerHTML = buildPrintTable(currentType, currentData);
+    }
+  });
+  window.addEventListener('afterprint', () => {
+    document.getElementById('printArea').innerHTML = '';
+  });
+
+  // ===== SIDEBAR MOBILE =====
+  function toggleSidebar() {
+    const s = document.getElementById('sidebar');
+    const o = document.getElementById('overlay');
+    const open = s.classList.toggle('open');
+    o.style.display = open ? 'block' : 'none';
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').style.display = 'none';
+  }
+  window.addEventListener('resize', () => { if (window.innerWidth > 768) closeSidebar(); });
+
+  // ===== INIT =====
+  renderFilters();
+</script>
+</body>
+</html>

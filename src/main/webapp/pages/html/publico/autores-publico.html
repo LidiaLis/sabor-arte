@@ -9,6 +9,7 @@
   :root {
     --moss:         #4a5e3a;
     --moss-dark:    #2f3d25;
+    --moss-mid:     #3d5030;
     --moss-light:   #6b7f59;
     --sage:         #a3b18a;
     --sage-light:   #c8d5b9;
@@ -20,6 +21,17 @@
     --text-light:   #8a9480;
     --gold:         #c4a265;
     --gold-light:   #dfc094;
+    --gold-pale:    #f5ead6;
+    --pending:      #c4832a;
+    --pending-bg:   #fdf2e3;
+    --published:    #3a7a4a;
+    --published-bg: #e8f4eb;
+    --draft:        #6a7a8a;
+    --draft-bg:     #eef1f4;
+    --archived:     #8a7a6a;
+    --archived-bg:  #f4f0ec;
+    --error:        #9b4444;
+    --error-bg:     #f5e6e6;
     --sidebar-w:    260px;
   }
 
@@ -52,59 +64,37 @@
   /* ===== MAIN ===== */
   .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
 
-  /* ===== TOPBAR ===== */
-  .topbar { background: var(--warm-white); border-bottom: 1px solid var(--cream-dark); padding: 0 40px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; gap: 20px; }
-  .topbar-left { display: flex; align-items: center; gap: 16px; }
-  .page-crumb { font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 6px; }
+  /* ===== TOPBAR (mesmo padrão da tela de receitas) ===== */
+  .topbar { background: var(--warm-white); border-bottom: 1px solid var(--cream-dark); padding: 0 40px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .page-crumb { font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 6px; font-weight: 300; }
   .page-crumb .current { color: var(--moss); font-weight: 500; }
 
-  .search-bar { display: flex; align-items: center; gap: 10px; background: var(--cream); border: 1.5px solid var(--cream-dark); border-radius: 2px; padding: 0 14px; height: 34px; min-width: 220px; transition: border-color 0.2s, box-shadow 0.2s; }
-  .search-bar:focus-within { border-color: var(--moss); box-shadow: 0 0 0 3px rgba(74,94,58,0.1); }
-  .search-bar input { border: none; background: none; outline: none; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-dark); width: 100%; }
+  /* ===== TOOLBAR (busca + filtro em listbox — mesmo padrão da tela de receitas) ===== */
+  .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .search-bar {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--cream); border: 1.5px solid var(--cream-dark);
+    border-radius: 2px; padding: 8px 14px; flex: 1; max-width: 320px;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+  }
+  .search-bar:focus-within { border-color: var(--moss-light); background: var(--warm-white); box-shadow: 0 0 0 3px rgba(74,94,58,0.1); }
+  .search-bar input { border: none; background: none; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-dark); outline: none; flex: 1; }
   .search-bar input::placeholder { color: var(--text-light); }
-  .search-icon { font-size: 14px; color: var(--text-light); flex-shrink: 0; }
-
-  /* ===== HERO SECTION ===== */
-  .hero-section {
-    background: linear-gradient(135deg, var(--moss-dark) 0%, var(--moss) 50%, var(--moss-light) 100%);
-    padding: 56px 48px 52px;
-    position: relative; overflow: hidden;
+  .filter-select {
+    background: var(--cream); border: 1.5px solid var(--cream-dark);
+    border-radius: 2px; padding: 8px 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-dark);
+    cursor: pointer; outline: none; transition: border-color .2s, box-shadow .2s, background .2s;
   }
-  .hero-section::before {
-    content: ''; position: absolute; top: -100px; right: -60px;
-    width: 380px; height: 380px; border-radius: 50%;
-    background: rgba(163,177,138,0.1);
-  }
-  .hero-section::after {
-    content: ''; position: absolute; bottom: -60px; left: 25%;
-    width: 220px; height: 220px; border-radius: 50%;
-    background: rgba(196,162,101,0.07);
-  }
-  .hero-inner { position: relative; z-index: 1; max-width: 700px; }
-  .hero-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--gold-light); font-weight: 500; margin-bottom: 10px; }
-  .hero-title { font-family: 'Playfair Display', serif; font-size: 40px; font-weight: 700; color: white; line-height: 1.15; margin-bottom: 14px; }
-  .hero-title em { font-style: italic; color: var(--gold-light); }
-  .hero-desc { font-size: 15px; color: rgba(255,255,255,0.65); font-weight: 300; line-height: 1.7; margin-bottom: 28px; max-width: 480px; }
-
-  .hero-stats-row { display: flex; gap: 32px; }
-  .hero-stat { }
-  .hero-stat-val { font-family: 'Nunito', sans-serif; font-size: 28px; font-weight: 800; color: white; line-height: 1; }
-  .hero-stat-lbl { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.9px; font-weight: 300; margin-top: 3px; }
-  .stat-divider { width: 1px; background: rgba(255,255,255,0.12); }
-
-  /* ===== FILTERS ===== */
-  .filters-bar { background: var(--warm-white); border-bottom: 1px solid var(--cream-dark); padding: 0 40px; display: flex; align-items: center; gap: 8px; height: 52px; }
-  .filters-search { margin-left: auto; }
-  .filter-chip { display: inline-flex; align-items: center; gap: 5px; padding: 6px 16px; border-radius: 20px; border: 1.5px solid var(--cream-dark); background: none; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; color: var(--text-mid); cursor: pointer; transition: all 0.2s; }
-  .filter-chip:hover { border-color: var(--moss-light); color: var(--moss); }
-  .filter-chip.active { background: var(--moss); border-color: var(--moss); color: white; }
-  .filter-label { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; margin-right: 4px; font-weight: 500; }
+  .filter-select:focus { border-color: var(--moss-light); background: var(--warm-white); box-shadow: 0 0 0 3px rgba(74,94,58,0.1); }
+  .toolbar-spacer { flex: 1; }
 
   /* ===== CONTENT ===== */
-  .content { flex: 1; padding: 20px 40px 40px; }
+  .content { flex: 1; padding: 24px 40px; }
 
-  .section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; }
-  .section-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--text-dark); }
+  .section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 500; color: var(--text-dark); line-height: 1; }
+  .section-title em { font-style: italic; color: var(--moss); }
   .section-count { font-size: 12px; color: var(--text-light); font-weight: 300; }
 
   /* ===== AUTHORS GRID ===== */
@@ -112,14 +102,14 @@
 
   .author-card {
     background: var(--warm-white); border: 1px solid var(--cream-dark);
-    border-radius: 4px; overflow: hidden; cursor: pointer;
+    border-radius: 4px; overflow: hidden;
     transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
     position: relative;
   }
   .author-card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(47,61,37,0.13); border-color: var(--sage); }
 
   .card-banner {
-    height: 44px;
+    height: 118px;
     position: relative; overflow: hidden;
   }
   .banner-1 { background: linear-gradient(120deg, #2f3d25, #6b7f59); }
@@ -137,11 +127,11 @@
     background-size: 18px 18px;
   }
 
-  .card-body-inner { padding: 0 18px 14px; }
+  .card-body-inner { padding: 0 18px 8px; }
 
-  .author-avatar-wrap { margin-top: -22px; margin-bottom: 8px; position: relative; display: inline-block; }
+  .author-avatar-wrap { margin-top: -34px; margin-bottom: 4px; position: relative; display: inline-block; }
   .author-avatar {
-    width: 58px; height: 58px; border-radius: 50%;
+    width: 52px; height: 52px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-family: 'Nunito', sans-serif; font-size: 19px; font-weight: 800;
     border: 3px solid var(--warm-white);
@@ -162,20 +152,23 @@
   }
 
   .author-name { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--text-dark); margin-bottom: 3px; }
-  .author-title { font-size: 12px; color: var(--text-light); font-weight: 300; margin-bottom: 9px; line-height: 1.4; }
+  .author-title { font-size: 12px; color: var(--text-light); font-weight: 300; margin-bottom: 6px; line-height: 1.4; }
 
-  .author-divider { height: 1px; background: var(--cream-dark); margin-bottom: 9px; }
-
-  .author-stats { display: flex; gap: 0; }
-  .author-stat { flex: 1; text-align: center; padding: 0 8px; position: relative; }
-  .author-stat + .author-stat::before { content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 1px; background: var(--cream-dark); }
-  .author-stat-val { font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 800; color: var(--moss); line-height: 1; }
-  .author-stat-lbl { font-size: 10px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.7px; margin-top: 2px; font-weight: 300; }
-
-  .card-footer { padding: 10px 18px; border-top: 1px solid var(--cream-dark); display: flex; align-items: center; justify-content: center; background: rgba(245,240,232,0.4); }
-  .btn-ver-perfil { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--moss); text-decoration: none; letter-spacing: 0.3px; transition: gap 0.2s; }
-  .author-card:hover .btn-ver-perfil { gap: 11px; }
-  .btn-ver-perfil .arrow { font-size: 14px; }
+  .card-footer {
+    display: flex; align-items: center; gap: 6px;
+    justify-content: flex-end;
+    padding: 10px 16px;
+    border-top: 1px solid var(--cream-dark);
+    background: var(--cream);
+  }
+  .footer-btn {
+    padding: 6px 12px; border: 1.5px solid var(--cream-dark);
+    background: var(--warm-white); border-radius: 2px;
+    font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500;
+    color: var(--text-mid); cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;
+  }
+  .footer-btn:hover { border-color: var(--moss); color: var(--moss); background: rgba(74,94,58,0.05); }
 
 /* Bloco de autenticação no lugar do "sidebar-user" (visitante não está logado) */
   .sidebar-auth{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;gap:8px;position:relative;z-index:1;}
@@ -292,9 +285,11 @@
   .pag-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
   /* ===== RESPONSIVE ===== */
-  @media (max-width: 960px) { .featured-strip { flex-direction: column; align-items: flex-start; } .featured-meta { align-items: flex-start; } .authors-grid { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; } .content { padding: 24px 20px; } .topbar { padding: 0 20px; } .filters-bar { padding: 12px 20px; height: auto; flex-wrap: wrap; } .filters-search { margin-left: 0; width: 100%; } .search-bar { min-width: 0; width: 100%; } .hero-section { padding: 36px 20px; } .hero-title { font-size: 28px; } .hero-stats-row { gap: 20px; } .pagination { flex-direction: column; gap: 10px; align-items: flex-start; } }
-  @media (max-width: 480px) { .authors-grid { grid-template-columns: 1fr; } .modal-recipes-grid { grid-template-columns: 1fr 1fr; } .modal-social-row { flex-wrap: wrap; } }
+  @media (max-width: 1280px) { .authors-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 960px)  { .featured-strip { flex-direction: column; align-items: flex-start; } .featured-meta { align-items: flex-start; } }
+  @media (max-width: 860px)  { .authors-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 768px)  { .sidebar { display: none; } .main { margin-left: 0; } .content { padding: 24px 20px; } .topbar { padding: 0 20px; } .pagination { flex-direction: column; gap: 10px; align-items: flex-start; } }
+  @media (max-width: 480px)  { .modal-recipes-grid { grid-template-columns: 1fr 1fr; } .modal-social-row { flex-wrap: wrap; } }
 </style>
 </head>
 <body>
@@ -356,46 +351,46 @@
 <!-- MAIN -->
 <main class="main">
 
-  <!-- TOPBAR -->
+  <!-- TOPBAR (mesmo padrão da tela de receitas) -->
   <div class="topbar">
-    <div class="topbar-left">
-      <div class="page-crumb">
-        <span>Início</span>
-        <span style="color:var(--cream-dark)">/</span>
-        <span class="current">Nossos Autores</span>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- FILTROS + BUSCA -->
-  <div class="filters-bar">
-    <span class="filter-label">Filtrar:</span>
-    <button class="filter-chip active" onclick="filterByCategory('todos', this)">Todos</button>
-    <button class="filter-chip" onclick="filterByCategory('confeitaria', this)">🎂 Confeitaria</button>
-    <button class="filter-chip" onclick="filterByCategory('massas', this)">🍝 Massas</button>
-    <button class="filter-chip" onclick="filterByCategory('vegano', this)">🌿 Vegano</button>
-    <button class="filter-chip" onclick="filterByCategory('sopas', this)">🥣 Sopas</button>
-    <button class="filter-chip" onclick="filterByCategory('internacional', this)">🌍 Internacional</button>
-    <div class="search-bar filters-search">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="campoBuscaAutor" placeholder="Buscar autores…">
+    <div class="page-crumb">
+      <span>Gestão</span>
+      <span style="color:var(--cream-dark)">/</span>
+      <span class="current">Autores</span>
     </div>
   </div>
 
   <!-- CONTENT -->
   <div class="content">
 
-    <!-- GRADE DE AUTORES -->
     <div class="section-header">
-      <h2 class="section-title">Todos os Autores</h2>
+      <div>
+        <div class="section-title">Todos os <em>Autores</em></div>
+      </div>
       <span class="section-count" id="countLabel">8 autores encontrados</span>
+    </div>
+
+    <!-- ===== TOOLBAR: BUSCA + FILTRO DE ESPECIALIDADE (mesmo padrão da tela de receitas) ===== -->
+    <div class="toolbar">
+      <div class="search-bar">
+        <span style="font-size:14px;color:var(--text-light)">🔍</span>
+        <input type="text" id="campoBuscaAutor" placeholder="Buscar autores…">
+      </div>
+      <select class="filter-select" id="filterEspecialidade">
+        <option value="todos" selected>Todas as especialidades</option>
+        <option value="confeitaria">🎂 Confeitaria</option>
+        <option value="massas">🍝 Massas</option>
+        <option value="vegano">🌿 Vegano</option>
+        <option value="sopas">🥣 Sopas</option>
+        <option value="internacional">🌍 Internacional</option>
+      </select>
+      <div class="toolbar-spacer"></div>
     </div>
 
     <div class="authors-grid" id="authorsGrid">
 
       <!-- CARD 1 - Maria -->
-      <div class="author-card" data-categories="confeitaria,massas,vegano" data-name="maria andrade" onclick="openModal('maria')">
+      <div class="author-card" data-categories="confeitaria,massas,vegano" data-name="maria andrade">
         <div class="card-banner banner-1"><div class="banner-pattern"></div></div>
         <div class="card-body-inner">
           <div class="author-avatar-wrap">
@@ -403,29 +398,14 @@
           </div>
           <div class="author-name">Maria Andrade</div>
           <div class="author-title">Chef Administradora</div>
-          <div class="author-divider"></div>
-          <div class="author-stats">
-            <div class="author-stat">
-              <div class="author-stat-val">47</div>
-              <div class="author-stat-lbl">Receitas</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">128</div>
-              <div class="author-stat-lbl">Comentários</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">2.4k</div>
-              <div class="author-stat-lbl">Visualiz.</div>
-            </div>
           </div>
-        </div>
         <div class="card-footer">
-          <span class="btn-ver-perfil">Ver perfil <span class="arrow">→</span></span>
+          <button class="footer-btn" onclick="openModal('maria')">👁 Ver</button>
         </div>
       </div>
 
       <!-- CARD 2 - Ricardo -->
-      <div class="author-card" data-categories="massas,internacional" data-name="ricardo souza" onclick="openModal('ricardo')">
+      <div class="author-card" data-categories="massas,internacional" data-name="ricardo souza">
         <div class="card-banner banner-2"><div class="banner-pattern"></div></div>
         <div class="card-body-inner">
           <div class="author-avatar-wrap">
@@ -433,29 +413,14 @@
           </div>
           <div class="author-name">Ricardo Souza</div>
           <div class="author-title">Chef de Cozinha</div>
-          <div class="author-divider"></div>
-          <div class="author-stats">
-            <div class="author-stat">
-              <div class="author-stat-val">38</div>
-              <div class="author-stat-lbl">Receitas</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">94</div>
-              <div class="author-stat-lbl">Comentários</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">1.8k</div>
-              <div class="author-stat-lbl">Visualiz.</div>
-            </div>
           </div>
-        </div>
         <div class="card-footer">
-          <span class="btn-ver-perfil">Ver perfil <span class="arrow">→</span></span>
+          <button class="footer-btn" onclick="openModal('ricardo')">👁 Ver</button>
         </div>
       </div>
 
       <!-- CARD 3 - Luciana -->
-      <div class="author-card" data-categories="vegano,sopas" data-name="luciana ferreira" onclick="openModal('luciana')">
+      <div class="author-card" data-categories="vegano,sopas" data-name="luciana ferreira">
         <div class="card-banner banner-3"><div class="banner-pattern"></div></div>
         <div class="card-body-inner">
           <div class="author-avatar-wrap">
@@ -463,29 +428,14 @@
           </div>
           <div class="author-name">Luciana Ferreira</div>
           <div class="author-title">Nutricionista</div>
-          <div class="author-divider"></div>
-          <div class="author-stats">
-            <div class="author-stat">
-              <div class="author-stat-val">31</div>
-              <div class="author-stat-lbl">Receitas</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">76</div>
-              <div class="author-stat-lbl">Comentários</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">1.2k</div>
-              <div class="author-stat-lbl">Visualiz.</div>
-            </div>
           </div>
-        </div>
         <div class="card-footer">
-          <span class="btn-ver-perfil">Ver perfil <span class="arrow">→</span></span>
+          <button class="footer-btn" onclick="openModal('luciana')">👁 Ver</button>
         </div>
       </div>
 
       <!-- CARD 4 - Carlos -->
-      <div class="author-card" data-categories="internacional,massas" data-name="carlos mendes" onclick="openModal('carlos')">
+      <div class="author-card" data-categories="internacional,massas" data-name="carlos mendes">
         <div class="card-banner banner-5"><div class="banner-pattern"></div></div>
         <div class="card-body-inner">
           <div class="author-avatar-wrap">
@@ -493,29 +443,14 @@
           </div>
           <div class="author-name">Carlos Mendes</div>
           <div class="author-title">Chef Executivo</div>
-          <div class="author-divider"></div>
-          <div class="author-stats">
-            <div class="author-stat">
-              <div class="author-stat-val">29</div>
-              <div class="author-stat-lbl">Receitas</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">61</div>
-              <div class="author-stat-lbl">Comentários</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">980</div>
-              <div class="author-stat-lbl">Visualiz.</div>
-            </div>
           </div>
-        </div>
         <div class="card-footer">
-          <span class="btn-ver-perfil">Ver perfil <span class="arrow">→</span></span>
+          <button class="footer-btn" onclick="openModal('carlos')">👁 Ver</button>
         </div>
       </div>
 
       <!-- CARD 5 - Ana Paula -->
-      <div class="author-card" data-categories="confeitaria,sopas" data-name="ana paula lima" onclick="openModal('anapaula')">
+      <div class="author-card" data-categories="confeitaria,sopas" data-name="ana paula lima">
         <div class="card-banner banner-4"><div class="banner-pattern"></div></div>
         <div class="card-body-inner">
           <div class="author-avatar-wrap">
@@ -523,29 +458,14 @@
           </div>
           <div class="author-name">Ana Paula Lima</div>
           <div class="author-title">Confeiteira</div>
-          <div class="author-divider"></div>
-          <div class="author-stats">
-            <div class="author-stat">
-              <div class="author-stat-val">24</div>
-              <div class="author-stat-lbl">Receitas</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">88</div>
-              <div class="author-stat-lbl">Comentários</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">1.5k</div>
-              <div class="author-stat-lbl">Visualiz.</div>
-            </div>
           </div>
-        </div>
         <div class="card-footer">
-          <span class="btn-ver-perfil">Ver perfil <span class="arrow">→</span></span>
+          <button class="footer-btn" onclick="openModal('anapaula')">👁 Ver</button>
         </div>
       </div>
 
       <!-- CARD 6 - Pedro -->
-      <div class="author-card" data-categories="internacional,massas,sopas" data-name="pedro alves" onclick="openModal('pedro')">
+      <div class="author-card" data-categories="internacional,massas,sopas" data-name="pedro alves">
         <div class="card-banner banner-6"><div class="banner-pattern"></div></div>
         <div class="card-body-inner">
           <div class="author-avatar-wrap">
@@ -553,29 +473,14 @@
           </div>
           <div class="author-name">Pedro Alves</div>
           <div class="author-title">Chef</div>
-          <div class="author-divider"></div>
-          <div class="author-stats">
-            <div class="author-stat">
-              <div class="author-stat-val">22</div>
-              <div class="author-stat-lbl">Receitas</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">55</div>
-              <div class="author-stat-lbl">Comentários</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">870</div>
-              <div class="author-stat-lbl">Visualiz.</div>
-            </div>
           </div>
-        </div>
         <div class="card-footer">
-          <span class="btn-ver-perfil">Ver perfil <span class="arrow">→</span></span>
+          <button class="footer-btn" onclick="openModal('pedro')">👁 Ver</button>
         </div>
       </div>
 
       <!-- CARD 7 - Beatriz -->
-      <div class="author-card" data-categories="vegano,confeitaria" data-name="beatriz nunes" onclick="openModal('beatriz')">
+      <div class="author-card" data-categories="vegano,confeitaria" data-name="beatriz nunes">
         <div class="card-banner banner-7"><div class="banner-pattern"></div></div>
         <div class="card-body-inner">
           <div class="author-avatar-wrap">
@@ -583,29 +488,14 @@
           </div>
           <div class="author-name">Beatriz Nunes</div>
           <div class="author-title">Food Stylist</div>
-          <div class="author-divider"></div>
-          <div class="author-stats">
-            <div class="author-stat">
-              <div class="author-stat-val">18</div>
-              <div class="author-stat-lbl">Receitas</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">43</div>
-              <div class="author-stat-lbl">Comentários</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">720</div>
-              <div class="author-stat-lbl">Visualiz.</div>
-            </div>
           </div>
-        </div>
         <div class="card-footer">
-          <span class="btn-ver-perfil">Ver perfil <span class="arrow">→</span></span>
+          <button class="footer-btn" onclick="openModal('beatriz')">👁 Ver</button>
         </div>
       </div>
 
       <!-- CARD 8 - Felipe -->
-      <div class="author-card" data-categories="massas,internacional" data-name="felipe costa" onclick="openModal('felipe')">
+      <div class="author-card" data-categories="massas,internacional" data-name="felipe costa">
         <div class="card-banner banner-8"><div class="banner-pattern"></div></div>
         <div class="card-body-inner">
           <div class="author-avatar-wrap">
@@ -613,24 +503,9 @@
           </div>
           <div class="author-name">Felipe Costa</div>
           <div class="author-title">Cozinheiro Amador</div>
-          <div class="author-divider"></div>
-          <div class="author-stats">
-            <div class="author-stat">
-              <div class="author-stat-val">5</div>
-              <div class="author-stat-lbl">Receitas</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">19</div>
-              <div class="author-stat-lbl">Comentários</div>
-            </div>
-            <div class="author-stat">
-              <div class="author-stat-val">310</div>
-              <div class="author-stat-lbl">Visualiz.</div>
-            </div>
           </div>
-        </div>
         <div class="card-footer">
-          <span class="btn-ver-perfil">Ver perfil <span class="arrow">→</span></span>
+          <button class="footer-btn" onclick="openModal('felipe')">👁 Ver</button>
         </div>
       </div>
 
@@ -970,15 +845,13 @@
     criarBtn('›', paginaAtual + 1, { disabled: paginaAtual === totalPaginas });
   }
 
-  function filterByCategory(cat, btn) {
-    document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    categoriaAtual = cat;
+  document.getElementById('campoBuscaAutor').addEventListener('input', function() {
     paginaAtual = 1;
     renderPagina();
-  }
+  });
 
-  document.getElementById('campoBuscaAutor').addEventListener('input', function() {
+  document.getElementById('filterEspecialidade').addEventListener('change', function() {
+    categoriaAtual = this.value;
     paginaAtual = 1;
     renderPagina();
   });

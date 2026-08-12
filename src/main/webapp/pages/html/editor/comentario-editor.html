@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabor & Arte — Central de Moderação de Comentários</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --moss:#4a5e3a;--moss-dark:#2f3d25;--moss-mid:#3d5030;--moss-light:#6b7f59;
+    --sage:#a3b18a;--sage-light:#c8d5b9;--cream:#f5f0e8;--cream-dark:#e6dece;
+    --warm-white:#faf8f4;--text-dark:#1e2718;--text-mid:#4a5240;--text-light:#8a9480;
+    --gold:#c4a265;--gold-light:#dfc094;--gold-pale:#f5ead6;
+    --pending:#c4832a;--pending-bg:#fdf2e3;--published:#3a7a4a;--published-bg:#e8f4eb;
+    --draft:#6a7a8a;--draft-bg:#eef1f4;--archived:#8a7a6a;--archived-bg:#f4f0ec;
+    --revision:#a05a3a;--revision-bg:#f6e6de;--error:#9b4444;--error-bg:#fdf0f0;
+    --sidebar-w:260px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh;display:flex;}
+
+  /* ===== SIDEBAR ===== */
+  .sidebar{width:var(--sidebar-w);background:var(--moss-dark);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
+  .sidebar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 200% 60% at 50% 0%,rgba(74,94,58,0.5) 0%,transparent 60%),radial-gradient(ellipse 100% 40% at 50% 100%,rgba(163,177,138,0.1) 0%,transparent 60%);pointer-events:none;}
+  .sidebar-brand{padding:28px 24px 22px;border-bottom:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;}
+  .brand-row{display:flex;align-items:center;gap:12px;}
+  .brand-badge{width:38px;height:38px;background:linear-gradient(135deg,var(--moss-light),var(--sage));border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .brand-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--cream);display:block;line-height:1;}
+  .brand-sub{font-size:10px;color:var(--sage);text-transform:uppercase;letter-spacing:1.2px;margin-top:3px;display:block;font-weight:300;}
+  .sidebar-user{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:12px;position:relative;z-index:1;cursor:pointer;}
+  .user-avatar{width:38px;height:38px;background:linear-gradient(135deg,#8e44ad,#6c3483);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--cream);flex-shrink:0;}
+  .user-name{font-size:13px;font-weight:600;color:var(--cream);}
+  .user-role-badge{font-size:10px;color:var(--gold-light);text-transform:uppercase;letter-spacing:0.8px;font-weight:300;}
+  .sidebar-nav{flex:1;padding:16px 0;position:relative;z-index:1;}
+  .nav-section-label{font-size:9px;text-transform:uppercase;letter-spacing:1.8px;color:rgba(163,177,138,0.5);padding:16px 24px 6px;font-weight:500;}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:11px 24px;color:rgba(245,240,232,0.7);text-decoration:none;font-size:14px;font-weight:400;cursor:pointer;transition:all 0.2s;border-left:3px solid transparent;}
+  .nav-item:hover{color:var(--cream);background:rgba(255,255,255,0.06);border-left-color:var(--sage);}
+  .nav-item.active{color:var(--cream);background:rgba(163,177,138,0.15);border-left-color:var(--sage-light);font-weight:500;}
+  .nav-icon{width:22px;text-align:center;font-size:16px;flex-shrink:0;}
+  .nav-badge{margin-left:auto;background:var(--gold);color:var(--moss-dark);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;}
+  .sidebar-bottom{padding:16px 24px 24px;border-top:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;}
+  .btn-logout{display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:2px;color:rgba(245,240,232,0.7);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;}
+  .btn-logout:hover{background:rgba(155,68,68,0.2);border-color:rgba(155,68,68,0.3);color:#e8a0a0;}
+
+  /* ===== MAIN / TOPBAR ===== */
+  .main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;}
+  .topbar{background:var(--warm-white);border-bottom:1px solid var(--cream-dark);padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+  .topbar-left{display:flex;align-items:center;gap:14px;}
+  .menu-toggle{display:none;background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-dark);padding:4px;}
+  .page-crumb{font-size:12px;color:var(--text-light);display:flex;align-items:center;gap:6px;font-weight:300;}
+  .page-crumb .current{color:var(--moss);font-weight:500;}
+  .topbar-right{display:flex;align-items:center;gap:16px;}
+  .notif-btn{width:36px;height:36px;background:var(--cream);border:1.5px solid var(--cream-dark);border-radius:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;position:relative;transition:all 0.2s;}
+  .notif-btn:hover{background:var(--cream-dark);}
+  .notif-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--gold);border-radius:50%;border:2px solid var(--warm-white);}
+
+  /* ===== CONTENT ===== */
+  .content{flex:1;padding:50px 40px 40px;}
+  .section-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:36px;}
+  .section-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:500;color:var(--text-dark);line-height:1;}
+  .section-title em{font-style:italic;color:var(--moss);}
+  .section-date{font-size:12px;color:var(--text-light);font-weight:300;margin-top:4px;}
+
+  /* ===== STAT CARDS (compactos) ===== */
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;}
+  .stat-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:2px;padding:14px 16px;position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;cursor:default;display:flex;align-items:center;gap:12px;}
+  .stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(47,61,37,0.1);}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .stat-card.pending::before{background:linear-gradient(90deg,var(--pending),#e8a84a);}
+  .stat-card.moss::before{background:linear-gradient(90deg,var(--moss),var(--sage));}
+  .stat-card.red::before{background:linear-gradient(90deg,var(--error),#c96a6a);}
+  .stat-card.gold::before{background:linear-gradient(90deg,var(--gold),var(--gold-light));}
+  .stat-icon{width:34px;height:34px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+  .stat-card.pending .stat-icon{background:rgba(196,131,42,0.12);}
+  .stat-card.moss .stat-icon{background:rgba(74,94,58,0.1);}
+  .stat-card.red .stat-icon{background:rgba(155,68,68,0.1);}
+  .stat-card.gold .stat-icon{background:rgba(196,162,101,0.1);}
+  .stat-text{min-width:0;}
+  .stat-value{font-family:'Nunito',sans-serif;font-size:24px;font-weight:800;color:var(--text-dark);line-height:1;margin-bottom:2px;letter-spacing:-0.5px;transition:color 0.2s;}
+  .stat-label{font-size:10.5px;color:var(--text-light);text-transform:uppercase;letter-spacing:0.6px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  /* ===== FILTER PANEL (lateral) ===== */
+  .content-layout{display:grid;grid-template-columns:260px 1fr;gap:24px;align-items:start;}
+  .right-panel{min-width:0;}
+  .filter-panel{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:4px;overflow:hidden;position:sticky;top:88px;}
+  .filter-panel-head{padding:14px 18px;border-bottom:1px solid var(--cream-dark);font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:1.2px;display:flex;align-items:center;gap:8px;}
+  .filter-bar{display:flex;flex-direction:column;align-items:stretch;gap:16px;padding:18px;}
+  .filter-field{display:flex;flex-direction:column;gap:6px;width:100%;}
+  .filter-label{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;}
+  .filter-input,.filter-select{width:100%;padding:9px 12px;border:1.5px solid var(--cream-dark);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-dark);background:var(--cream);transition:border-color 0.2s,box-shadow 0.2s;outline:none;}
+  .filter-input:focus,.filter-select:focus{border-color:var(--moss);background:var(--warm-white);box-shadow:0 0 0 3px rgba(74,94,58,0.08);}
+  .search-wrap{display:flex;align-items:center;gap:8px;background:var(--cream);border:1.5px solid var(--cream-dark);border-radius:2px;padding:9px 14px;transition:border-color 0.2s,box-shadow 0.2s;width:100%;}
+  .search-wrap:focus-within{border-color:var(--moss-light);box-shadow:0 0 0 3px rgba(74,94,58,0.08);}
+  .search-wrap input{border:none;background:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-dark);outline:none;flex:1;min-width:0;}
+  .search-wrap input::placeholder{color:var(--text-light);font-weight:300;}
+  .btn-clear-filters{width:100%;padding:9px 16px;background:none;border:1.5px solid var(--cream-dark);border-radius:2px;color:var(--text-mid);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+  .btn-clear-filters:hover{border-color:var(--moss);color:var(--moss);background:rgba(74,94,58,0.05);}
+
+  /* ===== TABLE CARD ===== */
+  .table-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:4px;overflow:hidden;}
+  .table-card-head{padding:16px 22px;border-bottom:1px solid var(--cream-dark);display:flex;align-items:center;justify-content:space-between;}
+  .table-card-title{font-size:15px;font-weight:600;color:var(--text-dark);}
+  .table-card-meta{font-size:11px;color:var(--text-light);font-weight:300;}
+  .table-wrap{overflow-x:auto;}
+  .data-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .data-table thead th{padding:10px 16px;text-align:left;background:var(--cream);border-bottom:2px solid var(--cream-dark);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);font-weight:700;white-space:nowrap;}
+  .data-table tbody tr{border-bottom:1px solid var(--cream-dark);transition:background 0.12s;}
+  .data-table tbody tr:last-child{border-bottom:none;}
+  .data-table tbody tr:hover{background:rgba(245,240,232,0.7);}
+  .data-table tbody tr.is-blocked{opacity:0.55;}
+  .data-table td{padding:12px 16px;color:var(--text-mid);vertical-align:middle;}
+
+  .table-footer{padding:12px 20px;border-top:1px solid var(--cream-dark);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  .footer-info{font-size:11px;color:var(--text-light);font-weight:300;}
+  .footer-info strong{font-family:'Nunito',sans-serif;font-weight:700;color:var(--text-mid);}
+  .pagination{display:flex;gap:4px;}
+  .pag-btn{width:28px;height:28px;border:1.5px solid var(--cream-dark);background:none;border-radius:2px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:var(--text-light);display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+  .pag-btn:hover{border-color:var(--moss);color:var(--moss);}
+  .pag-btn.active{background:var(--moss);border-color:var(--moss);color:var(--cream);}
+  .pag-btn:disabled{opacity:0.35;cursor:not-allowed;}
+  .pag-btn:disabled:hover{border-color:var(--cream-dark);color:var(--text-light);}
+
+  .author-cell{display:flex;align-items:center;gap:9px;}
+  .author-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;color:white;flex-shrink:0;}
+  .author-name{font-size:12.5px;color:var(--text-dark);font-weight:600;}
+  .author-tag{font-size:10px;color:var(--text-light);font-weight:300;}
+
+  .recipe-tag{font-size:12px;color:var(--text-mid);display:flex;align-items:center;gap:6px;max-width:150px;}
+
+  .comment-preview{font-size:12.5px;color:var(--text-mid);max-width:230px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.5;font-style:italic;}
+
+  .report-badge{display:inline-flex;align-items:center;gap:5px;background:var(--error-bg);color:var(--error);font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;padding:4px 10px;border-radius:20px;}
+
+  .reason-tag{display:inline-block;background:var(--cream);border:1px solid var(--cream-dark);color:var(--text-mid);font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+  .pill-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+  .pill.pendente{background:var(--pending-bg);color:var(--pending);}
+  .pill.resolvido{background:var(--published-bg);color:var(--published);}
+  .pill.removido{background:var(--error-bg);color:var(--error);}
+  .pill.bloqueado{background:var(--draft-bg);color:var(--draft);}
+
+  .row-actions{display:flex;gap:5px;flex-wrap:wrap;}
+  .row-btn{width:27px;height:27px;border:1.5px solid var(--cream-dark);background:none;border-radius:2px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--text-light);transition:all 0.15s;}
+  .row-btn:hover{border-color:var(--moss);color:var(--moss);background:rgba(74,94,58,0.05);}
+  .row-btn.keep:hover{border-color:var(--published);color:var(--published);background:var(--published-bg);}
+  .row-btn.remove:hover{border-color:var(--error);color:var(--error);background:var(--error-bg);}
+  .row-btn.resolve:hover{border-color:var(--gold);color:var(--pending);background:var(--gold-pale);}
+  .row-btn.block:hover{border-color:var(--draft);color:var(--draft);background:var(--draft-bg);}
+  .row-btn:disabled{opacity:0.3;cursor:not-allowed;}
+  .row-btn:disabled:hover{border-color:var(--cream-dark);color:var(--text-light);background:none;}
+
+  .empty-state{text-align:center;padding:70px 30px;}
+  .empty-icon{font-size:48px;margin-bottom:14px;opacity:0.4;}
+  .empty-text{font-family:'Playfair Display',serif;font-size:18px;color:var(--text-light);font-style:italic;margin-bottom:6px;}
+  .empty-sub{font-size:13px;color:var(--text-light);font-weight:300;}
+
+  /* ===== MODALS ===== */
+  .modal-overlay{position:fixed;inset:0;background:rgba(30,39,24,0.55);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:300;padding:24px;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:var(--warm-white);border-radius:4px;max-width:560px;width:100%;max-height:88vh;overflow:hidden;box-shadow:0 24px 60px rgba(30,39,24,0.3);animation:modalIn 0.25s ease;display:flex;flex-direction:column;}
+  .modal-box.tiny{max-width:420px;}
+  @keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:none;}}
+  .modal-head{padding:20px 24px;border-bottom:1px solid var(--cream-dark);display:flex;align-items:center;justify-content:space-between;background:var(--warm-white);flex-shrink:0;}
+  .modal-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:600;color:var(--text-dark);}
+  .modal-close{width:30px;height:30px;border:none;background:var(--cream);border-radius:2px;cursor:pointer;font-size:16px;color:var(--text-mid);flex-shrink:0;transition:all 0.15s;}
+  .modal-close:hover{background:var(--cream-dark);color:var(--text-dark);}
+  .modal-body{padding:24px;overflow-y:auto;flex:1;}
+  .modal-footer{padding:16px 24px;border-top:1px solid var(--cream-dark);display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;flex-shrink:0;}
+  .confirm-message{font-size:13.5px;color:var(--text-mid);line-height:1.7;}
+  .confirm-icon{width:46px;height:46px;border-radius:50%;background:var(--gold-pale);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px;}
+
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,0.12);}
+  .btn-primary{background:var(--moss);color:var(--cream);}
+  .btn-primary:hover{background:var(--moss-dark);}
+  .btn-gold{background:var(--gold);color:var(--moss-dark);}
+  .btn-gold:hover{background:var(--gold-light);}
+  .btn-green{background:var(--published);color:var(--warm-white);}
+  .btn-green:hover{background:#2c6038;}
+  .btn-red{background:var(--error);color:var(--warm-white);}
+  .btn-red:hover{background:#7c3535;}
+  .btn-outline{background:none;color:var(--text-mid);border:1.5px solid var(--cream-dark);}
+  .btn-outline:hover{border-color:var(--moss);color:var(--moss);background:rgba(74,94,58,0.05);}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;transform:none !important;box-shadow:none !important;}
+
+  /* View comment modal specifics */
+  .view-user-row{display:flex;align-items:center;gap:12px;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--cream-dark);}
+  .view-user-avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;color:white;flex-shrink:0;}
+  .view-user-name{font-size:14px;font-weight:700;color:var(--text-dark);}
+  .view-user-sub{font-size:11.5px;color:var(--text-light);font-weight:300;}
+  .view-block{margin-bottom:20px;}
+  .view-block:last-child{margin-bottom:0;}
+  .view-block-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--moss);margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+  .comment-full{background:var(--cream);border:1px solid var(--cream-dark);border-radius:3px;padding:16px;font-size:14px;color:var(--text-dark);line-height:1.7;font-style:italic;}
+  .view-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;}
+  .view-meta-item{font-size:12.5px;color:var(--text-mid);}
+  .view-meta-item b{color:var(--text-dark);display:block;font-weight:600;margin-bottom:2px;font-size:10px;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-light);}
+  .view-meta-item span{font-size:13px;color:var(--text-dark);font-weight:500;}
+  .report-reasons-list{display:flex;flex-wrap:wrap;gap:6px;}
+
+  /* Toast */
+  .toast{position:fixed;bottom:28px;right:28px;background:var(--moss-dark);color:var(--cream);padding:14px 20px;border-radius:3px;font-size:13px;font-weight:500;box-shadow:0 12px 30px rgba(30,39,24,0.3);display:flex;align-items:center;gap:10px;z-index:400;transform:translateY(20px);opacity:0;pointer-events:none;transition:all 0.3s ease;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .toast.success{background:var(--moss-dark);}
+  .toast.red{background:#6e3232;}
+  .toast.gray{background:#4a4a4a;}
+  .toast.gold{background:#8a6d2e;}
+
+  /* ===== RESPONSIVE ===== */
+  @media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:900px){.content-layout{grid-template-columns:1fr;} .filter-panel{position:static;} .view-meta-grid{grid-template-columns:1fr;}}
+  @media(max-width:768px){.sidebar{transform:translateX(-100%);transition:transform 0.3s;} .sidebar.open{transform:translateX(0);} .main{margin-left:0;} .content{padding:24px 20px;} .topbar{padding:0 20px;} .menu-toggle{display:block;}}
+  @media(max-width:480px){.stats-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR EDITOR (estático) ===== -->
+<aside class="sidebar" id="sidebar" data-role="editor">
+
+    <div class="sidebar-brand">
+        <div class="brand-row">
+            <div class="brand-badge">🌿</div>
+            <div>
+                <span class="brand-title">Sabor &amp; Arte</span>
+                <span class="brand-sub">Blog Editorial</span>
+            </div>
+        </div>
+    </div>
+
+    <a href="perfil-editor.html" class="sidebar-user" title="Meu perfil">
+        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+			<img src="/saborearte/img/k.png"
+			     style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+			     alt="A">        
+	    </div>
+        <div class="user-info">
+            <div class="user-name">Lídia Lisboa</div>
+            <div class="user-role-badge">🔑Editor/Moderador</div>
+        </div>
+    </a>
+
+    <nav class="sidebar-nav">
+
+        <!-- ===== SEÇÃO VISÃO GERAL ===== -->
+        <div class="nav-section-label">Visão Geral</div>
+
+        <a href="dashboard-editor.html" class="nav-item ">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </a>
+
+        <!-- ===== SEÇÃO GESTÃO ===== -->
+        <div class="nav-section-label">Gestão</div>
+
+        <a href="receitas-editor.html" class="nav-item">
+            <span class="nav-icon">📝</span>
+            <span class="nav-label">Receitas</span>
+        </a>
+
+
+        <a href="comentario-editor.html" class="nav-item active">
+            <span class="nav-icon">💬</span>
+            <span class="nav-label"> Comentários</span>
+        </a>
+
+        <!-- ===== SEÇÃO ANÁLISE ===== -->
+        <div class="nav-section-label">Análise</div>
+
+        <a href="relatorio-editor.html" class="nav-item">
+            <span class="nav-icon">📈</span>
+            <span class="nav-label">Relatórios</span>
+        </a>
+
+        <!-- ===== SEÇÃO CONTA ===== -->
+        <div class="nav-section-label">Conta</div>
+        <a href="/saborearte/ConfiguracaoController" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Configurações</span>
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+	    <a href="/saborearte/LogoutController" class="btn-logout">
+	        <span class="nav-icon">🚪</span>
+	        <span>Sair</span>
+	    </a>
+    </div>
+
+</aside>
+
+<div id="overlay" onclick="closeSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99"></div>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+      <div class="page-crumb">
+        <span>Principal</span>
+        <span style="color:var(--cream-dark)">/</span>
+        <span class="current">Comentários</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="section-header">
+      <div>
+        <div class="section-title">Central de <em>Moderação</em></div>
+        <div class="section-date">Comentários são publicados automaticamente · aqui você modera apenas os denunciados</div>
+      </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stats-row">
+      <div class="stat-card pending">
+        <div class="stat-icon">🚩</div>
+        <div class="stat-text">
+          <div class="stat-value" id="statDenunciados">7</div>
+          <div class="stat-label">Comentários Denunciados</div>
+        </div>
+      </div>
+      <div class="stat-card moss">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-text">
+          <div class="stat-value" id="statPendentes">4</div>
+          <div class="stat-label">Denúncias Pendentes</div>
+        </div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-icon">🗑</div>
+        <div class="stat-text">
+          <div class="stat-value" id="statRemovidos">1</div>
+          <div class="stat-label">Comentários Removidos</div>
+        </div>
+      </div>
+      <div class="stat-card gold">
+        <div class="stat-icon">🚫</div>
+        <div class="stat-text">
+          <div class="stat-value" id="statBloqueados">1</div>
+          <div class="stat-label">Usuários Bloqueados</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-layout">
+
+      <!-- FILTER PANEL (lateral) -->
+      <div class="filter-panel">
+        <div class="filter-panel-head">🔍 Filtros</div>
+        <div class="filter-bar">
+          <div class="filter-field">
+            <span class="filter-label">Pesquisar</span>
+            <div class="search-wrap">
+              <span>🔍</span>
+              <input type="text" id="fSearch" placeholder="Buscar por comentário, usuário ou receita..." oninput="applyFilters()">
+            </div>
+          </div>
+          <div class="filter-field">
+            <span class="filter-label">Status</span>
+            <select class="filter-select" id="fStatus" onchange="applyFilters()">
+              <option value="">Todos</option>
+              <option value="pendente">Pendente</option>
+              <option value="resolvido">Resolvido</option>
+              <option value="removido">Removido</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <span class="filter-label">Data</span>
+            <input type="date" class="filter-input" id="fData" onchange="applyFilters()">
+          </div>
+          <button class="btn-clear-filters" onclick="clearFilters()">✕ Limpar filtros</button>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="right-panel">
+        <div class="table-card">
+          <div class="table-card-head">
+            <div class="table-card-title">🚩 Comentários denunciados</div>
+            <div class="table-card-meta" id="tableMeta">7 comentários encontrados</div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Usuário</th>
+                  <th>Receita</th>
+                  <th>Comentário</th>
+                  <th>Denúncias</th>
+                  <th>Motivo</th>
+                  <th>Data</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+          <div class="table-footer">
+            <div class="footer-info">Exibindo <strong id="footerRange">1–5</strong> de <strong id="footerTotal">7</strong> comentários</div>
+            <div class="pagination" id="pagination"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<!-- ===== MODAL: VER COMENTÁRIO ===== -->
+<div class="modal-overlay" id="modalView">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">💬 Comentário Denunciado</div>
+      <button class="modal-close" onclick="closeModal('modalView')">✕</button>
+    </div>
+    <div class="modal-body" id="viewContent"><!-- preenchido via JS --></div>
+    <div class="modal-footer" id="viewActions"><!-- preenchido via JS --></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: CONFIRMAR AÇÃO ===== -->
+<div class="modal-overlay" id="modalConfirm">
+  <div class="modal-box tiny">
+    <div class="modal-head">
+      <div class="modal-title" id="confirmTitle">Confirmar ação</div>
+      <button class="modal-close" onclick="closeModal('modalConfirm')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-icon" id="confirmIcon">⚠</div>
+      <div class="confirm-message" id="confirmMessage">Tem certeza que deseja realizar esta ação?</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalConfirm')">Cancelar</button>
+      <button class="btn btn-primary" id="confirmActionBtn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ===================== DADOS FICTÍCIOS =====================
+  const USUARIO_CORES = {
+    'Ricardo Nunes':'#c0392b','Patrícia Gomes':'#2980b9','Eduardo Castro':'#8e44ad',
+    'Vanessa Melo':'#16a085','Thiago Ramos':'#d35400','Aline Barros':'#27ae60','Marcos Vidal':'#34495e'
+  };
+  function iniciais(nome){ return nome.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase(); }
+
+  let COMENTARIOS = [
+    {
+      id:1, usuario:'Ricardo Nunes', receita:'Risoto de Cogumelos Selvagens', receitaIcon:'🍝',
+      texto:'Essa receita é uma porcaria, só gente sem noção pra postar isso aqui, deveriam remover esse autor do site.',
+      denuncias:5, motivos:['Linguagem ofensiva','Assédio'], data:'19/07/2026 14:12', status:'pendente'
+    },
+    {
+      id:2, usuario:'Patrícia Gomes', receita:'Bolo de Cenoura com Calda de Chocolate', receitaIcon:'🎂',
+      texto:'Confira meu perfil pra promoções incríveis de suplementos!! Link na bio, ganhe dinheiro fácil clicando aqui.',
+      denuncias:8, motivos:['Spam'], data:'19/07/2026 10:03', status:'pendente'
+    },
+    {
+      id:3, usuario:'Eduardo Castro', receita:'Frango ao Limão Siciliano', receitaIcon:'🍗',
+      texto:'Fiz exatamente como está na receita e ficou maravilhoso, super recomendo pra quem gosta de algo leve!',
+      denuncias:2, motivos:['Conteúdo inadequado'], data:'18/07/2026 21:40', status:'pendente'
+    },
+    {
+      id:4, usuario:'Vanessa Melo', receita:'Salada Mediterrânea de Grão-de-Bico', receitaIcon:'🥗',
+      texto:'Gente esse site é uma fraude, a receita não funciona e o autor claramente mentiu sobre o tempo de preparo, cuidado!',
+      denuncias:3, motivos:['Informação falsa'], data:'18/07/2026 16:55', status:'resolvido'
+    },
+    {
+      id:5, usuario:'Thiago Ramos', receita:'Creme de Abóbora com Gengibre', receitaIcon:'🍲',
+      texto:'Vai se lixar com essa receita ridícula, quem foi o idiota que aprovou isso pra publicação?',
+      denuncias:6, motivos:['Linguagem ofensiva','Discurso de ódio'], data:'17/07/2026 12:20', status:'removido'
+    },
+    {
+      id:6, usuario:'Aline Barros', receita:'Hambúrguer de Grão-de-Bico Vegano', receitaIcon:'🌱',
+      texto:'Achei meio sem graça, esperava mais tempero, mas no geral deu pra comer bem.',
+      denuncias:1, motivos:['Conteúdo inadequado'], data:'17/07/2026 09:11', status:'pendente'
+    },
+    {
+      id:7, usuario:'Marcos Vidal', receita:'Salmão Grelhado com Ervas', receitaIcon:'🐟',
+      texto:'Comprem produtos importados baratos no meu site, entrega garantida em 24h, aproveitem a promoção exclusiva!',
+      denuncias:4, motivos:['Spam','Conteúdo inadequado'], data:'16/07/2026 20:05', status:'pendente'
+    }
+  ];
+
+  let blockedUsers = new Set(['Thiago Ramos']);
+  let currentViewId = null;
+
+  function findComentario(id){ return COMENTARIOS.find(c=>c.id === id); }
+
+  function statusLabel(status){
+    return {pendente:'Pendente', resolvido:'Resolvido', removido:'Removido'}[status] || status;
+  }
+
+  // ===================== PAGINAÇÃO =====================
+  const PAGE_SIZE = 5;
+  let currentPage = 1;
+  let filteredData = COMENTARIOS.slice();
+
+  // Renderiza a página atual (recorte paginado dos dados já filtrados)
+  function renderPage(){
+    const total = filteredData.length;
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    if(currentPage > totalPages) currentPage = totalPages;
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageData = filteredData.slice(start, start + PAGE_SIZE);
+
+    renderTable(pageData);
+    renderPagination(totalPages, total, start, pageData.length);
+  }
+
+  // ===================== RENDER =====================
+  function renderTable(list){
+    const tbody = document.getElementById('tableBody');
+    document.getElementById('tableMeta').textContent = filteredData.length + (filteredData.length===1 ? ' comentário encontrado' : ' comentários encontrados');
+
+    if(list.length === 0){
+      tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🕊️</div><div class="empty-text">Nenhum comentário denunciado</div><div class="empty-sub">Ajuste os filtros — a comunidade está tranquila por aqui</div></div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(c=>{
+      const cor = USUARIO_CORES[c.usuario] || '#6b7f59';
+      const bloqueado = blockedUsers.has(c.usuario);
+      const isPendente = c.status === 'pendente';
+      return `
+      <tr class="${bloqueado ? 'is-blocked' : ''}">
+        <td>
+          <div class="author-cell">
+            <div class="author-dot" style="background:${cor}">${iniciais(c.usuario)}</div>
+            <div>
+              <div class="author-name">${c.usuario}</div>
+              ${bloqueado ? '<div class="author-tag">🚫 Bloqueado</div>' : ''}
+            </div>
+          </div>
+        </td>
+        <td><div class="recipe-tag">${c.receitaIcon} ${c.receita}</div></td>
+        <td><div class="comment-preview">"${c.texto}"</div></td>
+        <td><span class="report-badge">🚩 ${c.denuncias}</span></td>
+        <td>${c.motivos.map(m=>`<span class="reason-tag">${m}</span>`).join(' ')}</td>
+        <td style="white-space:nowrap;font-size:12px;">${c.data}</td>
+        <td><span class="pill ${c.status}"><span class="pill-dot"></span>${statusLabel(c.status)}</span></td>
+        <td>
+          <div class="row-actions">
+            <button class="row-btn" title="Ver comentário" onclick="openView(${c.id})">👁</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Monta os controles de paginação dinamicamente, com base no total de páginas
+  function renderPagination(totalPages, total, start, pageCount){
+    const rangeStart = total === 0 ? 0 : start + 1;
+    const rangeEnd = start + pageCount;
+    document.getElementById('footerRange').textContent = total === 0 ? '0' : `${rangeStart}–${rangeEnd}`;
+    document.getElementById('footerTotal').textContent = total;
+
+    const wrap = document.getElementById('pagination');
+    let html = `<button class="pag-btn" ${currentPage===1?'disabled':''} onclick="goToPage(${currentPage-1})">‹</button>`;
+    for(let p=1;p<=totalPages;p++){
+      html += `<button class="pag-btn ${p===currentPage?'active':''}" onclick="goToPage(${p})">${p}</button>`;
+    }
+    html += `<button class="pag-btn" ${currentPage===totalPages?'disabled':''} onclick="goToPage(${currentPage+1})">›</button>`;
+    wrap.innerHTML = html;
+  }
+
+  function goToPage(p){
+    const totalPages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
+    if(p < 1 || p > totalPages) return;
+    currentPage = p;
+    renderPage();
+  }
+
+  function applyFilters(){
+    const search = document.getElementById('fSearch').value.trim().toLowerCase();
+    const status = document.getElementById('fStatus').value;
+    const data = document.getElementById('fData').value;
+
+    filteredData = COMENTARIOS.filter(c=>{
+      if(search && !c.texto.toLowerCase().includes(search) && !c.usuario.toLowerCase().includes(search) && !c.receita.toLowerCase().includes(search)) return false;
+      if(status && c.status !== status) return false;
+      if(data){
+        const dataSimples = c.data.split(' ')[0].split('/').reverse().join('-');
+        if(dataSimples !== data) return false;
+      }
+      return true;
+    });
+
+    currentPage = 1;
+    renderPage();
+  }
+
+  function clearFilters(){
+    document.getElementById('fSearch').value = '';
+    document.getElementById('fStatus').value = '';
+    document.getElementById('fData').value = '';
+    applyFilters();
+  }
+
+  function updateStats(){
+    document.getElementById('statDenunciados').textContent = COMENTARIOS.length;
+    document.getElementById('statPendentes').textContent = COMENTARIOS.filter(c=>c.status==='pendente').length;
+    document.getElementById('statRemovidos').textContent = COMENTARIOS.filter(c=>c.status==='removido').length;
+    document.getElementById('statBloqueados').textContent = blockedUsers.size;
+  }
+
+  function pulseStat(id){
+    const el = document.getElementById(id);
+    el.style.color = 'var(--moss)';
+    setTimeout(()=> el.style.color = '', 400);
+  }
+
+  // ===================== MODAL: VER COMENTÁRIO =====================
+  function openView(id){
+    const c = findComentario(id);
+    if(!c) return;
+    currentViewId = id;
+    const cor = USUARIO_CORES[c.usuario] || '#6b7f59';
+    const bloqueado = blockedUsers.has(c.usuario);
+
+    document.getElementById('viewContent').innerHTML = `
+      <div class="view-user-row">
+        <div class="view-user-avatar" style="background:${cor}">${iniciais(c.usuario)}</div>
+        <div>
+          <div class="view-user-name">${c.usuario} ${bloqueado ? '<span style="color:var(--error);font-size:11px;font-weight:700;">🚫 BLOQUEADO</span>' : ''}</div>
+          <div class="view-user-sub">Comentou em "${c.receita}" · ${c.data}</div>
+        </div>
+      </div>
+      <div class="view-block">
+        <div class="view-block-title">💬 Comentário completo</div>
+        <div class="comment-full">"${c.texto}"</div>
+      </div>
+      <div class="view-block">
+        <div class="view-block-title">🚩 Detalhes da denúncia</div>
+        <div class="view-meta-grid">
+          <div class="view-meta-item"><b>Quantidade de denúncias</b><span>${c.denuncias} usuários denunciaram</span></div>
+          <div class="view-meta-item"><b>Status atual</b><span><span class="pill ${c.status}"><span class="pill-dot"></span>${statusLabel(c.status)}</span></span></div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-light);margin-bottom:6px;">Motivos reportados</div>
+          <div class="report-reasons-list">${c.motivos.map(m=>`<span class="reason-tag">${m}</span>`).join('')}</div>
+        </div>
+      </div>
+    `;
+
+    const isPendente = c.status === 'pendente';
+    document.getElementById('viewActions').innerHTML = `
+      <button class="btn btn-outline" onclick="closeModal('modalView')">Fechar</button>
+      <button class="btn btn-green" onclick="keepComment(${c.id})" ${!isPendente?'disabled':''}>✅ Manter</button>
+      <button class="btn btn-gold" onclick="resolveReport(${c.id})" ${!isPendente?'disabled':''}>⚠ Resolver</button>
+      <button class="btn btn-red" onclick="removeComment(${c.id})" ${c.status==='removido'?'disabled':''}>🗑 Remover</button>
+      <button class="btn btn-outline" style="border-color:var(--draft);color:var(--draft);" onclick="blockUser(${c.id})" ${bloqueado?'disabled':''}>🚫 Bloquear usuário</button>
+    `;
+
+    openModal('modalView');
+  }
+
+  // ===================== AÇÕES =====================
+  function keepComment(id){
+    const c = findComentario(id);
+    if(!c) return;
+    showConfirm({
+      icon:'✅',
+      message:`Tem certeza que deseja manter o comentário de <b>${c.usuario}</b> publicado e encerrar a denúncia?`,
+      onConfirm:()=>{
+        c.status = 'resolvido';
+        afterAction();
+        showToast('✅ Comentário mantido. Denúncia encerrada.', 'success');
+      }
+    });
+  }
+
+  function removeComment(id){
+    const c = findComentario(id);
+    if(!c) return;
+    showConfirm({
+      icon:'🗑',
+      message:`Tem certeza que deseja remover permanentemente o comentário de <b>${c.usuario}</b>? Esta ação não pode ser desfeita.`,
+      onConfirm:()=>{
+        c.status = 'removido';
+        afterAction();
+        showToast('🗑 Comentário removido da plataforma.', 'red');
+      }
+    });
+  }
+
+  function resolveReport(id){
+    const c = findComentario(id);
+    if(!c) return;
+    showConfirm({
+      icon:'⚠',
+      message:`Tem certeza que deseja marcar a denúncia sobre o comentário de <b>${c.usuario}</b> como resolvida?`,
+      onConfirm:()=>{
+        c.status = 'resolvido';
+        afterAction();
+        showToast('⚠ Denúncia marcada como resolvida.', 'gold');
+      }
+    });
+  }
+
+  function blockUser(id){
+    const c = findComentario(id);
+    if(!c) return;
+    showConfirm({
+      icon:'🚫',
+      message:`Tem certeza que deseja bloquear este usuário? <b>${c.usuario}</b> não poderá mais comentar na plataforma.`,
+      onConfirm:()=>{
+        blockedUsers.add(c.usuario);
+        afterAction();
+        showToast(`🚫 Usuário "${c.usuario}" foi bloqueado.`, 'gray');
+      }
+    });
+  }
+
+  // ===================== MODAL DE CONFIRMAÇÃO CUSTOMIZADO =====================
+  function showConfirm({icon='⚠', message, onConfirm}){
+    document.getElementById('confirmIcon').textContent = icon;
+    document.getElementById('confirmMessage').innerHTML = message;
+    const btn = document.getElementById('confirmActionBtn');
+    const newBtn = btn.cloneNode(true); // remove listeners antigos
+    btn.parentNode.replaceChild(newBtn, btn);
+    newBtn.addEventListener('click', ()=>{
+      closeModal('modalConfirm');
+      onConfirm();
+    });
+    openModal('modalConfirm');
+  }
+
+  function afterAction(){
+    updateStats();
+    applyFilters();
+    if(document.getElementById('modalView').classList.contains('open') && currentViewId){
+      openView(currentViewId);
+    }
+  }
+
+  // ===================== HELPERS: MODAL / TOAST / SIDEBAR =====================
+  function openModal(id){ document.getElementById(id).classList.add('open'); }
+  function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-overlay').forEach(m=>{
+    m.addEventListener('click', e=>{ if(e.target === m) m.classList.remove('open'); });
+  });
+
+  let toastTimer;
+  function showToast(msg, type='success'){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> t.classList.remove('show'), 3200);
+  }
+
+  function toggleSidebar(){
+    const s = document.getElementById('sidebar');
+    const o = document.getElementById('overlay');
+    const open = s.classList.toggle('open');
+    o.style.display = open ? 'block' : 'none';
+  }
+  function closeSidebar(){
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').style.display = 'none';
+  }
+  window.addEventListener('resize', ()=>{ if(window.innerWidth > 768) closeSidebar(); });
+
+  // ===================== INIT =====================
+  updateStats();
+  applyFilters();
+</script>
+</body>
+</html>

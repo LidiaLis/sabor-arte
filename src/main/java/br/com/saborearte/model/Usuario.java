@@ -17,6 +17,7 @@ public class Usuario {
     private String localizacao_usuario;
     private String foto_usuario;
     private String titulo_usuario;
+    private String bio_usuario;
 
     private String instagram_usuario;
     private String youtube_usuario;
@@ -51,7 +52,13 @@ public class Usuario {
 
     private TemaUsuario tema = TemaUsuario.LIGHT;
 
+    // ===== Campos extras (NÃO existem na tabela usuario — não persistir) =====
+    // Preenchidos via subquery em consultas específicas (ex.: listarAutoresPublicos).
+    // Nunca usar esses campos em INSERT/UPDATE.
 
+    private int total_receitas_publicadas;
+    private int total_comentarios;
+    private long total_visualizacoes;
 
     // ===== Construtor vazio =====
 
@@ -72,6 +79,7 @@ public class Usuario {
                    String localizacao_usuario,
                    String foto_usuario,
                    String titulo_usuario,
+                   String bio_usuario,
                    String instagram_usuario,
                    String youtube_usuario,
                    String pinterest_usuario,
@@ -89,6 +97,7 @@ public class Usuario {
         this.localizacao_usuario = localizacao_usuario;
         this.foto_usuario = foto_usuario;
         this.titulo_usuario = titulo_usuario;
+        this.bio_usuario = bio_usuario;
         this.instagram_usuario = instagram_usuario;
         this.youtube_usuario = youtube_usuario;
         this.pinterest_usuario = pinterest_usuario;
@@ -108,6 +117,7 @@ public class Usuario {
                    String localizacao_usuario,
                    String foto_usuario,
                    String titulo_usuario,
+                   String bio_usuario,
                    String instagram_usuario,
                    String youtube_usuario,
                    String pinterest_usuario,
@@ -124,6 +134,7 @@ public class Usuario {
         this.localizacao_usuario = localizacao_usuario;
         this.foto_usuario = foto_usuario;
         this.titulo_usuario = titulo_usuario;
+        this.bio_usuario = bio_usuario;
         this.instagram_usuario = instagram_usuario;
         this.youtube_usuario = youtube_usuario;
         this.pinterest_usuario = pinterest_usuario;
@@ -228,6 +239,14 @@ public class Usuario {
         this.titulo_usuario = titulo_usuario;
     }
 
+    public String getBio_usuario() {
+        return bio_usuario;
+    }
+
+    public void setBio_usuario(String bio_usuario) {
+        this.bio_usuario = bio_usuario;
+    }
+
     public String getInstagram_usuario() {
         return instagram_usuario;
     }
@@ -258,5 +277,31 @@ public class Usuario {
 
     public void setData_criacao_usuario(LocalDateTime data_criacao_usuario) {
         this.data_criacao_usuario = data_criacao_usuario;
+    }
+
+    // ===== Getters e Setters — campos extras (não persistidos) =====
+
+    public int getTotal_receitas_publicadas() {
+        return total_receitas_publicadas;
+    }
+
+    public void setTotal_receitas_publicadas(int total_receitas_publicadas) {
+        this.total_receitas_publicadas = total_receitas_publicadas;
+    }
+
+    public int getTotal_comentarios() {
+        return total_comentarios;
+    }
+
+    public void setTotal_comentarios(int total_comentarios) {
+        this.total_comentarios = total_comentarios;
+    }
+
+    public long getTotal_visualizacoes() {
+        return total_visualizacoes;
+    }
+
+    public void setTotal_visualizacoes(long total_visualizacoes) {
+        this.total_visualizacoes = total_visualizacoes;
     }
 }

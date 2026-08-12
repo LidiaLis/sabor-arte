@@ -365,6 +365,116 @@ public class UsuarioDAO {
 
         return lista;
     }
+    
+    /**
+     * Lista os autores públicos (tipo AUTOR, EDITOR ou ADMIN — todos que podem
+     * assinar receitas), já com as estatísticas usadas nos cards e no modal da
+     * tela autores-publico.html: total de receitas publicadas, total de
+     * comentários recebidos (nas receitas dele) e soma das visualizações.
+     *
+     * Usa subqueries correlacionadas em vez de JOIN + GROUP BY para evitar
+     * duplicação de contagem quando um autor tem várias receitas e comentários
+     * ao mesmo tempo.
+     *
+     * OBS: total_comentarios conta todos os comentários das receitas do autor,
+     * sem filtrar por status_comentario — mesmo ponto em aberto já anotado no
+     * ReceitaDAO (ajustar quando os valores desse enum forem confirmados).
+     */
+    public List<Usuario> listarAutoresPublicos() throws SQLException {
+     
+        List<Usuario> lista = new ArrayList<>();
+     
+        String sql = """
+                SELECT
+                    u.*,
+                    (SELECT COUNT(*)
+                       FROM receita r
+                      WHERE r.usuario = u.id_usuario
+                        AND r.status_receita = 'publicada')            AS total_receitas_publicadas,
+                    (SELECT COUNT(*)
+                       FROM comentario cm
+                       JOIN receita r2 ON r2.id_receita = cm.receita
+                      WHERE r2.usuario = u.id_usuario)                 AS total_comentarios,
+                    (SELECT COALESCE(SUM(r3.visualizacoes_receita), 0)
+                       FROM receita r3
+                      WHERE r3.usuario = u.id_usuario
+                        AND r3.status_receita = 'publicada')           AS total_visualizacoes
+                FROM usuario u
+                WHERE u.tipo_usuario IN ('AUTOR', 'EDITOR', 'ADMIN')
+                  AND u.status_usuario = 'ATIVO'
+                ORDER BY u.nome_usuario ASC
+                """;
+     
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+     
+            ResultSet rs = stmt.executeQuery();
+     
+            while (rs.next()) {
+     
+                Usuario u = mapear(rs);
+     
+                // ===== Campos extras (não persistidos) =====
+                u.setTotal_receitas_publicadas(rs.getInt("total_receitas_publicadas"));
+                u.setTotal_comentarios(rs.getInt("total_comentarios"));
+                u.setTotal_visualizacoes(rs.getLong("total_visualizacoes"));
+     
+                lista.add(u);
+            }
+     
+            rs.close();
+        }
+     
+        return lista;
+    }
+     
+    /**
+     * Mesma ideia de listarAutoresPublicos(), mas para um único autor
+     * (usado ao abrir o modal de perfil, se você optar por buscar sob
+     * demanda em vez de reaproveitar os dados já carregados na listagem).
+     */
+    public Usuario buscarAutorPublicoPorId(int idUsuario) throws SQLException {
+     
+        String sql = """
+                SELECT
+                    u.*,
+                    (SELECT COUNT(*)
+                       FROM receita r
+                      WHERE r.usuario = u.id_usuario
+                        AND r.status_receita = 'publicada')            AS total_receitas_publicadas,
+                    (SELECT COUNT(*)
+                       FROM comentario cm
+                       JOIN receita r2 ON r2.id_receita = cm.receita
+                      WHERE r2.usuario = u.id_usuario)                 AS total_comentarios,
+                    (SELECT COALESCE(SUM(r3.visualizacoes_receita), 0)
+                       FROM receita r3
+                      WHERE r3.usuario = u.id_usuario
+                        AND r3.status_receita = 'publicada')           AS total_visualizacoes
+                FROM usuario u
+                WHERE u.id_usuario = ?
+                  AND u.tipo_usuario IN ('AUTOR', 'EDITOR', 'ADMIN')
+                  AND u.status_usuario = 'ATIVO'
+                """;
+     
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+     
+            stmt.setInt(1, idUsuario);
+     
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+     
+                    Usuario u = mapear(rs);
+     
+                    u.setTotal_receitas_publicadas(rs.getInt("total_receitas_publicadas"));
+                    u.setTotal_comentarios(rs.getInt("total_comentarios"));
+                    u.setTotal_visualizacoes(rs.getLong("total_visualizacoes"));
+     
+                    return u;
+                }
+            }
+        }
+     
+        return null;
+    }
 
     // ===== BUSCAR COM FILTROS =====
 
@@ -546,6 +656,50 @@ public class UsuarioDAO {
             ps.setString(1, caminhoFoto);
             ps.setInt(2, id);
             ps.executeUpdate();
+        }
+    }
+    public Usuario buscarUsuarioPorEmail(String email) throws SQLException {
+    	 
+        String sql = """
+                SELECT *
+                FROM usuario
+                WHERE email_usuario = ?
+                  AND status_usuario = 'ATIVO'
+                """;
+     
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+     
+            stmt.setString(1, email);
+     
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapear(rs);
+                }
+            }
+        }
+     
+        return null;
+    }
+     
+    /**
+     * Atualiza somente a senha do usuário. Usada em nova-senha.html, ao final
+     * do fluxo de recuperação — só deve ser chamada depois que
+     * CodigoRecuperacaoDAO.validarCodigo(...) retornou true na mesma sessão.
+     */
+    public boolean atualizarSenha(int idUsuario, String novaSenha) throws SQLException {
+     
+        String sql = """
+                UPDATE usuario
+                SET senha_usuario = ?
+                WHERE id_usuario = ?
+                """;
+     
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+     
+            stmt.setString(1, novaSenha);
+            stmt.setInt(2, idUsuario);
+     
+            return stmt.executeUpdate() > 0;
         }
     }
     

@@ -7,6 +7,7 @@ public class Passo {
     private int id_passo;
     private int receita;
     private int ordem_passo;
+    private String titulo_passo;
     private String descricao_passo;
 
     // ===== Construtor vazio =====
@@ -19,11 +20,13 @@ public class Passo {
     public Passo(int id_passo,
                  int receita,
                  int ordem_passo,
+                 String titulo_passo,
                  String descricao_passo) {
 
         this.id_passo = id_passo;
         this.receita = receita;
         this.ordem_passo = ordem_passo;
+        this.titulo_passo = titulo_passo;
         this.descricao_passo = descricao_passo;
     }
 
@@ -31,10 +34,12 @@ public class Passo {
 
     public Passo(int receita,
                  int ordem_passo,
+                 String titulo_passo,
                  String descricao_passo) {
 
         this.receita = receita;
         this.ordem_passo = ordem_passo;
+        this.titulo_passo = titulo_passo;
         this.descricao_passo = descricao_passo;
     }
 
@@ -48,6 +53,9 @@ public class Passo {
 
     public int getOrdem_passo() { return ordem_passo; }
     public void setOrdem_passo(int ordem_passo) { this.ordem_passo = ordem_passo; }
+
+    public String getTitulo_passo() { return titulo_passo; }
+    public void setTitulo_passo(String titulo_passo) { this.titulo_passo = titulo_passo; }
 
     public String getDescricao_passo() { return descricao_passo; }
     public void setDescricao_passo(String descricao_passo) { this.descricao_passo = descricao_passo; }

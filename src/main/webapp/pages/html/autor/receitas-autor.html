@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabor & Arte — Autor</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --moss:         #4a5e3a;
+    --moss-dark:    #2f3d25;
+    --moss-mid:     #3d5030;
+    --moss-light:   #6b7f59;
+    --sage:         #a3b18a;
+    --sage-light:   #c8d5b9;
+    --cream:        #f5f0e8;
+    --cream-dark:   #e6dece;
+    --warm-white:   #faf8f4;
+    --text-dark:    #1e2718;
+    --text-mid:     #4a5240;
+    --text-light:   #8a9480;
+    --gold:         #c4a265;
+    --gold-light:   #dfc094;
+    --gold-pale:    #f5ead6;
+    --pending:      #c4832a;
+    --pending-bg:   #fdf2e3;
+    --published:    #3a7a4a;
+    --published-bg: #e8f4eb;
+    --draft:        #6a7a8a;
+    --draft-bg:     #eef1f4;
+    --archived:     #8a7a6a;
+    --archived-bg:  #f4f0ec;
+    --sidebar-w:    260px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--moss-dark);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+  .sidebar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 200% 60% at 50% 0%, rgba(74,94,58,0.5) 0%, transparent 60%),
+      radial-gradient(ellipse 100% 40% at 50% 100%, rgba(163,177,138,0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .sidebar-brand {
+    padding: 28px 24px 22px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    position: relative; z-index: 1;
+  }
+  .brand-row { display: flex; align-items: center; gap: 12px; }
+  .brand-badge {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--moss-light), var(--sage));
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .brand-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 700;
+    color: var(--cream); display: block; line-height: 1;
+  }
+  .brand-sub {
+    font-size: 10px; color: var(--sage);
+    text-transform: uppercase; letter-spacing: 1.2px;
+    margin-top: 3px; display: block; font-weight: 300;
+  }
+  .sidebar-user {
+    padding: 18px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    display: flex; align-items: center; gap: 12px;
+    position: relative; z-index: 1;
+  }
+  .user-avatar {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800; font-size: 13px;
+    color: var(--moss-dark); flex-shrink: 0;
+  }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--cream); }
+  .user-role-badge { font-size: 10px; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 300; }
+  .sidebar-nav { flex: 1; padding: 16px 0; position: relative; z-index: 1; }
+  .nav-section-label {
+    font-size: 9px; text-transform: uppercase; letter-spacing: 1.8px;
+    color: rgba(163,177,138,0.5); padding: 16px 24px 6px; font-weight: 500;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 24px;
+    color: rgba(245,240,232,0.7);
+    text-decoration: none; font-size: 14px; font-weight: 400;
+    cursor: pointer; transition: all 0.2s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { color: var(--cream); background: rgba(255,255,255,0.06); border-left-color: var(--sage); }
+  .nav-item.active { color: var(--cream); background: rgba(163,177,138,0.15); border-left-color: var(--sage-light); font-weight: 500; }
+  .nav-icon { width: 22px; text-align: center; font-size: 16px; flex-shrink: 0; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--gold); color: var(--moss-dark);
+    font-family: 'Nunito', sans-serif;
+    font-size: 10px; font-weight: 800;
+    padding: 2px 7px; border-radius: 10px;
+  }
+  .sidebar-bottom {
+    padding: 16px 24px 24px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    position: relative; z-index: 1;
+  }
+  .btn-logout {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 10px 16px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 2px;
+    color: rgba(245,240,232,0.7);
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-logout:hover { background: rgba(155,68,68,0.2); border-color: rgba(155,68,68,0.3); color: #e8a0a0; }
+
+  /* ===== MAIN ===== */
+  .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+  .topbar {
+    background: var(--warm-white); border-bottom: 1px solid var(--cream-dark);
+    padding: 0 40px; height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .page-crumb { font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 6px; font-weight: 300; }
+  .page-crumb .current { color: var(--moss); font-weight: 500; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .topbar-search {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--cream); border: 1.5px solid var(--cream-dark);
+    border-radius: 2px; padding: 7px 14px; width: 240px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .topbar-search:focus-within { border-color: var(--moss-light); box-shadow: 0 0 0 3px rgba(74,94,58,0.08); }
+  .topbar-search input { border: none; background: none; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-dark); outline: none; flex: 1; }
+  .topbar-search input::placeholder { color: var(--text-light); font-weight: 300; }
+  .notif-btn {
+    width: 36px; height: 36px; background: var(--cream);
+    border: 1.5px solid var(--cream-dark); border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px; position: relative; transition: all 0.2s;
+  }
+  .notif-btn:hover { background: var(--cream-dark); }
+  .notif-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background: var(--gold); border-radius: 50%; border: 2px solid var(--warm-white); }
+
+  /* ===== CONTENT ===== */
+  .content { flex: 1; padding: 36px 40px; }
+  .section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 500; color: var(--text-dark); line-height: 1; }
+  .section-title em { font-style: italic; color: var(--moss); }
+  .section-sub { font-size: 12px; color: var(--text-light); font-weight: 300; margin-top: 4px; }
+  .btn-primary {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--moss); color: var(--cream);
+    padding: 10px 20px; border: none; border-radius: 2px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: background 0.2s, transform 0.15s;
+  }
+  .btn-primary:hover { background: var(--moss-dark); transform: translateY(-1px); }
+
+  /* ===== FILTER BAR ===== */
+  .filter-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+  .filter-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); font-weight: 500; margin-right: 4px; }
+  .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 16px; border-radius: 40px;
+    font-size: 12px; font-weight: 600;
+    border: 1.5px solid var(--cream-dark);
+    background: var(--warm-white); color: var(--text-mid);
+    cursor: pointer; transition: all 0.18s; user-select: none;
+  }
+  .chip:hover { border-color: var(--moss-light); color: var(--moss); }
+  .chip.active { background: var(--moss); border-color: var(--moss); color: #fff; }
+  .chip.active.publicado { background: var(--published); border-color: var(--published); }
+  .chip.active.rascunho  { background: var(--draft);     border-color: var(--draft); }
+  .chip.active.arquivado { background: var(--archived);  border-color: var(--archived); }
+  .chip-count {
+    font-family: 'Nunito', sans-serif; font-size: 10px; font-weight: 800;
+    background: rgba(255,255,255,0.25); padding: 1px 7px; border-radius: 10px; min-width: 22px; text-align: center;
+  }
+  .chip:not(.active) .chip-count { background: var(--cream-dark); color: var(--text-mid); }
+  .filter-right { display: flex; align-items: center; gap: 10px; }
+  .sort-select {
+    padding: 7px 14px; border: 1.5px solid var(--cream-dark);
+    border-radius: 2px; background: var(--warm-white);
+    font-family: 'DM Sans', sans-serif; font-size: 12px;
+    color: var(--text-mid); cursor: pointer; outline: none;
+  }
+  .sort-select:focus { border-color: var(--moss-light); }
+
+  /* ===== GRID ===== */
+  .results-info { font-size: 12px; color: var(--text-light); margin-bottom: 20px; }
+  .results-info strong { color: var(--text-mid); font-weight: 600; }
+  .recipes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+  @media (max-width: 1400px) { .recipes-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 1100px) { .recipes-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ===== CARD ===== */
+  .recipe-card {
+    background: var(--warm-white); border: 1px solid var(--cream-dark);
+    border-radius: 6px; overflow: hidden;
+    transition: transform 0.25s, box-shadow 0.25s; cursor: pointer;
+    animation: fadeUp 0.35s ease both;
+  }
+  .recipe-card:hover { transform: translateY(-5px); box-shadow: 0 20px 48px rgba(47,61,37,0.16); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  .recipe-img-wrap { position: relative; overflow: hidden; height: 180px; }
+  .recipe-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.45s ease; }
+  .recipe-card:hover .recipe-img-wrap img { transform: scale(1.07); }
+  .recipe-img-wrap::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(to bottom, transparent 50%, rgba(30,39,24,0.35) 100%);
+    pointer-events: none;
+  }
+  .img-badge {
+    position: absolute; top: 12px; left: 12px; z-index: 2;
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    backdrop-filter: blur(6px);
+  }
+  .img-badge.publicado { background: rgba(58,122,74,0.92);  color: #fff; }
+  .img-badge.rascunho  { background: rgba(80,90,100,0.88);  color: #fff; }
+  .img-badge.arquivado { background: rgba(100,85,75,0.88);  color: #fff; }
+  .img-time {
+    position: absolute; bottom: 10px; right: 10px; z-index: 2;
+    background: rgba(30,39,24,0.72); color: rgba(245,240,232,0.95);
+    font-family: 'Nunito', sans-serif; font-size: 11px; font-weight: 700;
+    padding: 3px 9px; border-radius: 20px;
+  }
+  .img-fav {
+    position: absolute; top: 10px; right: 10px; z-index: 2;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(255,255,255,0.88);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; cursor: pointer; transition: transform 0.2s;
+  }
+  .img-fav:hover { transform: scale(1.15); }
+  .recipe-body { padding: 14px 16px 10px; }
+  .recipe-cat { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--moss-light); font-weight: 600; margin-bottom: 5px; }
+  .recipe-name { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 700; color: var(--text-dark); line-height: 1.35; margin-bottom: 10px; }
+  .recipe-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tag { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: var(--cream); border: 1px solid var(--cream-dark); color: var(--text-mid); font-weight: 500; }
+  .recipe-meta { display: flex; align-items: center; justify-content: space-between; }
+  .recipe-author { display: flex; align-items: center; gap: 7px; }
+  .author-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Nunito', sans-serif; font-size: 9px; font-weight: 800; color: white; flex-shrink: 0; }
+  .author-name { font-size: 12px; color: var(--text-mid); }
+  .recipe-stars { font-size: 12px; color: var(--gold); letter-spacing: -1px; }
+  .recipe-footer {
+    display: flex; align-items: center; gap: 6px;
+    padding: 10px 12px;
+    border-top: 1px solid var(--cream-dark);
+    background: var(--cream);
+  }
+  .footer-btn {
+    flex: 1; padding: 7px 4px; border: 1.5px solid var(--cream-dark);
+    background: var(--warm-white); border-radius: 2px;
+    font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500;
+    color: var(--text-mid); cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .footer-btn:hover { border-color: var(--moss); color: var(--moss); background: rgba(74,94,58,0.05); }
+  .footer-btn.submit { border-color: var(--pending); color: var(--pending); }
+  .footer-btn.submit:hover { background: var(--pending-bg); }
+
+  /* ===== EMPTY STATE ===== */
+  .empty-state { display: none; text-align: center; padding: 80px 20px; grid-column: 1 / -1; }
+  .empty-state.show { display: block; }
+  .empty-icon { font-size: 52px; margin-bottom: 16px; }
+  .empty-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text-mid); margin-bottom: 8px; }
+  .empty-sub { font-size: 13px; color: var(--text-light); font-weight: 300; }
+
+  /* ===== PAGINATION ===== */
+  .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 40px; }
+  .pg-btn {
+    width: 36px; height: 36px; border-radius: 2px;
+    border: 1.5px solid var(--cream-dark); background: var(--warm-white);
+    font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700;
+    color: var(--text-mid); cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pg-btn:hover { border-color: var(--moss-light); color: var(--moss); }
+  .pg-btn.active { background: var(--moss); border-color: var(--moss); color: #fff; }
+  .pg-btn.prev-next { width: auto; padding: 0 14px; font-size: 12px; }
+
+  /* ===================== MODAL OVERLAY ===================== */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(30,39,24,0.55); backdrop-filter: blur(4px);
+    align-items: flex-start; justify-content: center;
+    overflow-y: auto; padding: 32px 20px;
+  }
+  .modal-overlay.open { display: flex; animation: fadeOverlay 0.25s ease; }
+  @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: var(--warm-white);
+    border-radius: 10px;
+    width: 100%; max-width: 860px;
+    box-shadow: 0 32px 80px rgba(30,39,24,0.28);
+    animation: slideModal 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    overflow: hidden;
+  }
+  @keyframes slideModal { from { opacity: 0; transform: translateY(40px) scale(0.97); } to { opacity: 1; transform: none; } }
+
+  .modal-header {
+    background: var(--moss-dark);
+    padding: 24px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative; overflow: hidden;
+  }
+  .modal-header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 200% 80% at 30% 50%, rgba(74,94,58,0.5) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .modal-header-left { position: relative; z-index: 1; }
+  .modal-header-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--sage); font-weight: 500; margin-bottom: 4px;
+  }
+  .modal-header-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700; color: var(--cream);
+  }
+  .modal-close {
+    position: relative; z-index: 1;
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 50%; color: var(--cream);
+    font-size: 18px; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-close:hover { background: rgba(155,68,68,0.3); }
+
+  .modal-body { padding: 32px; }
+
+  /* progress steps */
+  .form-steps {
+    display: flex; align-items: center; gap: 0;
+    margin-bottom: 32px;
+  }
+  .step-item {
+    display: flex; align-items: center; gap: 8px;
+    flex: 1; position: relative;
+  }
+  .step-item:not(:last-child)::after {
+    content: '';
+    position: absolute; top: 14px; left: calc(28px + 8px);
+    right: 0; height: 2px;
+    background: var(--cream-dark);
+    z-index: 0;
+  }
+  .step-item.done:not(:last-child)::after { background: var(--moss-light); }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--cream-dark); border: 2px solid var(--cream-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800;
+    color: var(--text-light); position: relative; z-index: 1;
+    transition: all 0.3s; flex-shrink: 0;
+  }
+  .step-item.active .step-num { background: var(--moss); border-color: var(--moss); color: #fff; }
+  .step-item.done .step-num { background: var(--published); border-color: var(--published); color: #fff; }
+  .step-label { font-size: 11px; color: var(--text-light); font-weight: 500; white-space: nowrap; position: relative; z-index: 2; background: var(--warm-white); padding: 0 3px; }
+  .step-item.active .step-label { color: var(--moss); font-weight: 600; }
+  .step-item.done .step-label { color: var(--published); }
+
+  /* section panels */
+  .form-panel { display: none; }
+  .form-panel.active { display: block; animation: fadeUp 0.3s ease; }
+
+  .form-section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px; font-weight: 600; color: var(--text-dark);
+    margin-bottom: 20px; padding-bottom: 10px;
+    border-bottom: 1.5px solid var(--cream-dark);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .form-row { display: grid; gap: 16px; margin-bottom: 16px; }
+  .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--text-mid);
+  }
+  .form-label span { color: #c44; font-weight: 400; margin-left: 2px; }
+  .form-input, .form-select, .form-textarea {
+    padding: 10px 14px;
+    border: 1.5px solid var(--cream-dark);
+    border-radius: 4px; background: var(--cream);
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    color: var(--text-dark); outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--moss-light);
+    box-shadow: 0 0 0 3px rgba(74,94,58,0.08);
+    background: var(--warm-white);
+  }
+  .form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  .form-select { cursor: pointer; }
+  .form-hint { font-size: 11px; color: var(--text-light); font-weight: 300; }
+
+  /* image upload */
+  .upload-zone {
+    border: 2px dashed var(--cream-dark);
+    border-radius: 6px; padding: 28px;
+    text-align: center; cursor: pointer;
+    transition: all 0.2s; background: var(--cream);
+  }
+  .upload-zone:hover { border-color: var(--moss-light); background: rgba(74,94,58,0.04); }
+  .upload-icon { font-size: 32px; margin-bottom: 8px; }
+  .upload-text { font-size: 13px; color: var(--text-mid); font-weight: 500; }
+  .upload-sub { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+
+  /* tags input */
+  .tags-input-wrap {
+    border: 1.5px solid var(--cream-dark); border-radius: 4px;
+    background: var(--cream); padding: 6px 10px;
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    cursor: text; transition: border-color 0.2s;
+    min-height: 44px;
+  }
+  .tags-input-wrap:focus-within { border-color: var(--moss-light); box-shadow: 0 0 0 3px rgba(74,94,58,0.08); background: var(--warm-white); }
+  .tag-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--moss); color: #fff;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .tag-remove { cursor: pointer; opacity: 0.7; font-size: 13px; line-height: 1; }
+  .tag-remove:hover { opacity: 1; }
+  .tags-real-input { border: none; background: none; outline: none; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-dark); min-width: 120px; flex: 1; }
+
+  /* ===== INGREDIENTES ===== */
+  .ing-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .ing-row {
+    display: grid; grid-template-columns: 1fr 90px 120px 36px;
+    gap: 8px; align-items: center;
+    animation: fadeUp 0.25s ease;
+  }
+  .ing-remove {
+    width: 32px; height: 32px; border-radius: 4px;
+    border: 1.5px solid #e8b0b0; background: #fff5f5;
+    color: #c44; cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .ing-remove:hover { background: #fee; border-color: #c44; }
+  .btn-add-row {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 4px;
+    border: 1.5px dashed var(--moss-light);
+    background: rgba(74,94,58,0.04);
+    color: var(--moss); font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-add-row:hover { background: rgba(74,94,58,0.1); border-style: solid; }
+
+  /* ===== PASSOS ===== */
+  .steps-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
+  .passo-block {
+    border: 1.5px solid var(--cream-dark);
+    border-radius: 8px; overflow: hidden;
+    animation: fadeUp 0.3s ease;
+  }
+  .passo-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    background: var(--cream);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .passo-header:hover { background: var(--cream-dark); }
+  .passo-num-badge {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--moss); color: #fff;
+    font-family: 'Nunito', sans-serif; font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .passo-title-text { font-size: 13px; font-weight: 600; color: var(--text-dark); flex: 1; }
+  .passo-status-text { font-size: 11px; color: var(--text-light); }
+  .passo-chevron {
+    font-size: 12px; color: var(--text-light);
+    transition: transform 0.2s;
+  }
+  .passo-block.open .passo-chevron { transform: rotate(180deg); }
+  .passo-remove-btn {
+    padding: 3px 8px; border-radius: 3px;
+    border: 1px solid #e8b0b0; background: #fff5f5;
+    color: #c44; font-size: 11px; cursor: pointer;
+    display: none;
+  }
+  .passo-block:hover .passo-remove-btn { display: block; }
+  .passo-body {
+    padding: 0 16px; max-height: 0; overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.2s;
+  }
+  .passo-block.open .passo-body {
+    max-height: 400px; padding: 16px;
+  }
+
+  /* modal footer */
+  .modal-footer {
+    padding: 20px 32px;
+    border-top: 1px solid var(--cream-dark);
+    background: var(--cream);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .btn-secondary {
+    display: flex; align-items: center; gap: 6px;
+    padding: 10px 20px; border-radius: 2px;
+    border: 1.5px solid var(--cream-dark);
+    background: var(--warm-white);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    color: var(--text-mid); cursor: pointer; transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--moss-light); color: var(--moss); }
+  .modal-footer-right { display: flex; gap: 10px; }
+  .btn-save-draft {
+    display: flex; align-items: center; gap: 6px;
+    padding: 10px 20px; border-radius: 2px;
+    border: 1.5px solid var(--draft); background: var(--draft-bg);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    color: var(--draft); cursor: pointer; transition: all 0.15s;
+  }
+  .btn-save-draft:hover { background: #dde3ea; }
+  .btn-submit-review {
+    display: flex; align-items: center; gap: 6px;
+    padding: 10px 20px; border-radius: 2px;
+    border: none; background: var(--moss); color: var(--cream);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-submit-review:hover { background: var(--moss-dark); transform: translateY(-1px); }
+
+  /* toast */
+  .toast {
+    position: fixed; bottom: 32px; right: 32px; z-index: 999;
+    background: var(--moss-dark); color: var(--cream);
+    padding: 14px 20px; border-radius: 6px;
+    font-size: 13px; font-weight: 500;
+    box-shadow: 0 8px 32px rgba(30,39,24,0.3);
+    display: flex; align-items: center; gap: 10px;
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .toast.show { transform: none; opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-brand">
+        <div class="brand-row">
+            <div class="brand-badge">🌿</div>
+            <div>
+                <span class="brand-title">Sabor &amp; Arte</span>
+                <span class="brand-sub">Blog editorial</span>
+            </div>
+        </div>
+    </div>
+
+    <a href="perfil-autor.html" class="sidebar-user" title="Meu perfil">
+        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+			<img src="/saborearte/img/v.png"
+			     style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+			     alt="A">        
+	    </div>
+        <div class="user-info">
+            <div class="user-name">Rafael Costa</div>
+            <div class="user-role-badge">✍️ Autor</div>
+        </div>
+    </a>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">Visão Geral</div>
+
+        <a href="dashboard-autor.html" class="nav-item ">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </a>
+
+        <div class="nav-section-label">Conteúdo</div>
+
+        <a href="receitas-autor.html" class="nav-item active">
+            <span class="nav-icon">📖</span>
+            <span class="nav-label">Minhas Receitas</span>
+        </a>
+        <a href="mensagens-autor.html" class="nav-item">     
+            <span class="nav-icon">💬</span>
+            <span class="nav-label">Mensagens</span>
+        </a>
+
+          <div class="nav-section-label">Análise</div>
+
+        <a href="relatorio-autor.html" class="nav-item">
+          <span class="nav-icon">📈</span>
+          <span class="nav-label">Relatórios</span>
+        </a>
+
+        <div class="nav-section-label">Conta</div>
+        <a href="/saborearte/ConfiguracaoController" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Configurações</span>
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+	    <a href="/saborearte/LogoutController" class="btn-logout">
+	        <span class="nav-icon">🚪</span>
+	        <span>Sair</span>
+	    </a>
+    </div>
+
+</aside>
+
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-crumb">
+      <span>Painel</span>
+      <span style="color:var(--cream-dark)">/</span>
+      <span class="current">Minhas Receitas</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Minhas <em>Receitas</em> 📖</div>
+        <div class="section-sub">Crie, edite e publique suas receitas</div>
+      </div>
+      <button class="btn-primary" onclick="openModal()">✚ Nova Receita</button>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="topbar-search" style="width:220px">
+        <span style="font-size:14px;color:var(--text-light)">🔍</span>
+        <input type="text" placeholder="Buscar receitas…" id="searchInput" oninput="applyFilters()">
+      </div>
+      <span class="filter-label">Filtrar:</span>
+      <div class="filter-chips">
+        <button class="chip active" data-filter="todos" onclick="setFilter(this)">🍴 Todas <span class="chip-count">7</span></button>
+        <button class="chip publicado" data-filter="publicado" onclick="setFilter(this)">✅ Publicadas <span class="chip-count">3</span></button>
+        <button class="chip rascunho" data-filter="rascunho" onclick="setFilter(this)">📝 Rascunhos <span class="chip-count">4</span></button>
+      </div>
+      <div class="filter-right">
+        <select class="sort-select" onchange="applyFilters()">
+          <option>Mais recentes</option>
+          <option>Mais antigos</option>
+          <option>A–Z</option>
+          <option>Melhor avaliação</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="results-info" id="resultsInfo">Mostrando <strong>7</strong> receitas</div>
+
+    <div class="recipes-grid" id="recipesGrid">
+      <!-- Os cards sao renderizados dinamicamente via JavaScript (ver renderRecipes) -->
+    </div>
+
+    <div class="pagination">
+      <button class="pg-btn prev-next">← Anterior</button>
+      <button class="pg-btn active">1</button>
+      <button class="pg-btn prev-next">Próxima →</button>
+    </div>
+  </div>
+</main>
+
+<!-- ===================== MODAL NOVA RECEITA ===================== -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <div class="modal-header-label">✚ Criação de Receita</div>
+        <div class="modal-header-title">Nova Receita</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- steps indicator -->
+      <div class="form-steps">
+        <div class="step-item active" id="step-ind-1">
+          <div class="step-num">1</div>
+          <span class="step-label">Informações</span>
+        </div>
+        <div class="step-item" id="step-ind-2">
+          <div class="step-num">2</div>
+          <span class="step-label">Ingredientes</span>
+        </div>
+        <div class="step-item" id="step-ind-3">
+          <div class="step-num">3</div>
+          <span class="step-label">Modo de Preparo</span>
+        </div>
+        <div class="step-item" id="step-ind-4">
+          <div class="step-num">4</div>
+          <span class="step-label">Imagem & Revisão</span>
+        </div>
+      </div>
+
+      <!-- PANEL 1: Informações básicas -->
+      <div class="form-panel active" id="panel-1">
+        <div class="form-section-title">📋 Informações Básicas</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Título da Receita <span>*</span></label>
+            <input class="form-input" type="text" placeholder="Ex: Bolo de Cenoura com Calda de Chocolate" id="f-titulo">
+          </div>
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="form-label">Categoria <span>*</span></label>
+            <select class="form-select" id="f-categoria">
+              <option value="">Selecionar categoria…</option>
+              <option>🎂 Sobremesas</option>
+              <option>🍝 Massas</option>
+              <option>🍗 Carnes</option>
+              <option>🥗 Saladas</option>
+              <option>🥣 Sopas</option>
+              <option>🥞 Café da Manhã</option>
+              <option>🍬 Confeitaria</option>
+              <option>🥧 Tortas</option>
+              <option>🫐 Bowls</option>
+              <option>🐟 Frutos do Mar</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tempo de Preparo (minutos) <span>*</span></label>
+            <input class="form-input" type="number" placeholder="Ex: 45" min="1" id="f-tempo">
+          </div>
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="form-label">Rendimento (porções) <span>*</span></label>
+            <input class="form-input" type="number" placeholder="Ex: 8" min="1" id="f-rendimento">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status inicial</label>
+            <select class="form-select" id="f-status">
+              <option value="rascunho">📝 Salvar como Rascunho</option>
+              <option value="publicado">🚀 Publicar Agora</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Tags / Palavras-chave</label>
+            <div class="tags-input-wrap" id="tagsWrap" onclick="document.getElementById('tagInput').focus()">
+              <input class="tags-real-input" id="tagInput" type="text" placeholder="Digite e pressione Enter ou vírgula…" onkeydown="handleTagInput(event)">
+            </div>
+            <span class="form-hint">Ex: Vegano, Sem Glúten, Fácil, Italiano…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 2: Ingredientes -->
+      <div class="form-panel" id="panel-2">
+        <div class="form-section-title">🥕 Ingredientes</div>
+        <div style="display:grid;grid-template-columns:1fr 90px 120px 36px;gap:8px;margin-bottom:6px;padding:0 2px">
+          <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-light)">Ingrediente</span>
+          <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-light)">Quantidade</span>
+          <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-light)">Unidade</span>
+          <span></span>
+        </div>
+        <div class="ing-list" id="ingList"></div>
+        <button class="btn-add-row" onclick="addIngrediente()">＋ Adicionar Ingrediente</button>
+      </div>
+
+      <!-- PANEL 3: Passos -->
+      <div class="form-panel" id="panel-3">
+        <div class="form-section-title">👨‍🍳 Modo de Preparo</div>
+        <div class="steps-list" id="stepsList"></div>
+        <button class="btn-add-row" id="btnAddPasso" onclick="addPasso()">＋ Adicionar Passo</button>
+      </div>
+
+      <!-- PANEL 4: Imagem & Revisão -->
+      <div class="form-panel" id="panel-4">
+        <div class="form-section-title">🖼️ Imagem de Capa</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">URL da Imagem</label>
+            <input class="form-input" type="text" placeholder="https://…" id="f-imagem">
+            <span class="form-hint">Cole o link de uma imagem ou use o upload abaixo</span>
+          </div>
+        </div>
+        <div class="upload-zone" onclick="showToast('📎 Selecione uma imagem do seu computador')">
+          <div class="upload-icon">📸</div>
+          <div class="upload-text">Clique para fazer upload</div>
+          <div class="upload-sub">JPG, PNG ou WEBP · máx. 5 MB</div>
+        </div>
+
+        <div class="form-section-title" style="margin-top:24px">✅ Resumo da Receita</div>
+        <div id="reviewSummary" style="background:var(--cream);border-radius:6px;padding:16px;font-size:13px;color:var(--text-mid);line-height:1.8;">
+          Preencha os campos anteriores para ver o resumo aqui.
+        </div>
+      </div>
+
+    </div><!-- end modal-body -->
+
+    <div class="modal-footer">
+      <button class="btn-secondary" id="btnBack" onclick="changePanel(-1)" style="display:none">← Voltar</button>
+      <div style="font-size:12px;color:var(--text-light)" id="stepCounter">Etapa 1 de 4</div>
+      <div class="modal-footer-right">
+        <button class="btn-save-draft" onclick="saveAction('rascunho')">💾 Salvar Rascunho</button>
+        <button class="btn-submit-review" id="btnNext" onclick="changePanel(1)">Próximo →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL VISUALIZAR RECEITA ===================== -->
+<div class="modal-overlay" id="viewModalOverlay" onclick="handleViewOverlayClick(event)">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <div class="modal-header-label">👁 Pré-visualização</div>
+        <div class="modal-header-title" id="viewTitle">Título da Receita</div>
+      </div>
+      <button class="modal-close" onclick="closeViewModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div style="position:relative;border-radius:8px;overflow:hidden;margin-bottom:20px;">
+        <img id="viewImg" src="" alt="" style="width:100%;height:240px;object-fit:cover;display:block;">
+        <span id="viewStatusBadge" class="img-badge" style="position:absolute;top:12px;left:12px;"></span>
+        <span id="viewTimeBadge" class="img-time" style="position:absolute;bottom:10px;right:10px;"></span>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:18px;margin-bottom:14px;font-size:13px;color:var(--text-mid);">
+        <div><b style="color:var(--text-dark)">Categoria:</b> <span id="viewCategoria"></span></div>
+        <div><b style="color:var(--text-dark)">Rendimento:</b> <span id="viewRendimento"></span></div>
+        <div><b style="color:var(--text-dark)">Avaliação:</b> <span id="viewEstrelas" style="color:var(--gold)"></span></div>
+      </div>
+
+      <div class="recipe-tags" id="viewTags" style="margin-bottom:20px;"></div>
+
+      <div id="viewDescricaoWrap" class="form-section-title" style="display:none;">📝 Descrição</div>
+      <p id="viewDescricao" style="display:none;font-size:13px;color:var(--text-mid);line-height:1.7;margin-bottom:20px;"></p>
+
+      <div class="form-section-title">🥕 Ingredientes</div>
+      <ul id="viewIngredientes" style="margin:10px 0 22px;padding-left:20px;font-size:13px;color:var(--text-mid);line-height:1.9;"></ul>
+
+      <div class="form-section-title">👨‍🍳 Modo de Preparo</div>
+      <ol id="viewPassos" style="margin:10px 0 0;padding-left:20px;font-size:13px;color:var(--text-mid);line-height:1.9;"></ol>
+    </div>
+
+    <div class="modal-footer">
+      <div></div>
+      <div class="modal-footer-right">
+        <button class="btn-secondary" onclick="closeViewModal()">Fechar</button>
+        <button class="btn-submit-review" id="viewEditBtn">✏️ Editar Receita</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== AUTOR LOGADO (usado nas receitas criadas por aqui) =====
+const AUTOR_LOGADO = { nome: 'Rafael Costa', iniciais: 'RC', cor: 'linear-gradient(135deg,#e74c3c,#c0392b)' };
+
+// ===== BASE DE RECEITAS (dados fictícios) =====
+let RECIPES = [
+  { id:1, status:'publicado', nome:'Bolo de Cenoura com Calda de Chocolate', categoria:'🎂 Sobremesas', tags:['Clássico','Forno'], tempo:60, rendimento:12,
+    autorNome:'Maria Andrade', autorIniciais:'MA', autorColor:'linear-gradient(135deg,#c4a265,#dfc094)', estrelas:5,
+    img:'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&q=80', fav:true,
+    descricao:'Um bolo fofinho de cenoura, coberto com uma generosa calda de chocolate meio amargo.',
+    ingredientes:[{nome:'Cenouras',qtd:'3',unidade:'unidade'},{nome:'Ovos',qtd:'4',unidade:'unidade'},{nome:'Açúcar',qtd:'2',unidade:'xícara'},{nome:'Farinha de trigo',qtd:'2',unidade:'xícara'},{nome:'Chocolate meio amargo',qtd:'200',unidade:'g'}],
+    passos:['Bata as cenouras, os ovos e o óleo no liquidificador.','Misture com o açúcar, a farinha e o fermento.','Asse em forma untada por 40 minutos a 180°C.','Cubra com a calda de chocolate ainda morno.'] },
+
+  { id:2, status:'publicado', nome:'Brigadeiro Gourmet de Pistache', categoria:'🍬 Confeitaria', tags:['Brasileiro','Doce'], tempo:20, rendimento:30,
+    autorNome:'Maria Andrade', autorIniciais:'MA', autorColor:'linear-gradient(135deg,#c4a265,#dfc094)', estrelas:5,
+    img:'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&q=80', fav:true,
+    descricao:'Brigadeiro cremoso com pistache triturado, uma versão sofisticada do clássico brasileiro.',
+    ingredientes:[{nome:'Leite condensado',qtd:'1',unidade:'unidade'},{nome:'Manteiga',qtd:'1',unidade:'colher (sopa)'},{nome:'Pistache triturado',qtd:'80',unidade:'g'}],
+    passos:['Cozinhe o leite condensado com a manteiga até desgrudar da panela.','Deixe esfriar e enrole as bolinhas.','Passe no pistache triturado.'] },
+
+  { id:3, status:'rascunho', nome:'Torta de Limão Siciliano com Merengue', categoria:'🥧 Tortas', tags:['Francês','Especial'], tempo:90, rendimento:8,
+    autorNome:'Maria Andrade', autorIniciais:'MA', autorColor:'linear-gradient(135deg,#c4a265,#dfc094)', estrelas:4,
+    img:'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80', fav:false,
+    descricao:'Torta com base amanteigada, recheio azedinho de limão siciliano e cobertura de merengue maçaricado.',
+    ingredientes:[{nome:'Limões sicilianos',qtd:'4',unidade:'unidade'},{nome:'Leite condensado',qtd:'1',unidade:'unidade'},{nome:'Claras',qtd:'3',unidade:'unidade'},{nome:'Biscoito maisena',qtd:'200',unidade:'g'}],
+    passos:['Triture o biscoito com manteiga e forre a forma.','Misture o suco de limão com o leite condensado e despeje sobre a base.','Leve para gelar por 2 horas.','Cubra com o merengue e maçarique antes de servir.'] },
+
+  { id:4, status:'rascunho', nome:'Pudim de Leite Condensado Clássico', categoria:'🍮 Sobremesas', tags:['Gelado','Tropical'], tempo:60, rendimento:8,
+    autorNome:'Maria Andrade', autorIniciais:'MA', autorColor:'linear-gradient(135deg,#c4a265,#dfc094)', estrelas:4,
+    img:'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&q=80', fav:false,
+    descricao:'O pudim de leite condensado tradicional, cremoso e com calda de caramelo.',
+    ingredientes:[{nome:'Leite condensado',qtd:'1',unidade:'unidade'},{nome:'Leite',qtd:'2',unidade:'xícara'},{nome:'Ovos',qtd:'3',unidade:'unidade'},{nome:'Açúcar (para calda)',qtd:'1',unidade:'xícara'}],
+    passos:['Prepare a calda de caramelo e forre a forma.','Bata os demais ingredientes no liquidificador e despeje na forma.','Asse em banho-maria por 50 minutos.','Deixe esfriar e leve à geladeira antes de desenformar.'] },
+
+  { id:5, status:'rascunho', nome:'Pavê de Morango com Chantilly', categoria:'🍓 Sobremesas', tags:['Gelado','Festa'], tempo:40, rendimento:10,
+    autorNome:'Maria Andrade', autorIniciais:'MA', autorColor:'linear-gradient(135deg,#c4a265,#dfc094)', estrelas:3,
+    img:'https://images.unsplash.com/photo-1567171466295-4afa63d45416?w=600&q=80', fav:false,
+    descricao:'Camadas de biscoito, creme e morangos frescos, finalizado com chantilly.',
+    ingredientes:[{nome:'Biscoito champagne',qtd:'200',unidade:'g'},{nome:'Morangos',qtd:'400',unidade:'g'},{nome:'Creme de leite',qtd:'2',unidade:'xícara'},{nome:'Chantilly',qtd:'300',unidade:'ml'}],
+    passos:['Monte camadas alternadas de biscoito, creme e morangos.','Repita até preencher o refratário.','Cubra com chantilly e leve à geladeira por 3 horas.'] },
+
+  { id:6, status:'rascunho', nome:'Cookies de Chocolate com Nozes', categoria:'🍪 Biscoitos', tags:['Americano','Forno'], tempo:35, rendimento:20,
+    autorNome:'Maria Andrade', autorIniciais:'MA', autorColor:'linear-gradient(135deg,#c4a265,#dfc094)', estrelas:4,
+    img:'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=600&q=80', fav:false,
+    descricao:'Cookies crocantes por fora e macios por dentro, recheados com gotas de chocolate e nozes.',
+    ingredientes:[{nome:'Farinha de trigo',qtd:'2',unidade:'xícara'},{nome:'Manteiga',qtd:'150',unidade:'g'},{nome:'Gotas de chocolate',qtd:'200',unidade:'g'},{nome:'Nozes picadas',qtd:'100',unidade:'g'}],
+    passos:['Bata a manteiga com o açúcar até obter um creme.','Adicione os secos e misture bem.','Incorpore as gotas de chocolate e as nozes.','Asse porções em forno pré-aquecido por 12 minutos.'] },
+
+  { id:7, status:'publicado', nome:'Cheesecake de Frutas Vermelhas', categoria:'🍰 Sobremesas', tags:['Americano','Gelado'], tempo:180, rendimento:10,
+    autorNome:'Maria Andrade', autorIniciais:'MA', autorColor:'linear-gradient(135deg,#c4a265,#dfc094)', estrelas:5,
+    img:'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=600&q=80', fav:true,
+    descricao:'Cheesecake cremoso com calda de frutas vermelhas, assado lentamente para uma textura perfeita.',
+    ingredientes:[{nome:'Cream cheese',qtd:'600',unidade:'g'},{nome:'Biscoito maisena',qtd:'200',unidade:'g'},{nome:'Frutas vermelhas',qtd:'300',unidade:'g'},{nome:'Açúcar',qtd:'1',unidade:'xícara'}],
+    passos:['Forre a forma com a base de biscoito triturado.','Bata o cream cheese com açúcar e ovos até ficar liso.','Asse em banho-maria por 1 hora.','Cubra com a calda de frutas vermelhas depois de fria.'] }
+];
+let nextRecipeId = 8;
+let editingId = null;
+
+// ===== HELPERS =====
+function formatTempo(min) {
+  min = parseInt(min) || 0;
+  if (min >= 60 && min % 60 === 0) return (min / 60) + 'h';
+  if (min >= 60) return Math.floor(min / 60) + 'h' + (min % 60) + 'min';
+  return min + ' min';
+}
+function renderStars(n) {
+  n = Math.round(n || 0);
+  return '★'.repeat(n) + '☆'.repeat(5 - n);
+}
+function statusBadgeHtml(status) {
+  return status === 'publicado'
+    ? '<span class="img-badge publicado">✅ Publicado</span>'
+    : '<span class="img-badge rascunho">📝 Rascunho</span>';
+}
+
+// ===== RENDER DA GRADE DE RECEITAS =====
+function renderRecipes() {
+  const grid = document.getElementById('recipesGrid');
+  const cardsHtml = RECIPES.map(r => `
+      <div class="recipe-card" data-id="${r.id}" data-status="${r.status}" data-name="${r.nome.replace(/"/g,'&quot;')}">
+        <div class="recipe-img-wrap">
+          <img src="${r.img}" alt="">
+          ${statusBadgeHtml(r.status)}
+          <span class="img-time">⏱ ${formatTempo(r.tempo)}</span>
+          <div class="img-fav">${r.fav ? '❤️' : '🤍'}</div>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-cat">${r.categoria}</div>
+          <div class="recipe-name">${r.nome}</div>
+          <div class="recipe-tags">${(r.tags||[]).map(t => `<span class="tag">${t}</span>`).join('')}</div>
+          <div class="recipe-meta">
+            <div class="recipe-author">
+              <div class="author-dot" style="background:${r.autorColor}">${r.autorIniciais}</div>
+              <span class="author-name">${r.autorNome}</span>
+            </div>
+            <div class="recipe-stars">${renderStars(r.estrelas)}</div>
+          </div>
+        </div>
+        <div class="recipe-footer">
+          <button class="footer-btn" onclick="viewRecipe(${r.id})">👁 Ver</button>
+          <button class="footer-btn" onclick="editRecipe(${r.id})">✏️ Editar</button>
+          ${r.status === 'publicado' ? `<button class="footer-btn" onclick="voltarRascunho(${r.id})">📝 Rascunho</button>` : `<button class="footer-btn submit" onclick="enviarReceita(${r.id})">📤 Enviar</button>`}
+        </div>
+      </div>`).join('');
+
+  grid.innerHTML = cardsHtml + `
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">📖</div>
+        <div class="empty-title">Nenhuma receita encontrada</div>
+        <div class="empty-sub">Tente ajustar os filtros ou criar uma nova receita.</div>
+      </div>`;
+
+  updateChipCounts();
+  applyFilters();
+}
+
+function updateChipCounts() {
+  const total = RECIPES.length;
+  const publicadas = RECIPES.filter(r => r.status === 'publicado').length;
+  const rascunhos = RECIPES.filter(r => r.status === 'rascunho').length;
+  const chipTodas = document.querySelector('.chip[data-filter="todos"] .chip-count');
+  const chipPub = document.querySelector('.chip[data-filter="publicado"] .chip-count');
+  const chipRas = document.querySelector('.chip[data-filter="rascunho"] .chip-count');
+  if (chipTodas) chipTodas.textContent = total;
+  if (chipPub) chipPub.textContent = publicadas;
+  if (chipRas) chipRas.textContent = rascunhos;
+}
+
+// ===== FILTER =====
+let activeFilter = 'todos';
+
+function setFilter(btn) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter = btn.dataset.filter;
+  applyFilters();
+}
+
+function applyFilters() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const cards = document.querySelectorAll('.recipe-card');
+  let visible = 0;
+  cards.forEach((card) => {
+    const status = card.dataset.status;
+    const name = card.dataset.name.toLowerCase();
+    const show = (activeFilter === 'todos' || status === activeFilter) && name.includes(search);
+    card.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  const empty = document.getElementById('emptyState');
+  if (empty) empty.classList.toggle('show', visible === 0);
+  document.getElementById('resultsInfo').innerHTML = `Mostrando <strong>${visible}</strong> receita${visible !== 1 ? 's' : ''}`;
+}
+
+// Favoritar: delegado no container, pois os cards são recriados a cada render
+document.getElementById('recipesGrid').addEventListener('click', e => {
+  const fav = e.target.closest('.img-fav');
+  if (!fav) return;
+  const card = fav.closest('.recipe-card');
+  const r = RECIPES.find(x => x.id === parseInt(card.dataset.id));
+  if (!r) return;
+  r.fav = !r.fav;
+  fav.textContent = r.fav ? '❤️' : '🤍';
+});
+
+// ===== MODAL (Nova Receita / Editar Receita) =====
+let currentPanel = 1;
+const totalPanels = 4;
+let tags = [];
+let ingredients = [];
+let passos = [];
+
+function resetForm() {
+  editingId = null;
+  document.getElementById('f-titulo').value = '';
+  document.getElementById('f-categoria').value = '';
+  document.getElementById('f-tempo').value = '';
+  document.getElementById('f-rendimento').value = '';
+  document.getElementById('f-status').value = 'rascunho';
+  document.getElementById('f-imagem').value = '';
+  tags = []; renderTags();
+  ingredients = []; document.getElementById('ingList').innerHTML = '';
+  passos = []; document.getElementById('stepsList').innerHTML = '';
+
+  currentPanel = 1;
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-1').classList.add('active');
+  document.querySelectorAll('.step-item').forEach(s => s.classList.remove('active', 'done'));
+  document.getElementById('step-ind-1').classList.add('active');
+  document.getElementById('btnBack').style.display = 'none';
+  document.getElementById('stepCounter').textContent = 'Etapa 1 de 4';
+  document.getElementById('btnNext').textContent = 'Próximo →';
+
+  document.querySelector('.modal-header-label').textContent = '✚ Criação de Receita';
+  document.querySelector('.modal-header-title').textContent = 'Nova Receita';
+}
+
+function openModal() {
+  resetForm();
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  addIngrediente();
+  addPasso();
+}
+
+function editRecipe(id) {
+  const r = RECIPES.find(x => x.id === id);
+  if (!r) return;
+  resetForm();
+  editingId = id;
+
+  document.querySelector('.modal-header-label').textContent = '✏️ Edição de Receita';
+  document.querySelector('.modal-header-title').textContent = 'Editar Receita';
+
+  document.getElementById('f-titulo').value = r.nome;
+  document.getElementById('f-categoria').value = r.categoria;
+  document.getElementById('f-tempo').value = r.tempo || '';
+  document.getElementById('f-rendimento').value = r.rendimento || '';
+  document.getElementById('f-status').value = r.status;
+  document.getElementById('f-imagem').value = r.img || '';
+
+  tags = [...(r.tags || [])];
+  renderTags();
+
+  const ingList = (r.ingredientes && r.ingredientes.length) ? r.ingredientes : [{}];
+  ingList.forEach(ing => {
+    addIngrediente();
+    const rowId = ingredients[ingredients.length - 1];
+    if (ing.nome) document.getElementById('ing-nome-' + rowId).value = ing.nome;
+    if (ing.qtd) document.getElementById('ing-qtd-' + rowId).value = ing.qtd;
+    if (ing.unidade) document.getElementById('ing-unid-' + rowId).value = ing.unidade;
+  });
+
+  const stepList = (r.passos && r.passos.length) ? r.passos : [''];
+  stepList.forEach(desc => {
+    addPasso();
+    const stepId = passos[passos.length - 1];
+    document.getElementById('passo-desc-' + stepId).value = desc;
+    updatePassoStatus(stepId);
+  });
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+// ===== MODAL (Ver Receita) =====
+function viewRecipe(id) {
+  const r = RECIPES.find(x => x.id === id);
+  if (!r) return;
+
+  document.getElementById('viewTitle').textContent = r.nome;
+  document.getElementById('viewImg').src = r.img;
+  const badge = document.getElementById('viewStatusBadge');
+  badge.className = 'img-badge ' + r.status;
+  badge.textContent = r.status === 'publicado' ? '✅ Publicado' : '📝 Rascunho';
+  document.getElementById('viewTimeBadge').textContent = '⏱ ' + formatTempo(r.tempo);
+  document.getElementById('viewCategoria').textContent = r.categoria || '—';
+  document.getElementById('viewRendimento').textContent = r.rendimento ? r.rendimento + ' porções' : '—';
+  document.getElementById('viewEstrelas').textContent = r.estrelas ? renderStars(r.estrelas) : 'Sem avaliações ainda';
+
+  document.getElementById('viewTags').innerHTML = (r.tags && r.tags.length)
+    ? r.tags.map(t => `<span class="tag">${t}</span>`).join('')
+    : '<span style="font-size:12px;color:var(--text-light)">Nenhuma tag</span>';
+
+  const descWrap = document.getElementById('viewDescricaoWrap');
+  const desc = document.getElementById('viewDescricao');
+  if (r.descricao) { descWrap.style.display = 'block'; desc.style.display = 'block'; desc.textContent = r.descricao; }
+  else { descWrap.style.display = 'none'; desc.style.display = 'none'; }
+
+  document.getElementById('viewIngredientes').innerHTML = (r.ingredientes && r.ingredientes.length)
+    ? r.ingredientes.map(i => `<li>${i.nome}${i.qtd ? ' — ' + i.qtd + (i.unidade ? ' ' + i.unidade : '') : ''}</li>`).join('')
+    : '<li style="list-style:none;margin-left:-20px;color:var(--text-light)">Nenhum ingrediente cadastrado.</li>';
+
+  document.getElementById('viewPassos').innerHTML = (r.passos && r.passos.length)
+    ? r.passos.map(p => `<li>${p}</li>`).join('')
+    : '<li style="list-style:none;margin-left:-20px;color:var(--text-light)">Nenhum passo cadastrado.</li>';
+
+  document.getElementById('viewEditBtn').onclick = () => { closeViewModal(); editRecipe(id); };
+
+  document.getElementById('viewModalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeViewModal() {
+  document.getElementById('viewModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleViewOverlayClick(e) {
+  if (e.target === document.getElementById('viewModalOverlay')) closeViewModal();
+}
+
+// ===== ENVIAR (publicar) RECEITA =====
+function enviarReceita(id) {
+  const r = RECIPES.find(x => x.id === id);
+  if (!r) return;
+  r.status = 'publicado';
+  renderRecipes();
+  showToast('🚀 "' + r.nome + '" foi publicada com sucesso!');
+}
+
+// ===== VOLTAR A RASCUNHO =====
+function voltarRascunho(id) {
+  const r = RECIPES.find(x => x.id === id);
+  if (!r) return;
+  r.status = 'rascunho';
+  renderRecipes();
+  showToast('📝 "' + r.nome + '" voltou a ser rascunho.');
+}
+
+function changePanel(dir) {
+  if (dir === 1 && currentPanel === totalPanels) {
+    const status = document.getElementById('f-status').value;
+    saveAction(status);
+    return;
+  }
+  const next = currentPanel + dir;
+  if (next < 1 || next > totalPanels) return;
+
+  document.getElementById('panel-' + currentPanel).classList.remove('active');
+  document.getElementById('step-ind-' + currentPanel).classList.remove('active');
+  if (dir === 1) document.getElementById('step-ind-' + currentPanel).classList.add('done');
+  else document.getElementById('step-ind-' + (currentPanel)).classList.remove('done');
+
+  currentPanel = next;
+  document.getElementById('panel-' + currentPanel).classList.add('active');
+  document.getElementById('step-ind-' + currentPanel).classList.add('active');
+
+  document.getElementById('btnBack').style.display = currentPanel > 1 ? 'flex' : 'none';
+  document.getElementById('stepCounter').textContent = `Etapa ${currentPanel} de ${totalPanels}`;
+  const btnNext = document.getElementById('btnNext');
+  btnNext.textContent = currentPanel === totalPanels ? '✅ Finalizar' : 'Próximo →';
+
+  if (currentPanel === 4) buildReview();
+}
+
+// ===== TAGS =====
+function handleTagInput(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(/,$/, '');
+    if (val && !tags.includes(val)) {
+      tags.push(val);
+      renderTags();
+    }
+    e.target.value = '';
+  } else if (e.key === 'Backspace' && e.target.value === '' && tags.length) {
+    tags.pop();
+    renderTags();
+  }
+}
+
+function renderTags() {
+  const wrap = document.getElementById('tagsWrap');
+  wrap.querySelectorAll('.tag-pill').forEach(t => t.remove());
+  tags.forEach((t, i) => {
+    const pill = document.createElement('span');
+    pill.className = 'tag-pill';
+    pill.innerHTML = `${t} <span class="tag-remove" onclick="removeTag(${i})">×</span>`;
+    wrap.insertBefore(pill, document.getElementById('tagInput'));
+  });
+}
+
+function removeTag(i) {
+  tags.splice(i, 1);
+  renderTags();
+}
+
+// ===== INGREDIENTES =====
+let ingId = 0;
+function addIngrediente() {
+  ingId++;
+  const id = ingId;
+  ingredients.push(id);
+  const row = document.createElement('div');
+  row.className = 'ing-row';
+  row.id = 'ing-' + id;
+  row.innerHTML = `
+    <input class="form-input" type="text" placeholder="Ex: Farinha de trigo" id="ing-nome-${id}">
+    <input class="form-input" type="number" placeholder="250" min="0" step="0.01" id="ing-qtd-${id}">
+    <select class="form-select" id="ing-unid-${id}">
+      <option value="">Unidade…</option>
+      <option>g</option><option>kg</option><option>ml</option><option>L</option>
+      <option>colher (sopa)</option><option>colher (chá)</option>
+      <option>xícara</option><option>unidade</option><option>a gosto</option>
+    </select>
+    <button class="ing-remove" onclick="removeIngrediente(${id})" title="Remover">✕</button>
+  `;
+  document.getElementById('ingList').appendChild(row);
+}
+
+function removeIngrediente(id) {
+  const el = document.getElementById('ing-' + id);
+  if (el) el.remove();
+  ingredients = ingredients.filter(i => i !== id);
+}
+
+// ===== PASSOS =====
+let passoId = 0;
+function addPasso() {
+  passoId++;
+  const num = passos.length + 1;
+  const id = passoId;
+  passos.push(id);
+
+  const block = document.createElement('div');
+  block.className = 'passo-block open';
+  block.id = 'passo-' + id;
+  block.innerHTML = `
+    <div class="passo-header" onclick="togglePasso(${id})">
+      <div class="passo-num-badge">${num}</div>
+      <span class="passo-title-text" id="passo-label-${id}">Passo ${num}</span>
+      <span class="passo-status-text" id="passo-status-${id}"></span>
+      <button class="passo-remove-btn" onclick="removePasso(event,${id})">Remover</button>
+      <span class="passo-chevron">▾</span>
+    </div>
+    <div class="passo-body">
+      <div class="form-group">
+        <label class="form-label">Descrição do Passo ${num} <span>*</span></label>
+        <textarea class="form-textarea" id="passo-desc-${id}" placeholder="Descreva este passo de forma clara e detalhada…" oninput="updatePassoStatus(${id})" rows="3"></textarea>
+      </div>
+    </div>
+  `;
+  document.getElementById('stepsList').appendChild(block);
+  document.getElementById('passo-desc-' + id).focus();
+  renumberPassos();
+}
+
+function togglePasso(id) {
+  const block = document.getElementById('passo-' + id);
+  block.classList.toggle('open');
+}
+
+function updatePassoStatus(id) {
+  const desc = document.getElementById('passo-desc-' + id).value.trim();
+  const status = document.getElementById('passo-status-' + id);
+  if (status) status.textContent = desc ? '✅' : '';
+}
+
+function removePasso(e, id) {
+  e.stopPropagation();
+  const el = document.getElementById('passo-' + id);
+  if (el) el.remove();
+  passos = passos.filter(p => p !== id);
+  renumberPassos();
+}
+
+function renumberPassos() {
+  const blocks = document.querySelectorAll('.passo-block');
+  blocks.forEach((block, i) => {
+    const num = i + 1;
+    const badge = block.querySelector('.passo-num-badge');
+    const label = block.querySelector('.passo-title-text');
+    if (badge) badge.textContent = num;
+    if (label && !document.getElementById('passo-desc-' + block.id.split('-')[1])?.value.trim()) {
+      label.textContent = `Passo ${num}`;
+    }
+  });
+}
+
+// ===== REVIEW =====
+function buildReview() {
+  const titulo = document.getElementById('f-titulo').value || '(sem título)';
+  const cat = document.getElementById('f-categoria').value || '(sem categoria)';
+  const tempo = document.getElementById('f-tempo').value || '?';
+  const rend = document.getElementById('f-rendimento').value || '?';
+  const status = document.getElementById('f-status').value;
+
+  const ingCount = document.querySelectorAll('.ing-row').length;
+  const stepCount = document.querySelectorAll('.passo-block').length;
+  const tagList = tags.length ? tags.join(', ') : '—';
+  const statusLabel = status === 'publicado' ? '🚀 Publicar Agora' : '📝 Salvar como Rascunho';
+
+  document.getElementById('reviewSummary').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;">
+      <div><b>Título:</b> ${titulo}</div>
+      <div><b>Categoria:</b> ${cat}</div>
+      <div><b>Tempo de preparo:</b> ${tempo} min</div>
+      <div><b>Rendimento:</b> ${rend} porções</div>
+      <div><b>Ingredientes:</b> ${ingCount} adicionado(s)</div>
+      <div><b>Passos:</b> ${stepCount} adicionado(s)</div>
+      <div style="grid-column:1/-1"><b>Tags:</b> ${tagList}</div>
+      <div style="grid-column:1/-1"><b>Ação ao finalizar:</b> ${statusLabel}</div>
+    </div>
+  `;
+}
+
+// ===== SAVE =====
+function saveAction(type) {
+  const titulo = document.getElementById('f-titulo').value.trim();
+  if (!titulo) {
+    showToast('⚠️ Dê um título para a receita antes de continuar.');
+    return;
+  }
+
+  const categoria = document.getElementById('f-categoria').value;
+  const tempo = parseInt(document.getElementById('f-tempo').value) || 0;
+  const rendimento = parseInt(document.getElementById('f-rendimento').value) || 0;
+  const imagem = document.getElementById('f-imagem').value.trim();
+  const defaultImg = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=600&q=80';
+
+  const ingredientesData = [...document.querySelectorAll('.ing-row')].map(row => {
+    const rowId = row.id.replace('ing-', '');
+    return {
+      nome: (document.getElementById('ing-nome-' + rowId)?.value || '').trim(),
+      qtd: (document.getElementById('ing-qtd-' + rowId)?.value || '').trim(),
+      unidade: document.getElementById('ing-unid-' + rowId)?.value || ''
+    };
+  }).filter(i => i.nome);
+
+  const passosData = [...document.querySelectorAll('.passo-block')].map(block => {
+    const stepId = block.id.replace('passo-', '');
+    return (document.getElementById('passo-desc-' + stepId)?.value || '').trim();
+  }).filter(p => p);
+
+  if (editingId) {
+    // ===== ATUALIZA RECEITA EXISTENTE =====
+    const r = RECIPES.find(x => x.id === editingId);
+    if (r) {
+      r.nome = titulo;
+      if (categoria) r.categoria = categoria;
+      if (tempo) r.tempo = tempo;
+      if (rendimento) r.rendimento = rendimento;
+      r.status = type;
+      r.tags = [...tags];
+      r.ingredientes = ingredientesData;
+      r.passos = passosData;
+      if (imagem) r.img = imagem;
+    }
+    closeModal();
+    showToast(type === 'rascunho' ? '💾 Receita atualizada e salva como rascunho!' : '🚀 Receita atualizada e publicada!');
+  } else {
+    // ===== CRIA NOVA RECEITA =====
+    RECIPES.unshift({
+      id: nextRecipeId++,
+      status: type,
+      nome: titulo,
+      categoria: categoria || '🍴 Sem categoria',
+      tags: [...tags],
+      tempo: tempo,
+      rendimento: rendimento,
+      autorNome: AUTOR_LOGADO.nome,
+      autorIniciais: AUTOR_LOGADO.iniciais,
+      autorColor: AUTOR_LOGADO.cor,
+      estrelas: 0,
+      img: imagem || defaultImg,
+      fav: false,
+      descricao: '',
+      ingredientes: ingredientesData,
+      passos: passosData
+    });
+    closeModal();
+    showToast(type === 'rascunho' ? '💾 Rascunho salvo com sucesso!' : '🚀 Receita publicada com sucesso!');
+  }
+
+  renderRecipes();
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// Keyboard close
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeViewModal(); }
+});
+
+// ===== INIT =====
+renderRecipes();
+</script>
+</body>
+</html>

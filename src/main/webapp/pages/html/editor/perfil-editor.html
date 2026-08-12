@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabor & Arte — Meu Perfil</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+:root {
+    --moss:         #4a5e3a;
+    --moss-dark:    #2f3d25;
+    --moss-light:   #6b7f59;
+    --sage:         #a3b18a;
+    --sage-light:   #c8d5b9;
+    --cream:        #f5f0e8;
+    --cream-dark:   #e6dece;
+    --warm-white:   #faf8f4;
+    --text-dark:    #1e2718;
+    --text-mid:     #4a5240;
+    --text-light:   #8a9480;
+    --gold:         #c4a265;
+    --gold-light:   #dfc094;
+    --published:    #3a7a4a;
+    --published-bg: #e8f4eb;
+    --error:        #9b4444;
+    --error-bg:     #fdf0f0;
+    --sidebar-w:    260px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text-dark); min-height: 100vh; display: flex; }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(30,39,24,.45); z-index: 99; backdrop-filter: blur(2px); }
+  .sidebar-overlay.active { display: block; }
+
+  .sidebar {
+    width: var(--sidebar-w); background: var(--moss-dark);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow-y: auto;
+    transition: transform 0.28s cubic-bezier(.25,.46,.45,.94);
+  }
+  .sidebar::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 200% 60% at 50% 0%, rgba(74,94,58,0.5) 0%, transparent 60%),
+                radial-gradient(ellipse 100% 40% at 50% 100%, rgba(163,177,138,0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .sidebar-brand { padding: 28px 24px 22px; border-bottom: 1px solid rgba(255,255,255,0.08); position: relative; z-index: 1; }
+  .brand-row { display: flex; align-items: center; gap: 12px; }
+  .brand-badge { width: 38px; height: 38px; background: linear-gradient(135deg, var(--moss-light), var(--sage)); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .brand-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--cream); display: block; line-height: 1; }
+  .brand-sub { font-size: 10px; color: var(--sage); text-transform: uppercase; letter-spacing: 1.2px; margin-top: 3px; display: block; font-weight: 300; }
+
+  .sidebar-user { padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; transition: background 0.2s; }
+  .sidebar-user:hover { background: rgba(255,255,255,0.04); }
+  .user-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px; color: white; flex-shrink: 0; }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role-badge { font-size: 10px; color: var(--sage-light); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 300; }
+  .user-arrow { font-size: 18px; color: rgba(163,177,138,0.4); flex-shrink: 0; }
+
+  .sidebar-nav { flex: 1; padding: 16px 0; position: relative; z-index: 1; }
+  .nav-section-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.8px; color: rgba(163,177,138,0.5); padding: 16px 24px 6px; font-weight: 500; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 24px; color: rgba(245,240,232,0.7); text-decoration: none; font-size: 14px; font-weight: 400; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
+  .nav-item:hover { color: var(--cream); background: rgba(255,255,255,0.06); border-left-color: var(--sage); }
+  .nav-item.active { color: var(--cream); background: rgba(163,177,138,0.15); border-left-color: var(--sage-light); font-weight: 500; }
+  .nav-icon { width: 22px; text-align: center; font-size: 16px; flex-shrink: 0; }
+  .nav-label { flex: 1; }
+  .nav-badge { margin-left: auto; background: var(--gold); color: var(--moss-dark); font-family: 'Nunito', sans-serif; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 10px; }
+
+  .sidebar-bottom { padding: 16px 24px 24px; border-top: 1px solid rgba(255,255,255,0.08); position: relative; z-index: 1; }
+  .btn-logout { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 2px; color: rgba(245,240,232,0.7); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .btn-logout:hover { background: rgba(155,68,68,0.2); border-color: rgba(155,68,68,0.3); color: #e8a0a0; }
+
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.active { transform: translateX(0); }
+  }
+
+  /* ===== MAIN ===== */
+  .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+  .topbar { background: var(--warm-white); border-bottom: 1px solid var(--cream-dark); padding: 0 40px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .page-crumb { font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 6px; }
+  .page-crumb .current { color: var(--moss); font-weight: 500; }
+
+  /* ===== CONTENT ===== */
+  .content { flex: 1; padding: 36px 40px; }
+
+  /* ===== HERO BANNER ===== */
+  .perfil-hero {
+    background: linear-gradient(135deg, var(--moss-dark) 0%, var(--moss) 60%, var(--moss-light) 100%);
+    border-radius: 4px; padding: 0; margin-bottom: 32px;
+    box-shadow: 0 8px 32px rgba(47,61,37,0.25);
+    position: relative; overflow: hidden;
+  }
+  .perfil-hero::before {
+    content: ''; position: absolute; top: -80px; right: -80px;
+    width: 320px; height: 320px; border-radius: 50%;
+    background: rgba(163,177,138,0.12);
+  }
+  .perfil-hero::after {
+    content: ''; position: absolute; bottom: -40px; left: 30%;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: rgba(196,162,101,0.08);
+  }
+  .hero-inner { padding: 36px 44px; display: flex; align-items: center; gap: 32px; position: relative; z-index: 1; }
+  .avatar-upload-wrap { position: relative; flex-shrink: 0; }
+  .hero-avatar-big {
+    width: 96px; height: 96px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif; font-size: 36px; font-weight: 800;
+    color: var(--moss-dark); border: 4px solid rgba(255,255,255,0.25);
+    cursor: pointer; transition: filter 0.2s; overflow: hidden; position: relative;
+  }
+  .hero-avatar-big:hover { filter: brightness(0.85); }
+  .hero-avatar-big img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+  .hero-avatar-big img.visible { display: block; }
+  .avatar-upload-btn {
+    position: absolute; bottom: 2px; right: 2px;
+    width: 26px; height: 26px;
+    background: var(--gold); border: 2px solid var(--warm-white);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; cursor: pointer; transition: background 0.2s;
+  }
+  .avatar-upload-btn:hover { background: var(--gold-light); }
+  .hero-text { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .hero-text-main { min-width: 0; }
+  .hero-name { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; color: white; margin-bottom: 6px; line-height: 1.1; }
+  .hero-role-pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); padding: 5px 16px; border-radius: 20px; font-size: 13px; color: rgba(255,255,255,0.9); font-weight: 500; margin-bottom: 8px; }
+  .hero-email { font-size: 14px; color: rgba(255,255,255,0.6); font-weight: 300; }
+  .hero-stats { display: flex; gap: 32px; flex-shrink: 0; }
+  .hero-stat { text-align: center; }
+  .hero-stat-val { font-family: 'Nunito', sans-serif; font-size: 26px; font-weight: 800; color: white; line-height: 1; }
+  .hero-stat-lbl { font-size: 11px; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.7px; margin-top: 4px; font-weight: 300; }
+
+  /* ===== TABS ===== */
+  .tab-nav { display: flex; gap: 2px; background: var(--cream-dark); padding: 4px; border-radius: 4px; margin-bottom: 28px; width: fit-content; }
+  .tab-btn { padding: 9px 20px; border: none; border-radius: 2px; background: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-light); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 7px; }
+  .tab-btn:hover { color: var(--text-dark); }
+  .tab-btn.active { background: var(--warm-white); color: var(--moss); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ===== GRID ===== */
+  .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .card-full { grid-column: 1 / -1; }
+
+  /* ===== CARD ===== */
+  .card { background: var(--warm-white); border: 1px solid var(--cream-dark); border-radius: 4px; overflow: hidden; }
+  .card-head { padding: 18px 24px; border-bottom: 1px solid var(--cream-dark); display: flex; align-items: center; justify-content: space-between; }
+  .card-head-title { font-size: 14px; font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 9px; }
+  .card-head-title .card-icon { font-size: 16px; }
+  .card-body { padding: 22px 24px; }
+
+  /* ===== FORM ===== */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { margin-bottom: 18px; }
+  .form-group:last-child { margin-bottom: 0; }
+  .form-label { display: block; font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; }
+  .form-input, .form-select, .form-textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--cream-dark); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-dark); background: var(--cream); transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+  .form-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--moss); background: var(--warm-white); box-shadow: 0 0 0 3px rgba(74,94,58,0.1); }
+  .form-input.readonly { background: var(--cream-dark) !important; color: var(--text-light) !important; cursor: not-allowed; }
+  .form-hint { font-size: 11px; color: var(--text-light); margin-top: 5px; font-weight: 300; }
+
+  /* ===== BOTÕES ===== */
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: var(--moss); color: var(--cream); }
+  .btn-primary:hover { background: var(--moss-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(47,61,37,0.25); }
+  .btn-primary:disabled { background: var(--sage); cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-outline { background: none; color: var(--moss); border: 1.5px solid var(--moss); }
+  .btn-outline:hover { background: rgba(74,94,58,0.06); }
+  .btn-danger { background: none; color: var(--error); border: 1.5px solid rgba(155,68,68,0.3); }
+  .btn-danger:hover { background: var(--error-bg); border-color: var(--error); }
+  .btn-sm { padding: 7px 14px; font-size: 12px; }
+
+  /* ===== TAGS ===== */
+  .tags-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; min-height: 36px; align-content: flex-start; }
+  .tag { display: inline-flex; align-items: center; gap: 5px; background: rgba(74,94,58,0.1); border: 1.5px solid rgba(74,94,58,0.22); padding: 5px 12px; border-radius: 20px; font-size: 12px; color: var(--moss); font-weight: 500; animation: tagIn 0.2s ease; }
+  @keyframes tagIn { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+  .tag .tag-remove { cursor: pointer; color: var(--moss-light); font-size: 14px; line-height: 1; transition: color 0.15s; }
+  .tag .tag-remove:hover { color: var(--error); }
+
+  .spec-select-wrap { display: flex; gap: 8px; align-items: stretch; }
+  .spec-select-wrap .form-select { flex: 1; }
+  .spec-hint { font-size: 11px; margin-top: 5px; font-weight: 300; color: var(--error); min-height: 16px; }
+
+  /* ===== ROLE BADGE ===== */
+  .role-badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(74,94,58,0.1); border: 1.5px solid rgba(74,94,58,0.2); padding: 8px 16px; border-radius: 2px; font-size: 13px; font-weight: 600; color: var(--moss); }
+
+  /* ===== RECEITAS ===== */
+  .public-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .public-mini { border-radius: 4px; overflow: hidden; border: 1px solid var(--cream-dark); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+  .public-mini:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(47,61,37,0.12); }
+  .public-mini img { width: 100%; height: 90px; object-fit: cover; display: block; }
+  .public-mini-body { padding: 8px 10px; background: var(--warm-white); }
+  .public-mini-title { font-size: 11px; font-weight: 600; color: var(--text-dark); line-height: 1.3; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .public-mini-cat { font-size: 10px; color: var(--text-light); }
+
+    /* ===== LOG DE ATIVIDADES ===== */
+  .log-list { display: flex; flex-direction: column; }
+  .log-item { display: flex; align-items: flex-start; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--cream-dark); }
+  .log-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .log-item:first-child { padding-top: 0; }
+  .log-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .log-dot.green  { background: #3a7a4a; }
+  .log-dot.blue   { background: #3a6f9b; }
+  .log-dot.gold   { background: var(--gold); }
+  .log-dot.red    { background: var(--error); }
+  .log-text { font-size: 13px; color: var(--text-dark); line-height: 1.4; }
+  .log-text b { font-weight: 600; }
+  .log-time { font-size: 11px; color: var(--text-light); margin-top: 2px; font-weight: 300; }
+
+  /* ===== MODAL GENÉRICO ===== */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: var(--warm-white); border-radius: 4px; padding: 32px 36px; text-align: center; min-width: 320px; box-shadow: 0 12px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease; }
+  .modal-icon { font-size: 48px; margin-bottom: 12px; }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; }
+  .modal-msg { font-size: 13px; color: var(--text-light); margin-bottom: 22px; font-weight: 300; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== MODAL AVATAR ===== */
+  .avatar-modal-box {
+    background: var(--warm-white); border-radius: 6px;
+    width: 100%; max-width: 480px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.25);
+    animation: slideUp 0.28s ease;
+    overflow: hidden; text-align: left; padding: 0;
+  }
+  .avatar-modal-header {
+    background: linear-gradient(135deg, var(--moss-dark), var(--moss));
+    padding: 18px 24px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .avatar-modal-title { color: white; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .avatar-modal-close {
+    background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
+    width: 30px; height: 30px; color: white; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: background 0.2s; line-height: 1;
+  }
+  .avatar-modal-close:hover { background: rgba(255,255,255,0.28); }
+  .avatar-modal-body { padding: 24px; }
+  .avatar-modal-footer { padding: 16px 24px; border-top: 1px solid var(--cream-dark); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+  .avatar-preview-area { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .avatar-preview-ring {
+    width: 96px; height: 96px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif; font-size: 36px; font-weight: 800; color: var(--moss-dark);
+    border: 4px solid var(--sage-light); overflow: hidden; position: relative; transition: border-color 0.25s;
+  }
+  .avatar-preview-ring.has-img { border-color: var(--moss); }
+  .avatar-preview-ring img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+  .avatar-preview-ring img.visible { display: block; }
+  .avatar-preview-lbl { font-size: 12px; color: var(--text-light); }
+
+  .drop-zone {
+    border: 2px dashed var(--cream-dark); border-radius: 6px;
+    padding: 24px 20px; text-align: center; cursor: pointer;
+    background: var(--cream); position: relative; transition: all 0.2s;
+  }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--moss); background: rgba(74,94,58,0.04); }
+  .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .drop-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+  .drop-title { font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; }
+  .drop-sub { font-size: 12px; color: var(--text-light); }
+  .drop-sub span { color: var(--moss); font-weight: 500; cursor: pointer; }
+
+  .file-info-bar {
+    display: none; background: rgba(74,94,58,0.08); border: 1.5px solid rgba(74,94,58,0.22);
+    border-radius: 4px; padding: 10px 14px; margin-top: 10px;
+    align-items: center; gap: 10px;
+  }
+  .file-info-bar.show { display: flex; }
+  .file-info-name { font-size: 13px; color: var(--moss); font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-info-size { font-size: 11px; color: var(--text-light); flex-shrink: 0; }
+  .file-info-rm { background: none; border: none; color: var(--error); font-size: 18px; cursor: pointer; line-height: 1; }
+
+  .quick-section { margin-top: 18px; }
+  .quick-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); font-weight: 500; margin-bottom: 10px; }
+  .quick-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .quick-av {
+    width: 44px; height: 44px; border-radius: 50%; overflow: hidden; cursor: pointer;
+    border: 2.5px solid transparent; transition: all 0.2s; flex-shrink: 0;
+  }
+  .quick-av:hover { border-color: var(--moss); transform: scale(1.08); }
+  .quick-av.selected { border-color: var(--gold); }
+  .quick-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .av-error { display: none; font-size: 12px; color: var(--error); margin-top: 8px; }
+  .av-error.show { display: block; }
+  .av-success {
+    display: none; background: var(--published-bg); border: 1.5px solid #7fc98a;
+    border-radius: 4px; padding: 10px 14px; font-size: 13px; color: var(--published);
+    font-weight: 500; align-items: center; gap: 8px; margin-bottom: 14px;
+  }
+  .av-success.show { display: flex; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 1100px) { .cards-grid { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } .bio-two-col { grid-template-columns: 1fr !important; } }
+  @media (max-width: 768px) { .main { margin-left: 0; } .content { padding: 20px; } .topbar { padding: 0 20px; } .hero-stats { display: none; } }
+  @media (max-width: 480px) { .hero-inner { flex-direction: column; text-align: center; } .tab-nav { overflow-x: auto; } .public-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+
+<link rel="stylesheet" href="css/perfil-autor.css">
+</head>
+<body>
+
+<!-- ===== SIDEBAR AUTOR (estático) ===== -->
+<aside class="sidebar" id="sidebar" data-role="editor">
+
+    <div class="sidebar-brand">
+        <div class="brand-row">
+            <div class="brand-badge">🌿</div>
+            <div>
+                <span class="brand-title">Sabor &amp; Arte</span>
+                <span class="brand-sub">Blog Editorial</span>
+            </div>
+        </div>
+    </div>
+
+    <a href="perfil-editor.html" class="sidebar-user" title="Meu perfil">
+        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+			<img src="/saborearte/img/k.png"
+			     style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+			     alt="A">        
+	    </div>
+        <div class="user-info active">
+            <div class="user-name">Lídia Lisboa</div>
+            <div class="user-role-badge">🔑Editor/Moderador</div>
+        </div>
+    </a>
+
+    <nav class="sidebar-nav">
+
+        <!-- ===== SEÇÃO VISÃO GERAL ===== -->
+        <div class="nav-section-label">Visão Geral</div>
+
+        <a href="dashboard-editor.html" class="nav-item ">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </a>
+
+        <!-- ===== SEÇÃO GESTÃO ===== -->
+        <div class="nav-section-label">Gestão</div>
+
+        <a href="receitas-editor.html" class="nav-item">
+            <span class="nav-icon">📝</span>
+            <span class="nav-label">Receitas</span>
+        </a>
+
+
+        <a href="comentario-editor.html" class="nav-item">
+            <span class="nav-icon">💬</span>
+            <span class="nav-label"> Comentários</span>
+        </a>
+
+        <!-- ===== SEÇÃO ANÁLISE ===== -->
+        <div class="nav-section-label">Análise</div>
+
+        <a href="relatorio-editor.html" class="nav-item">
+            <span class="nav-icon">📈</span>
+            <span class="nav-label">Relatórios</span>
+        </a>
+
+        <!-- ===== SEÇÃO CONTA ===== -->
+        <div class="nav-section-label">Conta</div>
+        <a href="/saborearte/ConfiguracaoController" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Configurações</span>
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+	    <a href="/saborearte/LogoutController" class="btn-logout">
+	        <span class="nav-icon">🚪</span>
+	        <span>Sair</span>
+	    </a>
+    </div>
+
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-crumb">
+      <span>Painel</span>
+      <span style="color:var(--cream-dark)">/</span>
+      <span class="current">Meu Perfil</span>
+    </div>
+    
+  </div>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="perfil-hero">
+      <div class="hero-inner">
+        <div class="avatar-upload-wrap">
+          <div class="hero-avatar-big" id="heroAvatar" onclick="openAvatarModal()" title="Clique para alterar foto">
+                     <img id="heroAvatarImg" alt="Foto de perfil"
+                              src="/saborearte/img/k.png"
+         class="visible"
+         alt="A">
+          </div>
+          <div class="avatar-upload-btn" onclick="openAvatarModal()" title="Alterar foto">📷</div>
+        </div>
+        <div class="hero-text">
+          <div class="hero-text-main">
+            <div class="hero-role-pill">🔑 Editor/Moderador</div>
+            <div class="hero-name">Lídia Lisboa</div>
+            <div class="hero-email">lídia.lisboa@saborarte.com.br</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('geral', this)">👤 Dados Gerais</button>
+      <button class="tab-btn" onclick="switchTab('bio', this)">✍️ Biografia</button>
+    </div>
+
+    <!-- TAB: DADOS GERAIS -->
+    <div id="tab-geral" class="tab-panel active">
+      <div class="cards-grid">
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-title"><span class="card-icon">📋</span> Informações Básicas</div>
+          </div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Nome de Exibição</label>
+                <input type="text" class="form-input" value="Lídia Lisboa">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Nome de Usuário</label>
+                <input type="text" class="form-input readonly" value="@Lídia.Lisboa" readonly>
+                <div class="form-hint">O nome de usuário não pode ser alterado.</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">E-mail de Acesso</label>
+              <input type="email" class="form-input readonly" value="lídia.lisboa@saborarte.com.br" readonly>
+              <div class="form-hint">O e-mail não pode ser alterado. Entre em contato com o administrador.</div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Telefone</label>
+                <input type="tel" class="form-input" placeholder="(71) 9 0000-0000">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Localização</label>
+                <input type="text" class="form-input" value="Salvador, BA">
+              </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="showModal('✅','Dados atualizados!','Suas informações foram salvas.')">💾 Atualizar Dados</button>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:22px">
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-title"><span class="card-icon">🔑</span> Cargo &amp; Permissão</div>
+          </div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Nível de Acesso</label>
+                <div class="role-badge">🔑 Editor/Moderador</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Membro desde</label>
+                <input class="form-input readonly" value="Janeiro de 2024" readonly>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-title"><span class="card-icon">📋</span> Log de Atividades</div>
+            <a href="comentario-editor.html" style="font-size:12px;color:var(--moss-light);text-decoration:none">Ver tudo</a>
+          </div>
+          <div class="card-body" style="padding-top:14px;padding-bottom:14px">
+            <div class="log-list">
+              <div class="log-item">
+                <span class="log-dot green"></span>
+                <div>
+                  <div class="log-text">Comentou na receita <b>Bolo de Cenoura</b></div>
+                  <div class="log-time">há 2 horas</div>
+                </div>
+              </div>
+              <div class="log-item">
+                <span class="log-dot blue"></span>
+                <div>
+                  <div class="log-text">Denunciou o comentário de <b>@joao.silva</b></div>
+                  <div class="log-time">há 5 horas</div>
+                </div>
+              </div>
+              <div class="log-item">
+                <span class="log-dot gold"></span>
+                <div>
+                  <div class="log-text">Aprovou comentário em <b>Risoto de Cogumelos</b></div>
+                  <div class="log-time">ontem, 18:42</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: BIOGRAFIA -->
+    <div id="tab-bio" class="tab-panel">
+
+      <div class="card" style="margin-bottom:22px">
+        <div class="card-head">
+          <div class="card-head-title"><span class="card-icon">✍️</span> Sobre Você</div>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Título Profissional</label>
+            <input type="text" class="form-input" value="Chef Administradora · Especialista em Confeitaria" placeholder="Ex: Chef de Cozinha · Especialista em Culinária Italiana">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Biografia (visível no perfil público)</label>
+            <textarea class="form-textarea" rows="3">Apaixonada por gastronomia desde criança, Especialista em confeitaria.</textarea>
+            <div class="form-hint">Esta descrição aparece na sua página pública de autor.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cards-grid bio-two-col" style="margin-bottom:22px">
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-title"><span class="card-icon">🍴</span> Especialidades Culinárias</div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Suas especialidades</label>
+              <div class="tags-wrap" id="tagsWrap">
+                <div class="tag">🎂 Confeitaria <span class="tag-remove" onclick="removeTag(this)">×</span></div>
+                <div class="tag">🍝 Massas <span class="tag-remove" onclick="removeTag(this)">×</span></div>
+                <div class="tag">🇫🇷 Culinária Francesa <span class="tag-remove" onclick="removeTag(this)">×</span></div>
+                <div class="tag">🌿 Vegano <span class="tag-remove" onclick="removeTag(this)">×</span></div>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Adicionar especialidade</label>
+              <div class="spec-select-wrap">
+                <select class="form-select" id="specSelect">
+                  <option value="">Escolha uma especialidade…</option>
+                  <option value="🎂 Confeitaria">🎂 Confeitaria</option>
+                  <option value="🧁 Bolos Decorados">🧁 Bolos Decorados</option>
+                  <option value="🍞 Panificação">🍞 Panificação</option>
+                  <option value="🍝 Massas">🍝 Massas</option>
+                  <option value="🥩 Carnes">🥩 Carnes</option>
+                  <option value="🐟 Frutos do Mar">🐟 Frutos do Mar</option>
+                  <option value="🌿 Vegano">🌿 Vegano</option>
+                  <option value="🥗 Vegetariano">🥗 Vegetariano</option>
+                  <option value="🍣 Culinária Japonesa">🍣 Culinária Japonesa</option>
+                  <option value="🇮🇹 Culinária Italiana">🇮🇹 Culinária Italiana</option>
+                  <option value="🇫🇷 Culinária Francesa">🇫🇷 Culinária Francesa</option>
+                  <option value="🇧🇷 Culinária Brasileira">🇧🇷 Culinária Brasileira</option>
+                  <option value="🇲🇽 Culinária Mexicana">🇲🇽 Culinária Mexicana</option>
+                  <option value="🫕 Ensopados">🫕 Ensopados</option>
+                  <option value="🥣 Sopas">🥣 Sopas</option>
+                  <option value="🍹 Drinks &amp; Coquetéis">🍹 Drinks &amp; Coquetéis</option>
+                  <option value="☕ Cafés &amp; Infusões">☕ Cafés &amp; Infusões</option>
+                  <option value="🔥 Churrasco &amp; Defumados">🔥 Churrasco &amp; Defumados</option>
+                  <option value="🌱 Alimentação Saudável">🌱 Alimentação Saudável</option>
+                  <option value="🫙 Conservas &amp; Fermentados">🫙 Conservas &amp; Fermentados</option>
+                </select>
+                <button class="btn btn-outline btn-sm" onclick="addSpec()">+ Adicionar</button>
+              </div>
+              <div class="spec-hint" id="specHint"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-title"><span class="card-icon">🌐</span> Redes Sociais</div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Instagram</label>
+              <input type="text" class="form-input" placeholder="@seuinstagram" value="@Lídialisboa.Chef">
+            </div>
+            <div class="form-group">
+              <label class="form-label">YouTube</label>
+              <input type="url" class="form-input" placeholder="https://youtube.com/@seu-canal">
+            </div>
+            <div class="form-group">
+              <label class="form-label">TikTok</label>
+              <input type="text" class="form-input" placeholder="@seutiktok">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Pinterest</label>
+              <input type="url" class="form-input" placeholder="https://pinterest.com/seuperfil">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <button class="btn btn-primary" onclick="showModal('✅','Biografia salva!','Seu perfil público foi atualizado.')">💾 Salvar Biografia</button>
+
+    </div>
+  </div>
+</main>
+
+<!-- MODAL GENÉRICO -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-icon" id="mIcon">✅</div>
+    <div class="modal-title" id="mTitle">Sucesso!</div>
+    <div class="modal-msg" id="mMsg">Operação concluída.</div>
+    <button class="btn btn-primary" onclick="closeModal()">OK</button>
+  </div>
+</div>
+
+<!-- MODAL AVATAR -->
+<div class="modal-overlay" id="avatarModal">
+  <div class="avatar-modal-box">
+    <div class="avatar-modal-header">
+      <div class="avatar-modal-title">📷 Alterar foto de perfil</div>
+      <button class="avatar-modal-close" onclick="closeAvatarModal()">×</button>
+    </div>
+
+    <div class="avatar-modal-body">
+      <div class="av-success" id="avSuccess">✅ Foto de perfil atualizada com sucesso!</div>
+
+      <div class="avatar-preview-area">
+        <div class="avatar-preview-ring" id="avPreviewRing">
+          M
+          <img id="avPreviewImg" alt="Preview">
+        </div>
+        <span class="avatar-preview-lbl">Pré-visualização</span>
+      </div>
+
+      <div class="drop-zone" id="avDropZone"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleAvDrop(event)">
+        <input type="file" id="avFileInput" accept="image/*" onchange="handleAvFile(this.files[0])">
+        <span class="drop-icon">🖼️</span>
+        <div class="drop-title">Arraste sua foto aqui</div>
+        <div class="drop-sub">ou <span onclick="document.getElementById('avFileInput').click()">clique para selecionar</span></div>
+        <div class="drop-sub" style="margin-top:4px">JPG, PNG, WEBP — máx. 5 MB</div>
+      </div>
+
+      <div class="av-error" id="avError"></div>
+
+      <div class="file-info-bar" id="avFileInfo">
+        <span>📎</span>
+        <span class="file-info-name" id="avFileName"></span>
+        <span class="file-info-size" id="avFileSize"></span>
+        <button class="file-info-rm" onclick="clearAvPreview()">×</button>
+      </div>
+
+      <div class="quick-section">
+        <div class="quick-lbl">Avatares rápidos</div>
+        <div class="quick-row" id="avQuickRow">
+          <div class="quick-av" data-url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=80" onclick="setAvQuick(this)"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=80" alt="Avatar 1"></div>
+          <div class="quick-av" data-url="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&q=80" onclick="setAvQuick(this)"><img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&q=80" alt="Avatar 2"></div>
+          <div class="quick-av" data-url="https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=120&q=80" onclick="setAvQuick(this)"><img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=120&q=80" alt="Avatar 3"></div>
+          <div class="quick-av" data-url="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=80" onclick="setAvQuick(this)"><img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=80" alt="Avatar 4"></div>
+          <div class="quick-av" data-url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80" onclick="setAvQuick(this)"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80" alt="Avatar 5"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="avatar-modal-footer">
+      <button class="btn btn-outline" onclick="closeAvatarModal()">Cancelar</button>
+      <button class="btn btn-primary" id="avSaveBtn" disabled onclick="saveAvatar()">💾 Salvar foto</button>
+    </div>
+  </div>
+</div>
+
+<script>/* ===== TABS ===== */
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  /* ===== ESPECIALIDADES ===== */
+  function addSpec() {
+    var sel = document.getElementById('specSelect');
+    var val = sel.value;
+    var hint = document.getElementById('specHint');
+    if (!val) { hint.textContent = 'Selecione uma especialidade antes de adicionar.'; return; }
+    var wrap = document.getElementById('tagsWrap');
+    var existing = [...wrap.querySelectorAll('.tag')].map(t => t.textContent.replace('×','').trim());
+    if (existing.includes(val)) { hint.textContent = 'Essa especialidade já foi adicionada.'; return; }
+    hint.textContent = '';
+    var div = document.createElement('div');
+    div.className = 'tag';
+    div.innerHTML = val + ' <span class="tag-remove" onclick="removeTag(this)">×</span>';
+    wrap.appendChild(div);
+    sel.value = '';
+  }
+  function removeTag(el) { el.parentElement.remove(); }
+
+  /* ===== MODAL GENÉRICO ===== */
+  function showModal(icon, title, msg) {
+    document.getElementById('mIcon').textContent = icon;
+    document.getElementById('mTitle').textContent = title;
+    document.getElementById('mMsg').textContent = msg;
+    document.getElementById('modalOverlay').classList.add('show');
+  }
+  function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+  document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+  /* ===== MODAL AVATAR ===== */
+  var avSelectedUrl = null;
+
+  function openAvatarModal() {
+    document.getElementById('avSuccess').classList.remove('show');
+    document.getElementById('avatarModal').classList.add('show');
+  }
+  function closeAvatarModal() {
+    document.getElementById('avatarModal').classList.remove('show');
+  }
+  document.getElementById('avatarModal').addEventListener('click', function(e) { if (e.target === this) closeAvatarModal(); });
+
+  function setAvPreview(src) {
+    var img = document.getElementById('avPreviewImg');
+    img.src = src;
+    img.classList.add('visible');
+    document.getElementById('avPreviewRing').classList.add('has-img');
+    document.getElementById('avSaveBtn').disabled = false;
+    document.getElementById('avError').classList.remove('show');
+    document.getElementById('avSuccess').classList.remove('show');
+    avSelectedUrl = src;
+  }
+
+  function clearAvPreview() {
+    var img = document.getElementById('avPreviewImg');
+    img.src = '';
+    img.classList.remove('visible');
+    document.getElementById('avPreviewRing').classList.remove('has-img');
+    document.getElementById('avSaveBtn').disabled = true;
+    document.getElementById('avFileInfo').classList.remove('show');
+    document.getElementById('avFileInput').value = '';
+    document.querySelectorAll('.quick-av').forEach(a => a.classList.remove('selected'));
+    avSelectedUrl = null;
+  }
+
+  function handleAvFile(file) {
+    if (!file) return;
+    var err = document.getElementById('avError');
+    if (!file.type.startsWith('image/')) { err.textContent = 'Arquivo inválido. Use JPG, PNG ou WEBP.'; err.classList.add('show'); return; }
+    if (file.size > 5 * 1024 * 1024) { err.textContent = 'O arquivo excede 5 MB. Escolha uma imagem menor.'; err.classList.add('show'); return; }
+    err.classList.remove('show');
+    document.querySelectorAll('.quick-av').forEach(a => a.classList.remove('selected'));
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      setAvPreview(e.target.result);
+      document.getElementById('avFileName').textContent = file.name;
+      var kb = file.size / 1024;
+      document.getElementById('avFileSize').textContent = kb > 1024 ? (kb/1024).toFixed(1)+' MB' : Math.round(kb)+' KB';
+      document.getElementById('avFileInfo').classList.add('show');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleAvDrop(e) {
+    e.preventDefault();
+    document.getElementById('avDropZone').classList.remove('drag-over');
+    handleAvFile(e.dataTransfer.files[0]);
+  }
+
+  function setAvQuick(el) {
+    document.querySelectorAll('.quick-av').forEach(a => a.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('avFileInfo').classList.remove('show');
+    document.getElementById('avFileInput').value = '';
+    setAvPreview(el.dataset.url);
+  }
+
+  function applyAvatarEverywhere(src) {
+    /* Hero */
+    var heroImg = document.getElementById('heroAvatarImg');
+    heroImg.src = src;
+    heroImg.classList.add('visible');
+    document.getElementById('heroAvatar').style.fontSize = '0';
+
+    /* Sidebar */
+    var sbImg = document.getElementById('sidebarAvatarImg');
+    sbImg.src = src;
+    sbImg.classList.add('visible');
+    document.getElementById('sidebarAvatar').style.fontSize = '0';
+
+    /* Preview ring já está atualizado */
+  }
+
+  function saveAvatar() {
+    if (!avSelectedUrl) return;
+    var btn = document.getElementById('avSaveBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Salvando…';
+    setTimeout(function() {
+      applyAvatarEverywhere(avSelectedUrl);
+      document.getElementById('avSuccess').classList.add('show');
+      btn.textContent = '💾 Salvar foto';
+      btn.disabled = false;
+      setTimeout(closeAvatarModal, 1000);
+    }, 800);
+  }
+</script>
+
+</body>
+</html>

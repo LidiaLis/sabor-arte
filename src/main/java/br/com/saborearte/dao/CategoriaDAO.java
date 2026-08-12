@@ -8,8 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import br.com.saborearte.model.Categoria;
+import br.com.saborearte.model.Categoria.StatusCategoria;
 import br.com.saborearte.model.CategoriaCor;
 import br.com.saborearte.model.CategoriaEmoji;
+import br.com.saborearte.model.Receita.StatusReceita;
 
 public class CategoriaDAO {
 
@@ -263,14 +265,93 @@ public class CategoriaDAO {
     // =========================================================================
 
     private Categoria mapearCategoria(ResultSet rs) throws SQLException {
+
         Categoria c = new Categoria();
+
         c.setId_categoria(rs.getInt("id_categoria"));
         c.setNome_categoria(rs.getString("nome_categoria"));
         c.setDescricao_categoria(rs.getString("descricao_categoria"));
         c.setEmoji_categoria(rs.getString("emoji_categoria"));
         c.setCor_categoria(rs.getString("cor_categoria"));
-        c.setStatus_categoria(Categoria.StatusCategoria.valueOf(rs.getString("status_categoria")));
+
+        c.setStatus_categoria(
+            StatusCategoria.valueOf(
+                rs.getString("status_categoria")
+            )
+        );
+
         return c;
+    }
+    
+    public List<Categoria> listarCategoriasComContagem(int limite) throws SQLException {
+    	 
+        List<Categoria> lista = new ArrayList<>();
+ 
+        String sql = """
+                SELECT
+                    c.*,
+                    COUNT(r.id_receita) AS total_receitas
+                FROM categoria c
+                LEFT JOIN receita r
+                    ON r.categoria = c.id_categoria
+                    AND r.status_receita = ?
+                WHERE c.status_categoria = ?
+                GROUP BY c.id_categoria, c.nome_categoria, c.descricao_categoria, c.emoji_categoria, c.cor_categoria, c.status_categoria
+                ORDER BY total_receitas DESC
+                LIMIT ?
+                """;
+ 
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+ 
+            stmt.setString(1, StatusReceita.publicada.name());
+            stmt.setString(2, StatusCategoria.ATIVA.name());
+            stmt.setInt(3, limite);
+ 
+            ResultSet rs = stmt.executeQuery();
+ 
+            while (rs.next()) {
+ 
+                Categoria c = mapearCategoria(rs);
+ 
+                // ===== Campo extra (não persistido) =====
+                c.setTotal_receitas(rs.getInt("total_receitas"));
+ 
+                lista.add(c);
+            }
+ 
+            rs.close();
+        }
+ 
+        return lista;
+    }
+    
+    public List<Categoria> listarCategoriasAtivas() throws SQLException {
+        String sql = """
+                SELECT
+                    id_categoria,
+                    nome_categoria,
+                    descricao_categoria,
+                    emoji_categoria,
+                    cor_categoria,
+                    status_categoria
+                FROM categoria
+                WHERE status_categoria = ?
+                ORDER BY nome_categoria ASC
+                """;
+     
+        List<Categoria> lista = new ArrayList<>();
+     
+        try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+            ps.setString(1, StatusCategoria.ATIVA.name());
+     
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapearCategoria(rs));
+                }
+            }
+        }
+     
+        return lista;
     }
 
 }

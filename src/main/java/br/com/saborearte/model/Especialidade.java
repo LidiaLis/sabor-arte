@@ -6,7 +6,8 @@ public class Especialidade {
 
     private int id_usuario;
     private int id_categoria;
-
+// adicionar tempo especialidade
+    
     // ===== Construtor vazio =====
 
     public Especialidade() {

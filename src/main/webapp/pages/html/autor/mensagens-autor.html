@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabor & Arte — Comentários Recebidos</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>:root {
+  --moss:#4a5e3a;--moss-dark:#2f3d25;--moss-mid:#3d5030;--moss-light:#6b7f59;
+  --sage:#a3b18a;--sage-light:#c8d5b9;--cream:#f5f0e8;--cream-dark:#e6dece;
+  --warm-white:#faf8f4;--text-dark:#1e2718;--text-mid:#4a5240;--text-light:#8a9480;
+  --gold:#c4a265;--gold-light:#dfc094;--gold-pale:#f5ead6;
+  --pending:#c4832a;--pending-bg:#fdf2e3;--published:#3a7a4a;--published-bg:#e8f4eb;
+  --draft:#6a7a8a;--draft-bg:#eef1f4;--archived:#8a7a6a;--archived-bg:#f4f0ec;
+  --danger:#9b4444;--danger-bg:#fdf0f0;
+  --sidebar-w:260px;
+}
+
+/* ===== RESET ===== */
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { overflow-x:hidden; }
+
+/* ===== TIPOGRAFIA BASE =====
+   Fontes carregadas via <link> do Google Fonts no <head> de cada página:
+   Playfair Display (títulos), DM Sans (corpo), Nunito (números/valores) */
+body {
+  font-family:'DM Sans',sans-serif;
+  background:var(--cream);
+  color:var(--text-dark);
+  min-height:100vh;
+  display:flex;
+}
+
+/* ===== LAYOUT BASE (usado em toda página com sidebar) ===== */
+.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;}
+.content{flex:1;padding:36px 40px;}
+
+.section-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;}
+.section-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:500;color:var(--text-dark);line-height:1;}
+.section-title em{font-style:italic;color:var(--moss);}
+.section-date{font-size:12px;color:var(--text-light);font-weight:300;margin-top:4px;}
+
+/* ===== BOTÕES ===== */
+.btn-primary{display:flex;align-items:center;gap:8px;background:var(--moss);color:var(--cream);padding:10px 20px;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.2s,transform 0.15s;}
+.btn-primary:hover{background:var(--moss-dark);transform:translateY(-1px);}
+.btn-ghost{padding:9px 18px;background:none;border:1.5px solid var(--cream-dark);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-mid);cursor:pointer;transition:all .15s;}
+.btn-ghost:hover{border-color:var(--text-mid);}
+.btn-outline{padding:9px 18px;background:none;border:1.5px solid var(--moss);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--moss);cursor:pointer;transition:all .15s;}
+.btn-outline:hover{background:rgba(74,94,58,.06);}
+
+/* ===== FORMULÁRIOS ===== */
+.field{margin-bottom:14px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:block;margin-bottom:6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text-mid);}
+.field label .req{color:var(--moss);margin-left:2px;}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1.5px solid var(--cream-dark);border-radius:2px;background:var(--cream);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-dark);outline:none;transition:border-color .2s,box-shadow .2s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--moss-light);box-shadow:0 0 0 3px rgba(74,94,58,.08);background:var(--warm-white);}
+.field input::placeholder{color:var(--text-light);}
+.field-hint{font-size:11px;color:var(--text-light);margin-top:4px;font-weight:300;}
+
+/* ===== BADGES ===== */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;}
+.badge-pending{background:var(--pending-bg);color:var(--pending);}
+.badge-published{background:var(--published-bg);color:var(--published);}
+.badge-draft{background:var(--draft-bg);color:var(--draft);}
+.badge-archived{background:var(--archived-bg);color:var(--archived);}
+.badge-danger{background:var(--danger-bg);color:var(--danger);}
+.badge-gold{background:var(--gold-pale);color:#8a6a2a;}
+
+/* ===== TABELAS ===== */
+.table-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:2px;overflow:hidden;}
+.table-head{padding:16px 24px;border-bottom:1px solid var(--cream-dark);display:flex;align-items:center;justify-content:space-between;}
+.table-title{font-size:14px;font-weight:600;color:var(--text-dark);display:flex;align-items:center;gap:8px;}
+.table-count{font-family:'Nunito',sans-serif;font-size:12px;color:var(--text-light);font-weight:600;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--cream);}
+thead th{padding:11px 20px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text-light);border-bottom:1px solid var(--cream-dark);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--cream-dark);transition:background .15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:rgba(245,240,232,.5);}
+td{padding:14px 20px;font-size:13px;color:var(--text-dark);vertical-align:middle;}
+
+/* ===== CARDS ===== */
+.card, .side-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:2px;}
+
+/* -- Cards de estatística (usados em todos os dashboards) -- */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+.stat-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:2px;padding:14px 18px;position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;cursor:default;display:flex;align-items:center;gap:12px;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(47,61,37,0.1);}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--sage),var(--sage-light));}
+.stat-card.moss::before{background:linear-gradient(90deg,var(--moss),var(--sage));}
+.stat-card.gold::before{background:linear-gradient(90deg,var(--gold),var(--gold-light));}
+.stat-card.pending::before{background:linear-gradient(90deg,var(--pending),#e8a84a);}
+.stat-card.green::before{background:linear-gradient(90deg,var(--published),#5ab870);}
+.stat-card.alert::before{background:linear-gradient(90deg,#9b4444,#c46a6a);}
+.stat-icon{width:34px;height:34px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:0;background:rgba(163,177,138,0.18);flex-shrink:0;}
+.stat-card.moss .stat-icon{background:rgba(74,94,58,0.1);}
+.stat-card.gold .stat-icon{background:rgba(196,162,101,0.1);}
+.stat-card.pending .stat-icon{background:rgba(196,131,42,0.12);}
+.stat-card.green .stat-icon{background:rgba(58,122,74,0.1);}
+.stat-card.alert .stat-icon{background:rgba(155,68,68,0.12);}
+.stat-value{font-family:'Nunito',sans-serif;font-size:24px;font-weight:800;color:var(--text-dark);line-height:1;margin-bottom:2px;letter-spacing:-0.5px;}
+.stat-label{font-size:11px;color:var(--text-light);text-transform:uppercase;letter-spacing:0.6px;font-weight:500;}
+
+/* -- Cards de gráfico (usados em todos os dashboards) -- */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:36px;}
+.chart-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:4px;padding:20px 22px;}
+.chart-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.chart-card-title{font-size:14px;font-weight:600;color:var(--text-dark);}
+.chart-card-sub{font-size:11px;color:var(--text-light);font-weight:300;margin-top:2px;}
+.chart-legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-mid);}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.legend-dot.moss{background:var(--moss);}
+.legend-dot.gold{background:var(--gold);}
+.chart-canvas-wrap{position:relative;width:100%;height:200px;}
+
+/* ===== RESPONSIVIDADE GLOBAL ===== */
+@media(max-width:1280px){.charts-row{grid-template-columns:1fr;}}
+@media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:768px){.main{margin-left:0;} .content{padding:24px 20px;}}
+@media(max-width:480px){.stats-row{grid-template-columns:1fr;}}
+
+/* ===================== SIDEBAR ===================== */
+/* ==========================================================================
+   Sabor & Arte — SIDEBAR.CSS
+   Contém SOMENTE estilos da barra lateral. Compartilhado por todas as
+   telas internas do sistema (admin, editor, autor, visitante).   
+   Depende das variáveis definidas em global.css.
+   ========================================================================== */
+
+.sidebar{width:var(--sidebar-w);background:var(--moss-dark);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
+.sidebar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 200% 60% at 50% 0%,rgba(74,94,58,0.5) 0%,transparent 60%),radial-gradient(ellipse 100% 40% at 50% 100%,rgba(163,177,138,0.1) 0%,transparent 60%);pointer-events:none;}
+
+.sidebar-brand{padding:28px 24px 22px;border-bottom:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;}
+.brand-row{display:flex;align-items:center;gap:12px;}
+.brand-badge{width:38px;height:38px;background:linear-gradient(135deg,var(--moss-light),var(--sage));border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.brand-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--cream);display:block;line-height:1;}
+.brand-sub{font-size:10px;color:var(--sage);text-transform:uppercase;letter-spacing:1.2px;margin-top:3px;display:block;font-weight:300;}
+
+.sidebar-user{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
+.user-avatar{width:38px;height:38px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--moss-dark);flex-shrink:0;}
+.user-name{font-size:13px;font-weight:600;color:var(--cream);}
+.user-role-badge{font-size:10px;color:var(--gold-light);text-transform:uppercase;letter-spacing:0.8px;font-weight:300;}
+
+.sidebar-nav{flex:1;padding:16px 0;position:relative;z-index:1;}
+.nav-section-label{font-size:9px;text-transform:uppercase;letter-spacing:1.8px;color:rgba(163,177,138,0.5);padding:16px 24px 6px;font-weight:500;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 24px;color:rgba(245,240,232,0.7);text-decoration:none;font-size:14px;font-weight:400;cursor:pointer;transition:all 0.2s;border-left:3px solid transparent;}
+.nav-item:hover{color:var(--cream);background:rgba(255,255,255,0.06);border-left-color:var(--sage);}
+.nav-item.active{color:var(--cream);background:rgba(163,177,138,0.15);border-left-color:var(--sage-light);font-weight:500;}
+.nav-icon{width:22px;text-align:center;font-size:16px;flex-shrink:0;}
+.nav-badge{margin-left:auto;background:var(--gold);color:var(--moss-dark);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;}
+
+.sidebar-bottom{padding:16px 24px 24px;border-top:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;}
+.btn-logout{display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:2px;color:rgba(245,240,232,0.7);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;}
+.btn-logout:hover{background:rgba(155,68,68,0.2);border-color:rgba(155,68,68,0.3);color:#e8a0a0;}
+
+/* ===== RESPONSIVIDADE ===== */
+@media(max-width:768px){.sidebar{display:none;}}
+
+/* ===================== TOPBAR ===================== */
+/* ==========================================================================
+   Sabor & Arte — TOPBAR.CSS
+   Contém SOMENTE estilos da barra superior. Compartilhado por todas as
+   telas internas do sistema. Depende das variáveis definidas em global.css.
+   ========================================================================== */
+
+.topbar{background:var(--warm-white);border-bottom:1px solid var(--cream-dark);padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+
+.page-crumb{font-size:12px;color:var(--text-light);display:flex;align-items:center;gap:6px;font-weight:300;}
+.page-crumb .crumb-sep{color:var(--cream-dark);}
+.page-crumb .current{color:var(--moss);font-weight:500;}
+
+.topbar-right{display:flex;align-items:center;gap:16px;}
+
+.topbar-search{display:flex;align-items:center;gap:8px;background:var(--cream);border:1.5px solid var(--cream-dark);border-radius:2px;padding:7px 14px;width:220px;transition:border-color 0.2s,box-shadow 0.2s;}
+.topbar-search:focus-within{border-color:var(--moss-light);box-shadow:0 0 0 3px rgba(74,94,58,0.08);}
+.topbar-search .search-icon{font-size:14px;color:var(--text-light);}
+.topbar-search input{border:none;background:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-dark);outline:none;flex:1;}
+.topbar-search input::placeholder{color:var(--text-light);font-weight:300;}
+
+.notif-btn{width:36px;height:36px;background:var(--cream);border:1.5px solid var(--cream-dark);border-radius:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;position:relative;transition:all 0.2s;}
+.notif-btn:hover{background:var(--cream-dark);}
+.notif-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--gold);border-radius:50%;border:2px solid var(--warm-white);}
+
+/* ===== RESPONSIVIDADE ===== */
+@media(max-width:768px){.topbar{padding:0 20px;}}
+@media(max-width:480px){.topbar-search{display:none;}}
+
+/* ===================== COMPONENTES REUTILIZÁVEIS ===================== */
+/* ==========================================================================
+   Sabor & Arte — COMPONENTES.CSS
+   Componentes reutilizados por várias telas, mas que NÃO fazem parte da
+   base estrutural (essa fica em global.css): modal, paginação, dropdown,
+   alertas, timeline, cards especiais, loading, filtros/toolbar.
+
+   Este arquivo é criado UMA vez e apenas importado pelas próximas telas.
+   Ainda não populado porque o Dashboard do Autor (primeira tela entregue)
+   não utiliza nenhum destes componentes. Os blocos abaixo serão
+   preenchidos assim que a tela que os originar for desenvolvida
+   (ex: modal de nova receita, paginação de "Minhas Receitas",
+   timeline do fluxo editorial, alertas de validação de formulário).
+   ========================================================================== */
+
+/* ===== TOOLBAR / FILTROS =====
+   Barra de filtros por pílulas + busca de conteúdo.
+   Reutilizado por comentarios.html e pelas próximas telas de listagem. */
+.toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:20px;}
+.toolbar-filters{display:flex;flex-wrap:wrap;gap:8px;}
+.filter-pill{padding:8px 16px;border-radius:20px;border:1.5px solid var(--cream-dark);background:var(--warm-white);color:var(--text-mid);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.filter-pill:hover{border-color:var(--moss-light);}
+.filter-pill.active{background:var(--moss);border-color:var(--moss);color:var(--cream);}
+.content-search{display:flex;align-items:center;gap:8px;background:var(--warm-white);border:1.5px solid var(--cream-dark);border-radius:2px;padding:8px 14px;min-width:240px;transition:border-color .2s,box-shadow .2s;}
+.content-search:focus-within{border-color:var(--moss-light);box-shadow:0 0 0 3px rgba(74,94,58,.08);}
+.content-search input{border:none;background:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-dark);outline:none;flex:1;}
+.content-search input::placeholder{color:var(--text-light);font-weight:300;}
+
+/* ===== MODAL =====
+   Reutilizado por comentarios.html (Responder oficialmente / Advertir
+   usuário) e pelas próximas telas que precisarem de diálogo modal. */
+.modal-overlay{position:fixed;inset:0;background:rgba(30,39,24,.5);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:200;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:4px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--cream-dark);}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;color:var(--text-dark);}
+.modal-close{width:30px;height:30px;border:none;background:var(--cream);border-radius:2px;color:var(--text-mid);font-size:15px;cursor:pointer;transition:background .15s;}
+.modal-close:hover{background:var(--cream-dark);}
+.modal-body{padding:20px 22px;}
+.modal-footer{display:flex;justify-content:flex-end;gap:12px;padding:16px 22px;border-top:1px solid var(--cream-dark);}
+
+/* ===== FORMULÁRIO DE RECEITA (seções) =====
+   Reutilizado por nova-receita.html e editar-receita.html */
+.form-section{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:4px;padding:24px 26px;margin-bottom:20px;}
+.form-section-head{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--cream-dark);}
+.form-section-icon{width:32px;height:32px;border-radius:2px;background:rgba(163,177,138,0.18);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.form-section-title{font-size:15px;font-weight:600;color:var(--text-dark);}
+.form-section-sub{font-size:11px;color:var(--text-light);font-weight:300;margin-top:2px;}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+
+/* -- upload de imagem -- */
+.image-upload{border:1.5px dashed var(--cream-dark);border-radius:2px;background:var(--cream);padding:22px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;}
+.image-upload:hover{border-color:var(--moss-light);background:var(--warm-white);}
+.image-upload-icon{font-size:22px;margin-bottom:8px;}
+.image-upload-text{font-size:12px;color:var(--text-mid);}
+.image-upload-hint{font-size:11px;color:var(--text-light);margin-top:4px;font-weight:300;}
+.image-preview{margin-top:14px;border:1px solid var(--cream-dark);border-radius:2px;overflow:hidden;display:none;}
+.image-preview.show{display:block;}
+.image-preview img{width:100%;max-height:220px;object-fit:cover;display:block;}
+
+/* -- lista dinâmica: ingredientes -- */
+.dynamic-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.ingredient-row{display:grid;grid-template-columns:110px 130px 1fr 36px;gap:10px;align-items:center;}
+.ingredient-row .field{margin-bottom:0;}
+
+/* -- lista dinâmica: passos (modo de preparo) -- */
+.step-row{display:grid;grid-template-columns:36px 1fr 36px;gap:12px;align-items:flex-start;}
+.step-number{width:36px;height:36px;border-radius:50%;background:var(--moss);color:var(--cream);font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.step-row textarea{min-height:70px;resize:vertical;}
+
+/* -- botões de linha (adicionar/remover) -- */
+.btn-add-row{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;background:none;border:1.5px dashed var(--sage);border-radius:2px;color:var(--moss);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;}
+.btn-add-row:hover{background:rgba(74,94,58,.06);border-style:solid;}
+.btn-remove-row{width:36px;height:36px;border-radius:2px;border:1.5px solid var(--cream-dark);background:var(--cream);color:var(--danger);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.btn-remove-row:hover{background:var(--danger-bg);border-color:var(--danger);}
+
+/* -- barra de ações do formulário -- */
+.form-actions-bar{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:18px 0 4px;}
+.form-actions-bar .btn-cancel{color:var(--text-light);}
+
+/* -- painel de devolução do editor (destaque, mesmo padrão visual) -- */
+.devolucao-panel{background:var(--pending-bg);border:1px solid var(--pending);border-left:4px solid var(--pending);border-radius:2px;padding:20px 22px;}
+.devolucao-panel-head{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.devolucao-panel-title{font-size:13px;font-weight:700;color:var(--pending);text-transform:uppercase;letter-spacing:.6px;}
+.devolucao-row{display:flex;flex-direction:column;gap:2px;margin-bottom:14px;}
+.devolucao-row:last-child{margin-bottom:0;}
+.devolucao-label{font-size:10px;color:var(--text-mid);text-transform:uppercase;letter-spacing:.6px;font-weight:600;}
+.devolucao-value{font-size:13px;color:var(--text-dark);}
+.devolucao-obs{font-size:13px;color:var(--text-dark);line-height:1.5;background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:2px;padding:12px 14px;margin-top:2px;}
+
+/* ===== PAGINAÇÃO =====
+   Reutilizado por comentarios.html e pelas próximas telas de listagem. */
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;padding:20px 0 4px;}
+.page-btn{min-width:32px;height:32px;padding:0 8px;border:1.5px solid var(--cream-dark);background:var(--warm-white);color:var(--text-mid);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s;}
+.page-btn:hover{border-color:var(--moss-light);}
+.page-btn.active{background:var(--moss);border-color:var(--moss);color:var(--cream);font-weight:600;}
+.page-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ===== DROPDOWN =====
+   (a ser preenchido quando necessário) */
+
+/* ===== ALERTAS (toast) =====
+   Notificação temporária de confirmação, disparada via showToast() em
+   app.js. Reutilizado por qualquer tela que precise confirmar uma ação. */
+.toast-container{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:300;}
+.toast{background:var(--moss-dark);color:var(--cream);padding:12px 18px;border-radius:2px;font-size:13px;box-shadow:0 8px 24px rgba(30,39,24,.25);border-left:4px solid var(--sage);opacity:0;transform:translateY(8px);transition:all .25s;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.warning{border-left-color:var(--pending);}
+.toast.danger{border-left-color:var(--danger);}
+
+/* ===== TIMELINE =====
+   (a ser preenchido quando a tela de fluxo editorial for criada) */
+
+/* ===== LOADING =====
+   (a ser preenchido quando necessário) */
+
+/* ===================== EXCLUSIVO DESTA TELA (COMENTÁRIOS RECEBIDOS — AUTOR) ===================== */
+
+.comment-list{display:flex;flex-direction:column;gap:14px;margin-bottom:8px;}
+
+.comment-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:4px;padding:20px 22px;transition:box-shadow .15s;}
+.comment-card:hover{box-shadow:0 4px 16px rgba(47,61,37,.06);}
+
+.comment-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+.comment-who{display:flex;align-items:center;gap:12px;}
+.comment-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-light));display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--moss-dark);flex-shrink:0;}
+.comment-user{font-size:13px;font-weight:600;color:var(--text-dark);}
+.comment-meta{font-size:11px;color:var(--text-light);font-weight:300;margin-top:2px;}
+.comment-meta .recipe-link{color:var(--moss);font-weight:500;}
+
+.comment-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+.rating-stars{font-size:12px;color:var(--gold);letter-spacing:1px;}
+.rating-stars .empty{color:var(--cream-dark);}
+
+.comment-text{font-size:13px;color:var(--text-mid);line-height:1.6;margin-bottom:14px;}
+
+.reply-block{background:var(--cream);border-left:3px solid var(--sage);border-radius:2px;padding:12px 14px;margin-bottom:14px;}
+.reply-block-label{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--moss);font-weight:700;margin-bottom:4px;}
+.reply-block-text{font-size:12px;color:var(--text-mid);line-height:1.5;}
+
+.comment-actions{display:flex;flex-wrap:wrap;gap:8px;padding-top:12px;border-top:1px solid var(--cream-dark);}
+.comment-actions button{display:flex;align-items:center;gap:6px;padding:7px 14px;font-size:12px;border-radius:2px;border:1.5px solid var(--cream-dark);background:var(--cream);color:var(--text-mid);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.act-responder:hover{background:rgba(74,94,58,.08);border-color:var(--moss);color:var(--moss);}
+.act-denunciar:hover{background:var(--danger-bg);border-color:var(--danger);color:var(--danger);}
+.comment-actions button:disabled{opacity:.55;cursor:not-allowed;}
+.comment-actions button:disabled:hover{background:var(--cream);border-color:var(--cream-dark);color:var(--text-mid);}
+
+@media(max-width:640px){
+  .comment-top{flex-direction:column;}
+  .comment-actions button{flex:1;justify-content:center;}
+}
+</style>
+
+</head>
+<body>
+
+<!-- ===== SIDEBAR AUTOR (estático) ===== -->
+<!-- TODO (backend): dados reais do usuário logado (tabela usuario) -->
+<!-- ===== SIDEBAR AUTOR (estático) ===== -->
+<aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-brand">
+        <div class="brand-row">
+            <div class="brand-badge">🌿</div>
+            <div>
+                <span class="brand-title">Sabor &amp; Arte</span>
+                <span class="brand-sub">Blog editorial</span>
+            </div>
+        </div>
+    </div>
+
+    <a href="perfil-autor.html" class="sidebar-user" title="Meu perfil">
+        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+			<img src="/saborearte/img/v.png"
+			     style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+			     alt="A">        
+	    </div>
+        <div class="user-info">
+            <div class="user-name">Rafael Costa</div>
+            <div class="user-role-badge">✍️ Autor</div>
+        </div>
+    </a>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">Visão Geral</div>
+
+        <a href="dashboard-autor.html" class="nav-item ">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </a>
+
+        <div class="nav-section-label">Conteúdo</div>
+
+        <a href="receitas-autor.html" class="nav-item">
+            <span class="nav-icon">📖</span>
+            <span class="nav-label">Minhas Receitas</span>
+        </a>
+        <a href="mensagens-autor.html" class="nav-item active">     
+            <span class="nav-icon">💬</span>
+            <span class="nav-label">Mensagens</span>
+        </a>
+
+         <div class="nav-section-label">Análise</div>
+
+        <a href="relatorio-autor.html" class="nav-item">
+          <span class="nav-icon">📈</span>
+          <span class="nav-label">Relatórios</span>
+        </a>
+
+        <div class="nav-section-label">Conta</div>
+        <a href="/saborearte/ConfiguracaoController" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Configurações</span>
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+	    <a href="/saborearte/LogoutController" class="btn-logout">
+	        <span class="nav-icon">🚪</span>
+	        <span>Sair</span>
+	    </a>
+    </div>
+
+</aside>
+
+<main class="main">
+
+  <!-- ===== TOPBAR ===== -->
+  <div class="topbar">
+    <div class="page-crumb">
+      <span>Comunidade</span>
+      <span class="crumb-sep">/</span>
+      <span class="current">Comentários Recebidos</span>
+    </div>
+    
+  </div>
+
+  <div class="content">
+
+    <div class="section-header">
+      <div>
+        <div class="section-title">Comentários <em>Recebidos</em> 💬</div>
+        <div class="section-date">Comentários da comunidade nas suas receitas — responda diretamente por aqui</div>
+      </div>
+    </div>
+
+    <!-- ===== CARDS DE RESUMO ===== -->
+    <!-- TODO (backend): valores agregados de comentario, filtrados pelas receitas do autor logado -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon">💬</div>
+        <div>
+          <div class="stat-value">32</div>
+          <div class="stat-label">Recebidos</div>
+        </div>
+      </div>
+      <div class="stat-card pending">
+        <div class="stat-icon">⏳</div>
+        <div>
+          <div class="stat-value">9</div>
+          <div class="stat-label">Não Respondidos</div>
+        </div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon">✅</div>
+        <div>
+          <div class="stat-value">23</div>
+          <div class="stat-label">Respondidos</div>
+        </div>
+      </div>
+      <div class="stat-card gold">
+        <div class="stat-icon">⭐</div>
+        <div>
+          <div class="stat-value">4.6</div>
+          <div class="stat-label">Avaliação Média</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TOOLBAR / FILTROS ===== -->
+    <div class="toolbar">
+      <div class="content-search">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="inputBuscaComentarios" placeholder="Buscar por receita ou texto do comentário…">
+      </div>
+      <div class="toolbar-filters">
+        <button class="filter-pill active" data-filtro="todos">Todos</button>
+        <button class="filter-pill" data-filtro="pendente">Não Respondidos</button>
+        <button class="filter-pill" data-filtro="respondido">Respondidos</button>
+      </div>
+    </div>
+
+    <!-- ===== LISTA DE COMENTÁRIOS ===== -->
+    <!-- TODO (backend): cada .comment-card gerado a partir de GET /api/autor/comentarios,
+         join com usuario (autor do comentário) e receita (título), somente das
+         receitas cujo usuario = autor logado. Ações de moderação (aprovar/ocultar/
+         excluir/advertir) não aparecem aqui — são exclusivas do perfil Editor. -->
+    <div class="comment-list">
+
+      <!-- Comentário ainda não respondido -->
+      <div class="comment-card" data-id="2081" data-status="pendente">
+        <div class="comment-top">
+          <div class="comment-who">
+            <div class="comment-avatar">LF</div>
+            <div>
+              <div class="comment-user">Luana Ferreira</div>
+              <div class="comment-meta">em <span class="recipe-link">Risoto de Cogumelos</span> · 18/07/2026 às 08:40</div>
+            </div>
+          </div>
+          <div class="comment-badges">
+            <span class="rating-stars">★★★★<span class="empty">★</span></span>
+          </div>
+        </div>
+
+        <div class="comment-text">Ficou muito saboroso! Troquei o vinho branco por caldo de legumes e funcionou super bem. Obrigada pela receita 🍄</div>
+
+        <div class="comment-actions">
+          <button class="act-responder">↩ Responder</button>
+          <button class="act-denunciar">🚩 Denunciar</button>
+        </div>
+      </div>
+
+      <!-- Comentário já respondido pelo autor -->
+      <div class="comment-card" data-id="2075" data-status="respondido">
+        <div class="comment-top">
+          <div class="comment-who">
+            <div class="comment-avatar">PM</div>
+            <div>
+              <div class="comment-user">Patrícia Martins</div>
+              <div class="comment-meta">em <span class="recipe-link">Pão de Fermentação Natural</span> · 17/07/2026 às 19:05</div>
+            </div>
+          </div>
+          <div class="comment-badges">
+            <span class="rating-stars">★★★★★</span>
+          </div>
+        </div>
+
+        <div class="comment-text">A crosta ficou perfeita! Só tive dúvida sobre o tempo de fermentação em dias mais frios.</div>
+
+        <!-- TODO (backend): resposta já registrada para este comentário -->
+        <div class="reply-block">
+          <div class="reply-block-label">Sua resposta</div>
+          <div class="reply-block-text">Em dias frios, deixe fermentar por até 2h a mais, ou até dobrar de volume — o tempo indicado é uma referência, não uma regra fixa.</div>
+        </div>
+
+        <div class="comment-actions">
+          <button class="act-responder">↩ Editar resposta</button>
+          <button class="act-denunciar">🚩 Denunciar</button>
+        </div>
+      </div>
+
+      <!-- Comentário ainda não respondido -->
+      <div class="comment-card" data-id="2069" data-status="pendente">
+        <div class="comment-top">
+          <div class="comment-who">
+            <div class="comment-avatar">RS</div>
+            <div>
+              <div class="comment-user">Rafael Souza</div>
+              <div class="comment-meta">em <span class="recipe-link">Torta de Limão Siciliano</span> · 16/07/2026 às 14:02</div>
+            </div>
+          </div>
+          <div class="comment-badges">
+            <span class="rating-stars">★★★<span class="empty">★★</span></span>
+          </div>
+        </div>
+
+        <div class="comment-text">Boa receita, mas achei o creme um pouco doce demais para o meu gosto. Alguma sugestão de ajuste?</div>
+
+        <div class="comment-actions">
+          <button class="act-responder">↩ Responder</button>
+          <button class="act-denunciar">🚩 Denunciar</button>
+        </div>
+      </div>
+
+      <!-- Comentário ainda não respondido -->
+      <div class="comment-card" data-id="2060" data-status="pendente">
+        <div class="comment-top">
+          <div class="comment-who">
+            <div class="comment-avatar">CD</div>
+            <div>
+              <div class="comment-user">Camila Duarte</div>
+              <div class="comment-meta">em <span class="recipe-link">Brownie Vegano de Chocolate 70%</span> · 15/07/2026 às 20:18</div>
+            </div>
+          </div>
+          <div class="comment-badges">
+            <span class="rating-stars">★★★★★</span>
+          </div>
+        </div>
+
+        <div class="comment-text">Simplesmente perfeito, ninguém acredita que é vegano! Vou fazer de novo no fim de semana.</div>
+
+        <div class="comment-actions">
+          <button class="act-responder">↩ Responder</button>
+          <button class="act-denunciar">🚩 Denunciar</button>
+        </div>
+      </div>
+
+      <!-- Comentário já respondido pelo autor -->
+      <div class="comment-card" data-id="2055" data-status="respondido">
+        <div class="comment-top">
+          <div class="comment-who">
+            <div class="comment-avatar">TB</div>
+            <div>
+              <div class="comment-user">Thiago Bastos</div>
+              <div class="comment-meta">em <span class="recipe-link">Ceviche de Tilápia com Leite de Tigre</span> · 14/07/2026 às 12:47</div>
+            </div>
+          </div>
+          <div class="comment-badges">
+            <span class="rating-stars">★★★★<span class="empty">★</span></span>
+          </div>
+        </div>
+
+        <div class="comment-text">Ficou muito bom, mas achei o leite de tigre meio ácido. É pra ser assim mesmo?</div>
+
+        <div class="reply-block">
+          <div class="reply-block-label">Sua resposta</div>
+          <div class="reply-block-text">Sim, é bem característico do prato! Se preferir mais suave, reduza o limão pela metade e acrescente aos poucos até o ponto que você gostar.</div>
+        </div>
+
+        <div class="comment-actions">
+          <button class="act-responder">↩ Editar resposta</button>
+          <button class="act-denunciar">🚩 Denunciar</button>
+        </div>
+      </div>
+
+      <!-- Comentário ainda não respondido -->
+      <div class="comment-card" data-id="2050" data-status="pendente">
+        <div class="comment-top">
+          <div class="comment-who">
+            <div class="comment-avatar">VR</div>
+            <div>
+              <div class="comment-user">Vanessa Ramos</div>
+              <div class="comment-meta">em <span class="recipe-link">Coq au Vin Tradicional</span> · 12/07/2026 às 09:31</div>
+            </div>
+          </div>
+          <div class="comment-badges">
+            <span class="rating-stars">★★★<span class="empty">★★</span></span>
+          </div>
+        </div>
+
+        <div class="comment-text">Demorou bem mais do que 1h30 pra ficar pronto aqui em casa, é normal?</div>
+
+        <div class="comment-actions">
+          <button class="act-responder">↩ Responder</button>
+          <button class="act-denunciar">🚩 Denunciar</button>
+        </div>
+      </div>
+
+      <!-- Comentário já respondido pelo autor -->
+      <div class="comment-card" data-id="2045" data-status="respondido">
+        <div class="comment-top">
+          <div class="comment-who">
+            <div class="comment-avatar">EN</div>
+            <div>
+              <div class="comment-user">Eduardo Nascimento</div>
+              <div class="comment-meta">em <span class="recipe-link">Salada Mediterrânea de Grão-de-Bico</span> · 10/07/2026 às 18:05</div>
+            </div>
+          </div>
+          <div class="comment-badges">
+            <span class="rating-stars">★★★★★</span>
+          </div>
+        </div>
+
+        <div class="comment-text">Virou receita fixa aqui em casa, muito fresca e fácil de fazer!</div>
+
+        <div class="reply-block">
+          <div class="reply-block-label">Sua resposta</div>
+          <div class="reply-block-text">Que alegria, Eduardo! Fico muito feliz que tenha entrado na rotina de vocês 🙌</div>
+        </div>
+
+        <div class="comment-actions">
+          <button class="act-responder">↩ Editar resposta</button>
+          <button class="act-denunciar">🚩 Denunciar</button>
+        </div>
+      </div>
+
+      <!-- Comentário ainda não respondido -->
+      <div class="comment-card" data-id="2040" data-status="pendente">
+        <div class="comment-top">
+          <div class="comment-who">
+            <div class="comment-avatar">LP</div>
+            <div>
+              <div class="comment-user">Larissa Prado</div>
+              <div class="comment-meta">em <span class="recipe-link">Curry Verde Tailandês</span> · 08/07/2026 às 21:12</div>
+            </div>
+          </div>
+          <div class="comment-badges">
+            <span class="rating-stars">★★★★<span class="empty">★</span></span>
+          </div>
+        </div>
+
+        <div class="comment-text">Não achei leite de coco integral aqui na cidade, dá pra usar o light mesmo?</div>
+
+        <div class="comment-actions">
+          <button class="act-responder">↩ Responder</button>
+          <button class="act-denunciar">🚩 Denunciar</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== PAGINAÇÃO ===== -->
+    <div class="pagination">
+      <button class="page-btn page-prev" disabled>‹</button>
+      <button class="page-btn page-next">›</button>
+    </div>
+
+  </div>
+</main>
+
+<!-- ===== MODAL — RESPONDER COMENTÁRIO ===== -->
+<div class="modal-overlay" id="modalResponder" data-close-modal>
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Responder comentário</span>
+      <button class="modal-close" data-close-modal>✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="textoResposta">Sua resposta será exibida publicamente abaixo do comentário</label>
+        <textarea id="textoResposta" rows="5" placeholder="Escreva sua resposta…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" data-close-modal>Cancelar</button>
+      <button class="btn-primary" id="btnEnviarResposta">Publicar Resposta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL — DENUNCIAR COMENTÁRIO ===== -->
+<div class="modal-overlay" id="modalDenuncia" data-close-modal>
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">🚩 Denunciar comentário</span>
+      <button class="modal-close" data-close-modal>✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-mid);line-height:1.6;">
+        Tem certeza que deseja denunciar o comentário de <strong id="denunciaNomeUsuario">este usuário</strong>?
+        Ele será enviado para a moderação do Editor e poderá ser removido da plataforma.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" data-close-modal>Cancelar</button>
+      <button class="btn-primary" id="btnConfirmarDenuncia" style="background:var(--danger);">Confirmar Denúncia</button>
+    </div>
+  </div>
+</div>
+
+<script>document.addEventListener('DOMContentLoaded', function () {
+  bindLogout();
+  bindNotificacoes();
+  bindSidebarMobileToggle();
+});
+
+/* ==========================================================================
+   LOGOUT
+   TODO (backend): invalidar sessão/token (POST /api/auth/logout)
+   e redirecionar para a tela de login
+   ========================================================================== */
+function bindLogout() {
+  var btn = document.getElementById('btnLogout');
+  if (!btn) return;
+
+  btn.addEventListener('click', function () {
+    // TODO (backend): chamada de logout real antes do redirecionamento
+    console.log('[app] encerrando sessão do usuário');
+    window.location.href = 'login.html';
+  });
+}
+
+/* ==========================================================================
+   NOTIFICAÇÕES
+   TODO (backend): abrir dropdown/painel com GET /api/notificacoes
+   ========================================================================== */
+function bindNotificacoes() {
+  var btn = document.getElementById('btnNotificacoes');
+  if (!btn) return;
+
+  btn.addEventListener('click', function () {
+    // TODO (backend): exibir painel de notificações reais
+    console.log('[app] abrir painel de notificações');
+  });
+}
+
+/* ==========================================================================
+   SIDEBAR MOBILE
+   ========================================================================== */
+function bindSidebarMobileToggle() {
+  var btn = document.getElementById('btnMenuMobile');
+  var sidebar = document.querySelector('.sidebar');
+  if (!btn || !sidebar) return;
+
+  btn.addEventListener('click', function () {
+    sidebar.classList.toggle('open');
+  });
+}
+
+/* ==========================================================================
+   TOAST — notificação temporária de confirmação
+   ========================================================================== */
+function showToast(mensagem, type) {
+  var container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  var toast = document.createElement('div');
+  toast.className = 'toast' + (type ? ' ' + type : '');
+  toast.textContent = mensagem;
+  container.appendChild(toast);
+
+  requestAnimationFrame(function () { toast.classList.add('show'); });
+
+  setTimeout(function () {
+    toast.classList.remove('show');
+    setTimeout(function () { toast.remove(); }, 250);
+  }, 3200);
+}
+
+/* ===================== EXCLUSIVO DESTA TELA (COMENTÁRIOS RECEBIDOS — AUTOR) ===================== */
+
+document.addEventListener('DOMContentLoaded', function () {
+  bindFiltros();
+  bindBusca();
+  bindModalResponder();
+  bindDenuncia();
+  bindPaginacao();
+});
+
+/* ==========================================================================
+   FILTROS — Todos / Não Respondidos / Respondidos
+   TODO (backend): refazer GET /api/autor/comentarios?status=<filtro>
+   ========================================================================== */
+function bindFiltros() {
+  var pills = document.querySelectorAll('.filter-pill');
+  var cards = document.querySelectorAll('.comment-card');
+
+  pills.forEach(function (pill) {
+    pill.addEventListener('click', function () {
+      pills.forEach(function (p) { p.classList.remove('active'); });
+      pill.classList.add('active');
+
+      var filtro = pill.dataset.filtro;
+      cards.forEach(function (card) {
+        var mostra = (filtro === 'todos') || (card.dataset.status === filtro);
+        card.style.display = mostra ? '' : 'none';
+      });
+    });
+  });
+}
+
+/* ==========================================================================
+   BUSCA — filtra por receita ou texto do comentário
+   TODO (backend): trocar filtro em memória por GET /api/autor/comentarios?q=
+   ========================================================================== */
+function bindBusca() {
+  var input = document.getElementById('inputBuscaComentarios');
+  if (!input) return;
+
+  input.addEventListener('input', function () {
+    var termo = input.value.trim().toLowerCase();
+    document.querySelectorAll('.comment-card').forEach(function (card) {
+      var texto = card.textContent.toLowerCase();
+      card.style.display = texto.includes(termo) ? '' : 'none';
+    });
+  });
+}
+
+/* ==========================================================================
+   MODAL — Responder comentário
+   TODO (backend): salvar a resposta do autor vinculada ao comentário via
+   POST /api/autor/comentarios/:id/responder
+   ========================================================================== */
+function bindModalResponder() {
+  var modal = document.getElementById('modalResponder');
+  if (!modal) return;
+  var textarea = document.getElementById('textoResposta');
+  var cardAtual = null;
+
+  document.querySelectorAll('.act-responder').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      cardAtual = btn.closest('.comment-card');
+      var respostaExistente = cardAtual.querySelector('.reply-block-text');
+      // Se já houver resposta, pré-preenche o textarea para edição
+      textarea.value = respostaExistente ? respostaExistente.textContent : '';
+      modal.classList.add('open');
+    });
+  });
+
+  modal.addEventListener('click', function (e) {
+    if (e.target === modal) modal.classList.remove('open');
+  });
+  modal.querySelectorAll('[data-close-modal]').forEach(function (el) {
+    el.addEventListener('click', function () { modal.classList.remove('open'); });
+  });
+
+  document.getElementById('btnEnviarResposta').addEventListener('click', function () {
+    if (!cardAtual) return;
+    var texto = textarea.value.trim();
+    if (!texto) return;
+
+    // TODO (backend): enviar texto da resposta para a API
+    var replyBlock = cardAtual.querySelector('.reply-block');
+    if (replyBlock) {
+      // já existia resposta: apenas atualiza o texto exibido
+      replyBlock.querySelector('.reply-block-text').textContent = texto;
+    } else {
+      // primeira resposta: cria o bloco e insere antes das ações
+      replyBlock = document.createElement('div');
+      replyBlock.className = 'reply-block';
+      replyBlock.innerHTML = '<div class="reply-block-label">Sua resposta</div><div class="reply-block-text"></div>';
+      replyBlock.querySelector('.reply-block-text').textContent = texto;
+      cardAtual.querySelector('.comment-actions').before(replyBlock);
+    }
+
+    var btnResponder = cardAtual.querySelector('.act-responder');
+    if (btnResponder) btnResponder.textContent = '↩ Editar resposta';
+    cardAtual.dataset.status = 'respondido';
+
+    modal.classList.remove('open');
+    showToast('Resposta publicada.', 'success');
+  });
+}
+
+/* ==========================================================================
+   DENUNCIAR COMENTÁRIO
+   TODO (backend): registrar denúncia via POST /api/autor/comentarios/:id/denunciar
+   — o comentário passa a aparecer na Central de Moderação do Editor.
+   ========================================================================== */
+function bindDenuncia() {
+  var modal = document.getElementById('modalDenuncia');
+  if (!modal) return;
+  var nomeEl = document.getElementById('denunciaNomeUsuario');
+  var btnAtual = null;
+
+  document.querySelectorAll('.act-denunciar').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (btn.disabled) return;
+      btnAtual = btn;
+      var card = btn.closest('.comment-card');
+      var usuario = card.querySelector('.comment-user');
+      nomeEl.textContent = usuario ? usuario.textContent : 'este usuário';
+      modal.classList.add('open');
+    });
+  });
+
+  modal.addEventListener('click', function (e) {
+    if (e.target === modal) modal.classList.remove('open');
+  });
+  modal.querySelectorAll('[data-close-modal]').forEach(function (el) {
+    el.addEventListener('click', function () { modal.classList.remove('open'); });
+  });
+
+  document.getElementById('btnConfirmarDenuncia').addEventListener('click', function () {
+    if (!btnAtual) return;
+    btnAtual.disabled = true;
+    btnAtual.textContent = '🚩 Denunciado';
+    modal.classList.remove('open');
+    showToast('Comentário denunciado e enviado para moderação.', 'warning');
+  });
+}
+
+/* ==========================================================================
+   PAGINAÇÃO
+   TODO (backend): buscar a página correspondente em
+   GET /api/autor/comentarios?pagina=<n>
+   ========================================================================== */
+function bindPaginacao() {
+  var pagination = document.querySelector('.pagination');
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.comment-card'));
+  if (!pagination || !cards.length) return;
+
+  var pageSize = 3; // TODO (backend): tamanho de página real vem da API
+  var totalPages = Math.max(1, Math.ceil(cards.length / pageSize));
+  var currentPage = 1;
+
+  var prevBtn = pagination.querySelector('.page-prev');
+  var nextBtn = pagination.querySelector('.page-next');
+
+  function buildNumberButtons() {
+    pagination.querySelectorAll('.page-number').forEach(function (b) { b.remove(); });
+    for (var i = 1; i <= totalPages; i++) {
+      var btn = document.createElement('button');
+      btn.className = 'page-btn page-number';
+      btn.textContent = i;
+      btn.addEventListener('click', function () {
+        currentPage = parseInt(this.textContent, 10);
+        render();
+      });
+      pagination.insertBefore(btn, nextBtn);
+    }
+  }
+
+  function render() {
+    cards.forEach(function (card, i) {
+      var pagina = Math.floor(i / pageSize) + 1;
+      card.style.display = (pagina === currentPage) ? '' : 'none';
+    });
+    pagination.querySelectorAll('.page-number').forEach(function (btn) {
+      btn.classList.toggle('active', parseInt(btn.textContent, 10) === currentPage);
+    });
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage === totalPages;
+  }
+
+  prevBtn.addEventListener('click', function () {
+    if (currentPage > 1) { currentPage--; render(); }
+  });
+  nextBtn.addEventListener('click', function () {
+    if (currentPage < totalPages) { currentPage++; render(); }
+  });
+
+  buildNumberButtons();
+  render();
+}</script>
+</body>
+</html>

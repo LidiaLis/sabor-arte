@@ -9,6 +9,12 @@ public class ReceitaIngrediente {
     private int quantidade_receita_ingrediente;
     private String unidade_medida_receita_ingrediente;
 
+    // ===== Campo extra (NÃO existe na tabela receita_ingrediente — não persistir) =====
+    // Preenchido via JOIN em listarIngredientesPorReceita (IngredienteDAO).
+    // Nunca usar esse campo em INSERT/UPDATE.
+
+    private String nome_ingrediente;
+
     // ===== Construtor vazio =====
 
     public ReceitaIngrediente() {
@@ -40,4 +46,9 @@ public class ReceitaIngrediente {
 
     public String getUnidade_medida_receita_ingrediente() { return unidade_medida_receita_ingrediente; }
     public void setUnidade_medida_receita_ingrediente(String unidade_medida_receita_ingrediente) { this.unidade_medida_receita_ingrediente = unidade_medida_receita_ingrediente; }
+
+    // ===== Getter e Setter — campo extra (não persistido) =====
+
+    public String getNome_ingrediente() { return nome_ingrediente; }
+    public void setNome_ingrediente(String nome_ingrediente) { this.nome_ingrediente = nome_ingrediente; }
 }

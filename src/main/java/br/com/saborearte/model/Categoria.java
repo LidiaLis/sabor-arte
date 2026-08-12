@@ -21,6 +21,12 @@ public class Categoria {
     // DEFAULT
     private StatusCategoria status_categoria = StatusCategoria.ATIVA;
 
+    // ===== Campo extra (NÃO existe na tabela categoria — não persistir) =====
+    // Preenchido via JOIN em consultas específicas (ex.: listarCategoriasComContagem).
+    // Nunca usar esse campo em INSERT/UPDATE.
+
+    private int total_receitas;
+
     // ===== Construtor vazio =====
 
     public Categoria() {
@@ -77,4 +83,32 @@ public class Categoria {
 
     public StatusCategoria getStatus_categoria() { return status_categoria; }
     public void setStatus_categoria(StatusCategoria status_categoria) { this.status_categoria = status_categoria; }
+
+    // ===== Getter e Setter — campo extra (não persistido) =====
+
+    public int getTotal_receitas() { return total_receitas; }
+    public void setTotal_receitas(int total_receitas) { this.total_receitas = total_receitas; }
+ 
+    
+    // ===== Campos extras (NÃO existem na tabela usuario — não persistir) =====
+    // Adicionar este bloco dentro da classe Usuario já existente, junto
+    // com os outros atributos. Preenchidos via JOIN em consultas específicas
+    // (ex.: listarAutoresDestaque). Nunca usar em INSERT/UPDATE.
+
+    private String nome_categoria_especialidade;
+    private String emoji_categoria_especialidade;
+    private int total_receitas_destaque;
+
+    // ===== Getters e Setters — campos extras (não persistidos) =====
+    // Adicionar junto com os outros getters/setters da classe Usuario.
+
+    public String getNome_categoria_especialidade() { return nome_categoria_especialidade; }
+    public void setNome_categoria_especialidade(String nome_categoria_especialidade) { this.nome_categoria_especialidade = nome_categoria_especialidade; }
+
+    public String getEmoji_categoria_especialidade() { return emoji_categoria_especialidade; }
+    public void setEmoji_categoria_especialidade(String emoji_categoria_especialidade) { this.emoji_categoria_especialidade = emoji_categoria_especialidade; }
+
+    public int getTotal_receitas_destaque() { return total_receitas_destaque; }
+    public void setTotal_receitas_destaque(int total_receitas_destaque) { this.total_receitas_destaque = total_receitas_destaque; }
+
 }

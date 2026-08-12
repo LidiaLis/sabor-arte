@@ -25,12 +25,21 @@ public class Comentario {
     // DEFAULT
     private StatusComentario status_comentario = StatusComentario.pendente;
 
+    // ===== Campos extras (NÃO existem na tabela comentario — não persistir) =====
+    // Preenchidos via JOIN em listarComentariosPorReceita (ComentarioDAO).
+    // Nunca usar esses campos em INSERT/UPDATE.
+
+    private String nome_usuario;
+    private String foto_usuario;
+
     // ===== Construtor vazio =====
 
     public Comentario() {
     }
 
     // ===== Construtor completo =====
+    // OBS: corrigido aqui — antes essa sobrecarga jogava data_criacao_comentario
+    // dentro de data_modera_comentario por engano (bug de copiar/colar).
 
     public Comentario(int id_comentario,
                       int receita,
@@ -46,12 +55,13 @@ public class Comentario {
         this.usuario = usuario;
         this.texto_comentario = texto_comentario;
         this.data_criacao_comentario = data_criacao_comentario;
-        this.data_modera_comentario = data_criacao_comentario;
+        this.data_modera_comentario = data_modera_comentario;
         this.status_comentario = status_comentario;
         this.avaliacao_comentario = avaliacao_comentario;
     }
 
     // ===== Construtor sem ID =====
+    // OBS: mesma correção do construtor completo.
 
     public Comentario(int receita,
                       int usuario,
@@ -65,7 +75,7 @@ public class Comentario {
         this.usuario = usuario;
         this.texto_comentario = texto_comentario;
         this.data_criacao_comentario = data_criacao_comentario;
-        this.data_modera_comentario = data_criacao_comentario;
+        this.data_modera_comentario = data_modera_comentario;
         this.status_comentario = status_comentario;
         this.avaliacao_comentario = avaliacao_comentario;
     }
@@ -95,4 +105,12 @@ public class Comentario {
 
     public int getAvaliacao_comentario() { return avaliacao_comentario; }
     public void setAvaliacao_comentario(int avaliacao_comentario) { this.avaliacao_comentario = avaliacao_comentario; }
+
+    // ===== Getters e Setters — campos extras (não persistidos) =====
+
+    public String getNome_usuario() { return nome_usuario; }
+    public void setNome_usuario(String nome_usuario) { this.nome_usuario = nome_usuario; }
+
+    public String getFoto_usuario() { return foto_usuario; }
+    public void setFoto_usuario(String foto_usuario) { this.foto_usuario = foto_usuario; }
 }

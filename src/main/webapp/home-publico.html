@@ -43,6 +43,21 @@
   .nav-icon{width:22px;text-align:center;font-size:16px;flex-shrink:0;}
   .sidebar-bottom{padding:16px 24px 24px;border-top:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;font-size:11px;color:rgba(245,240,232,0.45);font-weight:300;}
 
+  .btn-logout{display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:2px;color:rgba(245,240,232,0.7);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;}
+  .btn-logout:hover{background:rgba(155,68,68,0.2);border-color:rgba(155,68,68,0.3);color:#e8a0a0;}
+.sidebar-user{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
+
+a.sidebar-user,
+a.sidebar-user:link,
+a.sidebar-user:visited,
+a.sidebar-user:hover,
+a.sidebar-user:active {
+  text-decoration: none;
+  color: inherit;
+}  .user-avatar{width:38px;height:38px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--moss-dark);flex-shrink:0;}
+  .user-name{font-size:13px;font-weight:600;color:var(--cream);}
+  .user-role-badge{font-size:10px;color:var(--gold-light);text-transform:uppercase;letter-spacing:0.8px;font-weight:300;}
+
   /* ===== MAIN (mesmo padrão do admin) ===== */
   .main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;}
   .topbar{background:var(--warm-white);border-bottom:1px solid var(--cream-dark);padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
@@ -190,6 +205,8 @@ a.recipe-card:active {
 </aside>
 
 
+
+
 <main class="main">
 <div class="topbar">
   <div class="page-crumb">
@@ -206,11 +223,10 @@ a.recipe-card:active {
       <div class="sub-header">
         <div class="sub-title">🔥 Receitas em destaque</div>
 		<a href="/saborearte/pages/html/publico/receitas-publico.html" class="sub-link">Ver todas →</a>      </div>
-      </div>
 
       <div class="recipes-grid">
 
-<a href="/saborearte/pages/html/visitante/receitas-detalhe-publico.html" class="recipe-card">
+<a href="receita-detalhe-visitante.html" class="recipe-card">
         <div class="recipe-card">
           <div class="recipe-img-wrap">
             <img src="https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&q=80" alt="Risoto de Cogumelos">
@@ -276,7 +292,6 @@ a.recipe-card:active {
       <div class="side-card">
         <div class="card-head">
           <div class="card-title-sm">🏷️ Categorias principais</div>
-          <div class="card-action">Ver todas</div>
         </div>
         <div class="cat-item">
           <div class="cat-color" style="background:var(--moss)"></div>
@@ -308,7 +323,6 @@ a.recipe-card:active {
       <div class="side-card">
         <div class="card-head">
           <div class="card-title-sm">👩‍🍳 Autores em destaque</div>
-          <div class="card-action">Ver todos</div>
         </div>
         <div class="author-item">
           <img class="author-avatar-lg" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80" alt="Maria Andrade">
