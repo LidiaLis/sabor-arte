@@ -8,7 +8,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * DAO de Fluxo (histórico de moderação editorial: pendente -> aprovado /
@@ -193,5 +195,31 @@ public class FluxoDAO {
         );
 
         return f;
+    }
+    public Map<Integer, Integer> contarRevisadosPorMes(int meses) throws SQLException {
+        String sql = """
+                SELECT MONTH(data_fluxo) AS mes, COUNT(*) AS total
+                FROM fluxo
+                WHERE status_fluxo IN (?, ?)
+                  AND data_fluxo >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+                GROUP BY MONTH(data_fluxo)
+                ORDER BY mes
+                """;
+ 
+        Map<Integer, Integer> resultado = new LinkedHashMap<>();
+ 
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setString(1, StatusFluxo.APROVADO.name());
+            stmt.setString(2, StatusFluxo.REJEITADO.name());
+            stmt.setInt(3, meses);
+ 
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    resultado.put(rs.getInt("mes"), rs.getInt("total"));
+                }
+            }
+        }
+ 
+        return resultado;
     }
 }

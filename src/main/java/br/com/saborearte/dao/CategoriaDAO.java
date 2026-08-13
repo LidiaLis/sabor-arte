@@ -353,5 +353,14 @@ public class CategoriaDAO {
      
         return lista;
     }
+    public int contarCategoriasAtivas() throws SQLException {
+        String sql = "SELECT COUNT(*) AS total FROM categoria WHERE status_categoria = ?";
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setString(1, StatusCategoria.ATIVA.name());
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("total") : 0;
+            }
+        }
+    }
 
 }

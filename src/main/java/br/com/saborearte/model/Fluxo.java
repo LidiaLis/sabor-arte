@@ -14,14 +14,14 @@ public class Fluxo {
     // ===== ENUMS =====
 
     public enum StatusFluxo {
-        pendente,
-        aprovado,
-        rejeitado,
-        em_revisao
+        PENDENTE,
+       APROVADO,
+        REJEITADO,
+        EM_REVISAO
     }
 
     // DEFAULT
-    private StatusFluxo status_fluxo = StatusFluxo.pendente;
+    private StatusFluxo status_fluxo = StatusFluxo.PENDENTE;
 
     // ===== Construtor vazio =====
 

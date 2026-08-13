@@ -24,16 +24,16 @@ import java.time.LocalDateTime;
     CONSTRAINT chk_usuario_diferente
         CHECK (id_seguidor <> id_seguido)
 );*/
-public class UsuarioSeguidor {
+public class Seguidor {
 
     private int idSeguidor;
     private int idSeguido;
     private LocalDateTime dataSeguir;
 
-    public UsuarioSeguidor() {
+    public Seguidor() {
     }
 
-    public UsuarioSeguidor(int idSeguidor, int idSeguido, LocalDateTime dataSeguir) {
+    public Seguidor(int idSeguidor, int idSeguido, LocalDateTime dataSeguir) {
         this.idSeguidor = idSeguidor;
         this.idSeguido = idSeguido;
         this.dataSeguir = dataSeguir;

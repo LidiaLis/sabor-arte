@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabor & Arte — Receitas do Autor</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --moss:         #4a5e3a;
+    --moss-dark:    #2f3d25;
+    --moss-light:   #6b7f59;
+    --sage:         #a3b18a;
+    --sage-light:   #c8d5b9;
+    --cream:        #f5f0e8;
+    --cream-dark:   #e6dece;
+    --warm-white:   #faf8f4;
+    --text-dark:    #1e2718;
+    --text-mid:     #4a5240;
+    --text-light:   #8a9480;
+    --gold:         #c4a265;
+    --gold-light:   #dfc094;
+    --published:    #3a7a4a;
+    --published-bg: #e8f4eb;
+    --error:        #9b4444;
+    --error-bg:     #fdf0f0;
+    --sidebar-w:    260px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text-dark); min-height: 100vh; display: flex; }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--moss-dark);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow-y: auto;
+  }
+  .sidebar::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 200% 60% at 50% 0%, rgba(74,94,58,0.5) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .sidebar-brand { padding: 28px 24px 22px; border-bottom: 1px solid rgba(255,255,255,0.08); position: relative; z-index: 1; }
+  .brand-row { display: flex; align-items: center; gap: 12px; }
+  .brand-badge { width: 38px; height: 38px; background: linear-gradient(135deg, var(--moss-light), var(--sage)); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .brand-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--cream); display: block; line-height: 1; }
+  .brand-sub { font-size: 10px; color: var(--sage); text-transform: uppercase; letter-spacing: 1.2px; margin-top: 3px; display: block; font-weight: 300; }
+
+  .sidebar-user{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
+  a.sidebar-user, a.sidebar-user:link, a.sidebar-user:visited, a.sidebar-user:hover, a.sidebar-user:active { text-decoration: none; color: inherit; }
+  .user-avatar{width:38px;height:38px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--moss-dark);flex-shrink:0;}
+  .user-name{font-size:13px;font-weight:600;color:var(--cream);}
+  .user-role-badge{font-size:10px;color:var(--gold-light);text-transform:uppercase;letter-spacing:0.8px;font-weight:300;}
+
+  .sidebar-nav { flex: 1; padding: 16px 0; position: relative; z-index: 1; }
+  .nav-section-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.8px; color: rgba(163,177,138,0.5); padding: 16px 24px 6px; font-weight: 500; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 24px; color: rgba(245,240,232,0.7); text-decoration: none; font-size: 14px; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
+  .nav-item:hover { color: var(--cream); background: rgba(255,255,255,0.06); border-left-color: var(--sage); }
+  .nav-item.active { color: var(--cream); background: rgba(163,177,138,0.15); border-left-color: var(--sage-light); font-weight: 500; }
+  .nav-icon { width: 22px; text-align: center; font-size: 16px; }
+  .sidebar-bottom { padding: 16px 24px 24px; border-top: 1px solid rgba(255,255,255,0.08); position: relative; z-index: 1; }
+  .btn-logout { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 2px; color: rgba(245,240,232,0.7); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .btn-logout:hover { background: rgba(155,68,68,0.2); border-color: rgba(155,68,68,0.3); color: #e8a0a0; }
+
+  /* ===== MAIN ===== */
+  .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+  .topbar { background: var(--warm-white); border-bottom: 1px solid var(--cream-dark); padding: 0 40px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .page-crumb { font-size: 12px; color: var(--text-light); display: flex; align-items: center; gap: 6px; }
+  .page-crumb .current { color: var(--moss); font-weight: 500; }
+  .topbar-back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-mid); text-decoration: none; font-weight: 500; }
+  .topbar-back:hover { color: var(--moss); }
+
+  /* ===== CONTENT ===== */
+  .content { flex: 1; padding: 0 40px 40px; }
+
+  /* ===== AUTHOR HEADER ===== */
+  .author-hero {
+    background: linear-gradient(135deg, var(--moss-dark) 0%, var(--moss) 60%, var(--moss-light) 100%);
+    border-radius: 0 0 6px 6px; margin: 0 -40px 26px; padding: 30px 40px;
+    display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+    box-shadow: 0 6px 20px rgba(47,61,37,0.18); position: relative; overflow: hidden;
+  }
+  .author-hero::before { content:''; position:absolute; top:-70px; right:-70px; width:220px; height:220px; border-radius:50%; background: rgba(163,177,138,0.12); }
+  .ah-avatar {
+    width: 78px; height: 78px; border-radius: 50%; flex-shrink: 0; position: relative; z-index: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif; font-size: 28px; font-weight: 800;
+    border: 4px solid rgba(255,255,255,0.25);
+  }
+  .ah-info { flex: 1; min-width: 200px; position: relative; z-index: 1; }
+  .ah-name { font-family: 'Playfair Display', serif; font-size: 25px; font-weight: 700; color: white; line-height: 1.15; margin-bottom: 4px; }
+  .ah-role { font-size: 13px; color: rgba(255,255,255,0.65); font-weight: 300; margin-bottom: 8px; }
+  .ah-bio { font-size: 12.5px; color: rgba(255,255,255,0.75); font-weight: 300; max-width: 520px; line-height: 1.5; }
+  .ah-stats { display: flex; gap: 24px; position: relative; z-index: 1; flex-shrink: 0; }
+  .ah-stat { text-align: center; }
+  .ah-stat-val { font-family: 'Nunito', sans-serif; font-size: 21px; font-weight: 800; color: white; line-height: 1; }
+  .ah-stat-lbl { font-size: 10px; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.7px; margin-top: 3px; font-weight: 300; }
+  .ah-follow-btn {
+    position: relative; z-index: 1; flex-shrink: 0;
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+    padding: 10px 20px; border-radius: 2px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .ah-follow-btn:hover { background: rgba(255,255,255,0.26); }
+  .ah-follow-btn.following { background: var(--gold); border-color: var(--gold); color: var(--moss-dark); }
+  .ah-follow-btn.following:hover { background: var(--gold-light); }
+
+  /* ===== SECTION ===== */
+  .section-title-row { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 500; color: var(--text-dark); }
+  .section-title em { font-style: italic; color: var(--moss); }
+  .section-count { font-size: 12px; color: var(--text-light); font-weight: 300; }
+
+  /* ===== TOOLBAR (busca + filtro de categoria — mesmo padrão da tela de autores) ===== */
+  .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .search-bar {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--cream); border: 1.5px solid var(--cream-dark);
+    border-radius: 2px; padding: 8px 14px; flex: 1; max-width: 320px;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+  }
+  .search-bar:focus-within { border-color: var(--moss-light); background: var(--warm-white); box-shadow: 0 0 0 3px rgba(74,94,58,0.1); }
+  .search-bar input { border: none; background: none; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-dark); outline: none; flex: 1; }
+  .search-bar input::placeholder { color: var(--text-light); }
+  .filter-select {
+    background: var(--cream); border: 1.5px solid var(--cream-dark);
+    border-radius: 2px; padding: 8px 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-dark);
+    cursor: pointer; outline: none; transition: border-color .2s, box-shadow .2s, background .2s;
+  }
+  .filter-select:focus { border-color: var(--moss-light); background: var(--warm-white); box-shadow: 0 0 0 3px rgba(74,94,58,0.1); }
+  .toolbar-spacer { flex: 1; }
+
+  /* ===== RECIPE GRID ===== */
+  .recipes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .recipe-card { background: var(--warm-white); border: 1px solid var(--cream-dark); border-radius: 4px; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+  .recipe-card:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(47,61,37,0.14); }
+  .recipe-card img { width: 100%; height: 130px; object-fit: cover; display: block; }
+  .recipe-card-body { padding: 12px 14px; }
+  .recipe-card-title { font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; line-height: 1.3; }
+  .recipe-card-cat { font-size: 11px; color: var(--text-light); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 1200px) { .recipes-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 860px)  { .recipes-grid { grid-template-columns: 1fr 1fr; } .author-hero { flex-direction: column; align-items: flex-start; } .ah-stats { flex-wrap: wrap; } }
+  @media (max-width: 768px)  { .sidebar { display: none; } .main { margin-left: 0; } .content { padding: 0 20px 30px; } .topbar { padding: 0 20px; } .author-hero { margin: 0 -20px 22px; padding: 26px 20px; } }
+  @media (max-width: 480px)  { .recipes-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR VISITANTE ===== -->
+<aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-brand">
+        <div class="brand-row">
+            <div class="brand-badge">🌿</div>
+            <div>
+                <span class="brand-title">Sabor &amp; Arte</span>
+                <span class="brand-sub">Blog Editorial</span>
+            </div>
+        </div>
+    </div>
+
+    <a href="perfil-visitante.html" class="sidebar-user" title="Meu perfil">
+        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+            <img src="/saborearte/img/y.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="A">
+        </div>
+        <div class="user-info">
+            <div class="user-name">Thiago Ferreira</div>
+            <div class="user-role-badge">Visitante</div>
+        </div>
+    </a>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">Explorar</div>
+
+        <a href="home-visitante.html" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Home</span>
+        </a>
+
+        <a href="receitas-visitante.html" class="nav-item">
+            <span class="nav-icon">📝</span>
+            <span class="nav-label">Receitas</span>
+        </a>
+
+        <a href="autores-visitante.html" class="nav-item active">
+            <span class="nav-icon">✍️</span>
+            <span class="nav-label">Autores</span>
+        </a>
+
+        <a href="receitas-favoritas.html" class="nav-item">
+            <span class="nav-icon">⭐</span>
+            <span class="nav-label">Favoritas</span>
+        </a>
+
+        <div class="nav-section-label">Conta</div>
+        <a href="/saborearte/ConfiguracaoController" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Configurações</span>
+        </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+        <a href="/saborearte/LogoutController" class="btn-logout">
+            <span class="nav-icon">🚪</span>
+            <span>Sair</span>
+        </a>
+    </div>
+
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-crumb">
+      <span>Autores</span>
+      <span style="color:var(--cream-dark)">/</span>
+      <span class="current" id="crumbAuthor">Receitas</span>
+    </div>
+    <a class="topbar-back" href="autores-publico.html">← Voltar para autores</a>
+  </div>
+
+  <div class="content">
+
+    <!-- CABEÇALHO DO AUTOR -->
+    <div class="author-hero" id="authorHero">
+      <div class="ah-avatar" id="ahAvatar">?</div>
+      <div class="ah-info">
+        <div class="ah-name" id="ahName">Carregando…</div>
+        <div class="ah-role" id="ahRole"></div>
+        <div class="ah-bio" id="ahBio"></div>
+      </div>
+      <div class="ah-stats">
+        <div class="ah-stat"><div class="ah-stat-val" id="ahStatRecipes">–</div><div class="ah-stat-lbl">Receitas</div></div>
+        <div class="ah-stat"><div class="ah-stat-val" id="ahStatComments">–</div><div class="ah-stat-lbl">Comentários</div></div>
+        <div class="ah-stat"><div class="ah-stat-val" id="ahStatViews">–</div><div class="ah-stat-lbl">Visualizações</div></div>
+      </div>
+      <button class="ah-follow-btn" id="ahFollowBtn" onclick="toggleFollowAuthor()">
+        <span id="ahFollowIcon">+</span> <span id="ahFollowLabel">Seguir</span>
+      </button>
+    </div>
+
+    <!-- RECEITAS -->
+    <div class="section-title-row">
+      <div class="section-title">Todas as <em>receitas</em></div>
+      <span class="section-count" id="recipeCount"></span>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-bar">
+        <span style="font-size:14px;color:var(--text-light)">🔍</span>
+        <input type="text" id="campoBuscaReceita" placeholder="Buscar receitas…">
+      </div>
+      <select class="filter-select" id="filterCategoria">
+        <option value="todos" selected>Todas as categorias</option>
+      </select>
+      <div class="toolbar-spacer"></div>
+    </div>
+
+    <div class="recipes-grid" id="recipesGrid"></div>
+
+    <div class="empty-state" id="recipesEmptyState" style="display:none; text-align:center; padding: 60px 20px;">
+      <div style="font-size:44px; margin-bottom:14px;">🔍</div>
+      <div style="font-family:'Playfair Display',serif; font-size:19px; font-weight:700; color:var(--text-dark); margin-bottom:6px;">Nenhuma receita encontrada</div>
+      <div style="font-size:13.5px; color:var(--text-light); font-weight:300;">Tente buscar por outro termo ou categoria.</div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  var IMGS = [
+    'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=400&q=80',
+    'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&q=80',
+    'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=80',
+    'https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?w=400&q=80',
+    'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80',
+    'https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=400&q=80',
+    'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&q=80',
+    'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400&q=80',
+    'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&q=80'
+  ];
+
+  var AUTORES = {
+    maria: {
+      nome: 'Maria Andrade', cargo: 'Chef Administradora',
+      bio: 'Apaixonada por gastronomia desde criança, fundadora do Sabor & Arte. Especialista em confeitaria artesanal e cozinha mediterrânea.',
+      avatar: 'M', cor: 'linear-gradient(135deg,#c4a265,#dfc094)', corTexto: '#2f3d25',
+      receitas: 47, comentarios: 128, views: '2.4k',
+      pratos: [
+        ['Bolo de Cenoura','🎂 Sobremesas'], ['Risoto de Cogumelos','🍝 Massas'], ['Sopa de Abóbora','🥣 Sopas'],
+        ['Tarte Tatin de Maçã','🎂 Sobremesas'], ['Macarons de Pistache','🎂 Sobremesas'], ['Quiche de Alho-poró','🇫🇷 Francesa'],
+        ['Ratatouille Clássico','🇫🇷 Francesa'], ['Brioche Caseiro','🎂 Sobremesas']
+      ]
+    },
+    ricardo: {
+      nome: 'Ricardo Souza', cargo: 'Chef de Cozinha',
+      bio: 'Formado em Bolonha pela Alma Scuola Internazionale di Cucina Italiana, traz a autenticidade da cozinha italiana ao Brasil.',
+      avatar: 'R', cor: 'linear-gradient(135deg,#8a6a46,#b0896a)', corTexto: 'white',
+      receitas: 38, comentarios: 94, views: '1.8k',
+      pratos: [
+        ['Carbonara Tradicional','🍝 Massas'], ['Pizza Margherita','🍕 Pizzas'], ['Risoto ai Funghi','🍝 Massas'],
+        ['Tiramisù Clássico','🍝 Sobremesas'], ['Focaccia Genovese','🍕 Pizzas'], ['Osso Buco à Milanesa','🇮🇹 Italiana']
+      ]
+    },
+    luciana: {
+      nome: 'Luciana Ferreira', cargo: 'Nutricionista · Cozinha Natural',
+      bio: 'Nutricionista apaixonada por provar que alimentação saudável pode ser gostosa e acessível. Especialista em receitas plant-based.',
+      avatar: 'L', cor: 'linear-gradient(135deg,#4a6a7a,#6a8a9a)', corTexto: 'white',
+      receitas: 31, comentarios: 76, views: '1.2k',
+      pratos: [
+        ['Sopa Detox de Gengibre','🥣 Sopas'], ['Salada de Quinoa e Grão-de-bico','🥗 Saladas'], ['Hambúrguer de Lentilha','🌿 Plant-based'],
+        ['Creme de Abobrinha','🥣 Sopas'], ['Bowl Funcional de Cúrcuma','🍏 Funcional'], ['Wrap Integral de Homus','🥗 Saladas']
+      ]
+    },
+    carlos: {
+      nome: 'Carlos Mendes', cargo: 'Chef Executivo',
+      bio: 'Ex-chef executivo de hotel 5 estrelas, passou por cozinhas no Japão, França e EUA antes de trazer uma culinária fusion sofisticada.',
+      avatar: 'C', cor: 'linear-gradient(135deg,#4a5e3a,#6b7f59)', corTexto: 'white',
+      receitas: 29, comentarios: 61, views: '980',
+      pratos: [
+        ['Salmão Teriyaki Grelhado','🍣 Asian'], ['Costela ao Molho Barbecue','🔥 Grelhados'], ['Tataki de Atum','🍣 Asian'],
+        ['Frango à Provençal','🌍 Fusion'], ['Steak Frites','🥩 Proteínas'], ['Ceviche Peruano','🌍 Fusion']
+      ]
+    },
+    anapaula: {
+      nome: 'Ana Paula Lima', cargo: 'Confeiteira',
+      bio: 'Especialista em bolos de festa decorados e sobremesas elaboradas. Referência para confeiteiras iniciantes e avançadas no Brasil.',
+      avatar: 'A', cor: 'linear-gradient(135deg,#8a9480,#a3b18a)', corTexto: '#2f3d25',
+      receitas: 24, comentarios: 88, views: '1.5k',
+      pratos: [
+        ['Bolo Red Velvet Decorado','🎂 Bolos'], ['Cheesecake de Frutas Vermelhas','🍰 Cheesecakes'], ['Pudim de Leite Condensado','🍮 Sobremesas'],
+        ['Torta Naked Cake','🎨 Decoração'], ['Brownie Recheado','🍮 Sobremesas'], ['Cupcakes Decorados','🎂 Bolos']
+      ]
+    },
+    pedro: {
+      nome: 'Pedro Alves', cargo: 'Chef',
+      bio: 'Nascido e criado em Recife, defensor apaixonado da culinária nordestina — moqueca, baião de dois, tapioca e muito mais.',
+      avatar: 'P', cor: 'linear-gradient(135deg,#c4a265,#dfc094)', corTexto: '#2f3d25',
+      receitas: 22, comentarios: 55, views: '870',
+      pratos: [
+        ['Moqueca de Peixe','🦐 Frutos do Mar'], ['Baião de Dois','🌶️ Nordestino'], ['Tapioca Recheada','🫔 Tapioca'],
+        ['Carne de Sol com Macaxeira','🌶️ Nordestino'], ['Bobó de Camarão','🦐 Frutos do Mar'], ['Ensopado de Charque','🥘 Ensopados']
+      ]
+    },
+    beatriz: {
+      nome: 'Beatriz Nunes', cargo: 'Food Stylist',
+      bio: 'Une gastronomia e estética visual de forma única. Ensina como fotografar e estilizar pratos, tornando cada refeição uma obra de arte.',
+      avatar: 'B', cor: 'linear-gradient(135deg,#8a6a46,#b0896a)', corTexto: 'white',
+      receitas: 18, comentarios: 43, views: '720',
+      pratos: [
+        ['Bowl Vegano Instagramável','🌿 Vegano'], ['Tábua de Frios Orgânicos','🍃 Orgânicos'], ['Smoothie Bowl Colorido','🎨 Visual'],
+        ['Salada Arco-íris','🌿 Vegano'], ['Torradas Gourmet','📸 Styling'], ['Espetinhos de Frutas','🍃 Orgânicos']
+      ]
+    },
+    felipe: {
+      nome: 'Felipe Costa', cargo: 'Cozinheiro Amador',
+      bio: 'Engenheiro de software por profissão, cozinheiro por vocação. Prova que dá pra fazer pratos incríveis mesmo com rotina corrida.',
+      avatar: 'F', cor: 'linear-gradient(135deg,#4a6a7a,#6a8a9a)', corTexto: 'white',
+      receitas: 5, comentarios: 19, views: '310',
+      pratos: [
+        ['Macarrão Alho e Óleo','🍝 Massas'], ['Omelete Recheada','🥚 Ovos'], ['Sanduíche Quente Rápido','⚡ Rápidas'],
+        ['Arroz de Forno Simples','🏠 Caseira'], ['Panqueca Americana','🥚 Ovos']
+      ]
+    }
+  };
+
+  var seguindoLocal = {}; // demo local state (não persiste entre páginas)
+  var autorAtual = null;
+  var categoriaAtual = 'todos';
+
+  function getParam(name) {
+    var params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  }
+
+  function render() {
+    var id = getParam('id') || 'maria';
+    var autor = AUTORES[id];
+    if (!autor) { autor = AUTORES.maria; id = 'maria'; }
+    autorAtual = autor;
+    autorAtual.id = id;
+
+    document.getElementById('crumbAuthor').textContent = autor.nome;
+    document.title = 'Sabor & Arte — Receitas de ' + autor.nome;
+
+    var av = document.getElementById('ahAvatar');
+    av.textContent = autor.avatar;
+    av.style.background = autor.cor;
+    av.style.color = autor.corTexto;
+
+    document.getElementById('ahName').textContent = autor.nome;
+    document.getElementById('ahRole').textContent = autor.cargo;
+    document.getElementById('ahBio').textContent = autor.bio;
+    document.getElementById('ahStatRecipes').textContent = autor.receitas;
+    document.getElementById('ahStatComments').textContent = autor.comentarios;
+    document.getElementById('ahStatViews').textContent = autor.views;
+
+    var followBtn = document.getElementById('ahFollowBtn');
+    followBtn.dataset.authorId = id;
+    atualizarBotaoFollow(id);
+
+    popularFiltroCategorias(autor);
+    renderReceitas();
+  }
+
+  function popularFiltroCategorias(autor) {
+    var select = document.getElementById('filterCategoria');
+    select.innerHTML = '<option value="todos" selected>Todas as categorias</option>';
+    var vistos = {};
+    autor.pratos.forEach(function(p) {
+      var cat = p[1];
+      if (!vistos[cat]) {
+        vistos[cat] = true;
+        var opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        select.appendChild(opt);
+      }
+    });
+    categoriaAtual = 'todos';
+  }
+
+  function renderReceitas() {
+    var termo = document.getElementById('campoBuscaReceita').value.trim().toLowerCase();
+    var grid = document.getElementById('recipesGrid');
+    grid.innerHTML = '';
+
+    var filtradas = autorAtual.pratos.filter(function(p) {
+      var bateCategoria = (categoriaAtual === 'todos') || p[1] === categoriaAtual;
+      var bateBusca = !termo || p[0].toLowerCase().indexOf(termo) >= 0 || p[1].toLowerCase().indexOf(termo) >= 0;
+      return bateCategoria && bateBusca;
+    });
+
+    filtradas.forEach(function(p, i) {
+      var card = document.createElement('div');
+      card.className = 'recipe-card';
+      card.innerHTML =
+        '<img src="' + IMGS[i % IMGS.length] + '" alt="' + p[0] + '">' +
+        '<div class="recipe-card-body">' +
+          '<div class="recipe-card-title">' + p[0] + '</div>' +
+          '<div class="recipe-card-cat">' + p[1] + '</div>' +
+        '</div>';
+      grid.appendChild(card);
+    });
+
+    document.getElementById('recipeCount').textContent =
+      filtradas.length + (filtradas.length === 1 ? ' receita encontrada' : ' receitas encontradas');
+
+    document.getElementById('recipesGrid').style.display = filtradas.length === 0 ? 'none' : 'grid';
+    document.getElementById('recipesEmptyState').style.display = filtradas.length === 0 ? 'block' : 'none';
+  }
+
+  document.getElementById('campoBuscaReceita').addEventListener('input', renderReceitas);
+  document.getElementById('filterCategoria').addEventListener('change', function() {
+    categoriaAtual = this.value;
+    renderReceitas();
+  });
+
+  function atualizarBotaoFollow(id) {
+    var btn = document.getElementById('ahFollowBtn');
+    var icon = document.getElementById('ahFollowIcon');
+    var label = document.getElementById('ahFollowLabel');
+    if (seguindoLocal[id]) {
+      btn.classList.add('following');
+      icon.textContent = '✓';
+      label.textContent = 'Seguindo';
+    } else {
+      btn.classList.remove('following');
+      icon.textContent = '+';
+      label.textContent = 'Seguir';
+    }
+  }
+
+  function toggleFollowAuthor() {
+    var id = document.getElementById('ahFollowBtn').dataset.authorId;
+    seguindoLocal[id] = !seguindoLocal[id];
+    atualizarBotaoFollow(id);
+  }
+
+  render();
+</script>
+</body>
+</html>

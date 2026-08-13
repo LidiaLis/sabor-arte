@@ -237,22 +237,31 @@ public class LogDAO {
         log.setUsuario(rs.getInt("usuario"));
         log.setAcao_log(rs.getString("acao_log"));
         log.setDetalhe_log(rs.getString("descricao_log"));
-
+        log.setEntidade_log(rs.getString("entidade_log"));
+     
         Timestamp ts = rs.getTimestamp("data_log");
         log.setData_log(ts != null ? ts.toString() : null);
-
+     
         return log;
     }
-
+     
     /**
-     * Mesma coisa de mapear(), mas a tabela do log-admin.html também precisa
-     * de nome/foto/papel do usuário e da entidade — como Log.java não tem
-     * esses campos extras ainda, retorno o Log "puro"; monte o resto (nome,
-     * papel, entidade) direto no Controller a partir do próprio ResultSet,
-     * ou me confirma que posso adicionar esses campos extras no model
-     * (mesmo padrão usado em Comentario.java/Receita.java) que eu ajusto.
+     * Mesma coisa de mapear(), mas também preenche nome/foto/papel do autor
+     * (campos extras não persistidos de Log.java), lidos do JOIN com usuario
+     * que listarComFiltro() já faz.
      */
     private Log mapearComAutor(ResultSet rs) throws SQLException {
-        return mapear(rs);
+     
+        Log log = mapear(rs);
+     
+        log.setNome_usuario(rs.getString("nome_usuario"));
+        log.setFoto_usuario(rs.getString("foto_usuario"));
+     
+        String tipo = rs.getString("tipo_usuario");
+        if (tipo != null) {
+            log.setTipo_usuario(br.com.saborearte.model.Usuario.TipoUsuario.valueOf(tipo));
+        }
+     
+        return log;
     }
 }

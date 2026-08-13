@@ -703,5 +703,39 @@ public class UsuarioDAO {
         }
     }
     
-    
+    public int contarUsuariosAtivos() throws SQLException {
+        String sql = "SELECT COUNT(*) AS total FROM usuario WHERE status_usuario = 'ATIVO'";
+        try (PreparedStatement stmt = conexao.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            return rs.next() ? rs.getInt("total") : 0;
+        }
+    }
+
+    public java.util.Map<Integer, Integer> contarUsuariosPorMes(int meses) throws SQLException {
+        String sql = """
+                SELECT MONTH(data_criacao_usuario) AS mes, COUNT(*) AS total
+                FROM usuario
+                WHERE data_criacao_usuario >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+                GROUP BY MONTH(data_criacao_usuario)
+                ORDER BY mes
+                """;
+        java.util.Map<Integer, Integer> resultado = new java.util.LinkedHashMap<>();
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, meses);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) resultado.put(rs.getInt("mes"), rs.getInt("total"));
+            }
+        }
+        return resultado;
+    }
+    public void alterarStatus(int usuarioId, String novoStatus) throws SQLException {
+
+        String sql = "UPDATE usuario SET status_usuario = ? WHERE id_usuario = ?";
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setString(1, novoStatus);
+            stmt.setInt(2, usuarioId);
+            stmt.executeUpdate();
+        }
+    }
 }

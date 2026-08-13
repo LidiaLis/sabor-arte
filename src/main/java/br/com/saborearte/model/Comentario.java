@@ -16,14 +16,14 @@ public class Comentario {
     // ===== ENUMS =====
 
     public enum StatusComentario {
-        pendente,
-        aprovado,
-        rejeitado,
-        removido
+        PENDENTE,
+        APROVADO,
+        REJEITADO,
+        REMOVIDO
     }
 
     // DEFAULT
-    private StatusComentario status_comentario = StatusComentario.pendente;
+    private StatusComentario status_comentario = StatusComentario.PENDENTE;
 
     // ===== Campos extras (NÃO existem na tabela comentario — não persistir) =====
     // Preenchidos via JOIN em listarComentariosPorReceita (ComentarioDAO).

@@ -550,4 +550,99 @@ public class ReceitaDAO {
 
         return resultado;
     }
+    public int contarPorStatusEAutor(int idUsuario, StatusReceita status) throws SQLException {
+        String sql = "SELECT COUNT(*) AS total FROM receita WHERE usuario = ? AND status_receita = ?";
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, idUsuario);
+            stmt.setString(2, status.name());
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("total") : 0;
+            }
+        }
+    }
+
+    public long somarVisualizacoesPorAutor(int idUsuario) throws SQLException {
+        String sql = "SELECT COALESCE(SUM(visualizacoes_receita),0) AS total FROM receita WHERE usuario = ?";
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, idUsuario);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getLong("total") : 0L;
+            }
+        }
+    }
+
+    public java.util.Map<Integer, Integer> contarPublicadasPorMesEAutor(int idUsuario, int meses) throws SQLException {
+        String sql = """
+                SELECT MONTH(data_publicacao_receita) AS mes, COUNT(*) AS total
+                FROM receita
+                WHERE usuario = ?
+                  AND status_receita = ?
+                  AND data_publicacao_receita >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+                GROUP BY MONTH(data_publicacao_receita)
+                ORDER BY mes
+                """;
+        java.util.Map<Integer, Integer> resultado = new java.util.LinkedHashMap<>();
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, idUsuario);
+            stmt.setString(2, StatusReceita.publicada.name());
+            stmt.setInt(3, meses);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) resultado.put(rs.getInt("mes"), rs.getInt("total"));
+            }
+        }
+        return resultado;
+    }
+
+    public java.util.Map<Integer, Long> somarVisualizacoesPorMesEAutor(int idUsuario, int meses) throws SQLException {
+        String sql = """
+                SELECT MONTH(data_publicacao_receita) AS mes, COALESCE(SUM(visualizacoes_receita),0) AS total
+                FROM receita
+                WHERE usuario = ?
+                  AND status_receita = ?
+                  AND data_publicacao_receita >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+                GROUP BY MONTH(data_publicacao_receita)
+                ORDER BY mes
+                """;
+        java.util.Map<Integer, Long> resultado = new java.util.LinkedHashMap<>();
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, idUsuario);
+            stmt.setString(2, StatusReceita.publicada.name());
+            stmt.setInt(3, meses);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) resultado.put(rs.getInt("mes"), rs.getLong("total"));
+            }
+        }
+        return resultado;
+    }
+
+    public int contarPorStatus(StatusReceita status) throws SQLException {
+        String sql = "SELECT COUNT(*) AS total FROM receita WHERE status_receita = ?";
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setString(1, status.name());
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("total") : 0;
+            }
+        }
+    }
+
+    /**
+     * "Agendadas": receitas ja aprovadas (status publicada) mas com
+     * data_publicacao_receita ainda no futuro.
+     * AJUSTE: StatusReceita nao tem um valor "agendada" proprio — se existir
+     * outra forma de marcar isso no banco, troque essa condicao.
+     */
+    public int contarAgendadas() throws SQLException {
+        String sql = """
+                SELECT COUNT(*) AS total
+                FROM receita
+                WHERE status_receita = ?
+                  AND data_publicacao_receita > NOW()
+                """;
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setString(1, StatusReceita.publicada.name());
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("total") : 0;
+            }
+        }
+    }
 }
