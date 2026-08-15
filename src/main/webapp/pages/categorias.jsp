@@ -226,9 +226,7 @@
       <span style="color:var(--cream-dark)">/</span>
       <span class="current">Categorias</span>
     </div>
-    <div class="topbar-right">
-      <div class="notif-btn">🔔<div class="notif-dot"></div></div>
-    </div>
+
   </div>
 
   <div class="content">

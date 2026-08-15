@@ -364,10 +364,6 @@
       <span class="current">Usuários</span>
     </div>
     <div class="topbar-right">
-      <%-- O sino de notificação pode vir do notifications.jsp include --%>
-      <div class="notif-btn" onclick="NotifPanel && NotifPanel.toggle()">
-        🔔<div class="notif-dot"></div>
-      </div>
     </div>
   </div>
 
@@ -897,7 +893,7 @@
    (filtra e pagina as <tr> já renderizadas
    pelo servidor, sem recarregar a página)
 ───────────────────────────────────────── */
-var PAGE_SIZE = 6;      // quantos usuários por página — ajuste à vontade
+var PAGE_SIZE = 5;      // quantos usuários por página — ajuste à vontade
 var paginaAtual = 1;
 var todasLinhas = Array.from(document.querySelectorAll('#usersBody tr[data-name]'));
 

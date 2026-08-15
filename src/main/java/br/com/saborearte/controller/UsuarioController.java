@@ -102,6 +102,7 @@ private void cadastrar(HttpServletRequest request, HttpServletResponse response)
     String nome  = request.getParameter("nome");
     String email = request.getParameter("email");
     String senha = request.getParameter("senha");
+    String role  = request.getParameter("role");
 
     String emailRegex = "^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$";
 
@@ -109,6 +110,19 @@ private void cadastrar(HttpServletRequest request, HttpServletResponse response)
         email == null || email.trim().isEmpty() ||
         senha == null || senha.trim().isEmpty()) {
         request.getSession().setAttribute("erro", "Preencha todos os campos.");
+        response.sendRedirect(request.getContextPath() + "/LoginController");
+        return;
+    }
+
+    // Rota pública: só aceita AUTOR ou VISITANTE. Qualquer outro valor
+    // (ou ausência dele) cai em VISITANTE — nunca deixa escolher ADMIN/EDITOR por aqui.
+    TipoUsuario tipoEscolhido;
+    if ("author".equalsIgnoreCase(role)) {
+        tipoEscolhido = TipoUsuario.AUTOR;
+    } else if ("viewer".equalsIgnoreCase(role)) {
+        tipoEscolhido = TipoUsuario.VISITANTE;
+    } else {
+        request.getSession().setAttribute("erro", "Escolha se deseja se cadastrar como Autor ou Visitante.");
         response.sendRedirect(request.getContextPath() + "/LoginController");
         return;
     }
@@ -135,6 +149,7 @@ private void cadastrar(HttpServletRequest request, HttpServletResponse response)
     novo.setNome_usuario(nome.trim());
     novo.setEmail_usuario(email.trim());
     novo.setSenha_usuario(senha);
+    novo.setTipo_usuario(tipoEscolhido);
 
     usuarioDAO.cadastrarUsuario(novo);
 

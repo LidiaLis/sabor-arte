@@ -3,7 +3,7 @@
 
 <%--
   ============================================================================
-  sidebar.jsp — menu lateral UNIVERSAL (ADMIN / EDITOR / AUTOR / VISITANTE)
+  sidebar.jsp — menu lateral UNIVERSAL (PUBLICO / ADMIN / EDITOR / AUTOR / VISITANTE)
   ----------------------------------------------------------------------------
   Como usar em qualquer tela do sistema:
 
@@ -14,12 +14,20 @@
 
   Pre-requisitos:
     - session.getAttribute("usuarioLogado")  -> objeto Usuario (sempre setado
-      no login; aqui so' e' lido, nao e' buscado nada no banco)
+      no login; aqui so' e' lido, nao e' buscado nada no banco). Se for null,
+      trata-se de visitante PUBLICO (ninguem logado) - sidebar mostra
+      "Cadastre-se / Entrar" no lugar do card de usuario e um menu proprio.
     - request.getAttribute("currentPage")    -> String opcional, usada so'
       pra destacar (.active) o item de menu correspondente. Chaves aceitas:
       "dashboard", "usuarios", "categorias", "receitas", "relatorios",
       "auditoria", "comentarios", "mensagens", "home", "autores",
-      "favoritas", "perfil", "configuracoes"
+      "favoritas", "perfil", "configuracoes", "sobre" (essa ultima so' no
+      menu publico)
+
+  IMPORTANTE: "VISITANTE" (tipo_usuario = VISITANTE, alguem que se cadastrou
+  como leitor) e' diferente de PUBLICO (ninguem logado). O visitante logado
+  ve o menu de conta normal (favoritas, perfil, sair); o publico ve o menu
+  institucional com "Cadastre-se / Entrar" e sem opcao de sair.
 
   IMPORTANTE: o CSS das classes .sidebar, .nav-item etc. NAO esta' neste
   arquivo — continua vindo do <style> de cada pagina (design system), igual
@@ -39,9 +47,15 @@
 
 <%
   Usuario u = (Usuario) session.getAttribute("usuarioLogado");
+  boolean logado = (u != null);
   if (u == null) u = new Usuario();
 
-  String tipo = (u.getTipo_usuario() != null) ? u.getTipo_usuario().toString() : "VISITANTE";
+  // "PUBLICO" = ninguem logado. So' vira VISITANTE/AUTOR/EDITOR/ADMIN quando
+  // existe usuario de fato na sessao - antes disso tudo caia no mesmo "else"
+  // do VISITANTE logado, por isso o publico aparecia com o menu errado.
+  String tipo = logado
+      ? ((u.getTipo_usuario() != null) ? u.getTipo_usuario().toString() : "VISITANTE")
+      : "PUBLICO";
 
   String currentPage = (String) request.getAttribute("currentPage");
   if (currentPage == null) currentPage = "";
@@ -80,23 +94,41 @@
     </div>
   </div>
 
-  <a href="<%= _ctx %>/PerfilController" class="sidebar-user" title="Meu perfil">
-    <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
-      <% if (u.getFoto_usuario() != null && u.getFoto_usuario().length() > 0) { %>
-        <img src="<%= u.getFoto_usuario() %>" alt="<%= nomeExibicao %>">
-      <% } else { %>
-        <%= inicialNome %>
-      <% } %>
+  <% if (logado) { %>
+    <a href="<%= _ctx %>/PerfilController" class="sidebar-user" title="Meu perfil">
+      <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+        <% if (u.getFoto_usuario() != null && u.getFoto_usuario().length() > 0) { %>
+          <img src="<%= u.getFoto_usuario() %>" alt="<%= nomeExibicao %>">
+        <% } else { %>
+          <%= inicialNome %>
+        <% } %>
+      </div>
+      <div class="user-info">
+        <div class="user-name"><%= nomeExibicao %></div>
+        <div class="user-role-badge"><%= badgeEmoji %> <%= badgeLabel %></div>
+      </div>
+    </a>
+  <% } else { %>
+    <div class="sidebar-auth">
+      <div class="sidebar-auth-hint">Faça parte da nossa comunidade</div>
+      <a href="<%= _ctx %>/login.jsp" class="btn-sidebar btn-sidebar-solid">Cadastre-se</a>
+      <a href="<%= _ctx %>/login.jsp" class="btn-sidebar btn-sidebar-outline">Entrar</a>
     </div>
-    <div class="user-info">
-      <div class="user-name"><%= nomeExibicao %></div>
-      <div class="user-role-badge"><%= badgeEmoji %> <%= badgeLabel %></div>
-    </div>
-  </a>
+  <% } %>
 
   <nav class="sidebar-nav">
 
-    <% if ("ADMIN".equals(tipo)) { %>
+    <% if ("PUBLICO".equals(tipo)) { %>
+
+      <div class="nav-section-label">Principal</div>
+      <a href="<%= _ctx %>/HomeController" class="<%= navClass("home", currentPage) %>"><span class="nav-icon">🏠</span><span class="nav-label">Início</span></a>
+      <a href="<%= _ctx %>/ReceitaController" class="<%= navClass("receitas", currentPage) %>"><span class="nav-icon">📝</span><span class="nav-label">Receitas</span></a>
+      <a href="<%= _ctx %>/AutorPublicoController" class="<%= navClass("autores", currentPage) %>"><span class="nav-icon">👩‍🍳</span><span class="nav-label">Autores</span></a>
+
+      <div class="nav-section-label">Sobre</div>
+      <a href="<%= _ctx %>/pages/sobre.jsp" class="<%= navClass("sobre", currentPage) %>"><span class="nav-icon">ℹ️</span><span class="nav-label">Sobre o Sabor &amp; Arte</span></a>
+
+    <% } else if ("ADMIN".equals(tipo)) { %>
 
       <div class="nav-section-label">Principal</div>
       <a href="<%= _ctx %>/DashboardController" class="<%= navClass("dashboard", currentPage) %>"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></a>
@@ -147,6 +179,7 @@
       <a href="<%= _ctx %>/ConfiguracaoController" class="<%= navClass("configuracoes", currentPage) %>"><span class="nav-icon">⚙️</span><span class="nav-label">Configurações</span></a>
 
     <% } else { %>
+      <%-- VISITANTE logado (cadastrado como leitor) - PUBLICO ja' foi tratado acima --%>
 
       <div class="nav-section-label">Explorar</div>
       <a href="<%= _ctx %>/HomeController" class="<%= navClass("home", currentPage) %>"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></a>
@@ -163,7 +196,11 @@
   </nav>
 
   <div class="sidebar-bottom">
-    <a href="<%= _ctx %>/LogoutController" class="btn-logout"><span class="nav-icon">🚪</span><span>Sair</span></a>
+    <% if (logado) { %>
+      <a href="<%= _ctx %>/LogoutController" class="btn-logout"><span class="nav-icon">🚪</span><span>Sair</span></a>
+    <% } else { %>
+      © 2026 Sabor &amp; Arte
+    <% } %>
   </div>
 
 </aside>

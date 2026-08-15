@@ -220,6 +220,21 @@
 
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
+  /* ── SELETOR DE TIPO DE CONTA ── */
+  .role-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .role-option {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+    padding: 14px 16px; border: 1.5px solid var(--cream-dark); border-radius: 2px;
+    background: var(--cream); cursor: pointer; text-align: left;
+    font-family: 'DM Sans', sans-serif; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  }
+  .role-option-icon { font-size: 17px; margin-bottom: 4px; }
+  .role-option-title { font-size: 13px; font-weight: 500; color: var(--text-dark); }
+  .role-option-desc { font-size: 11px; color: var(--text-light); font-weight: 300; line-height: 1.3; }
+  .role-option:hover { border-color: var(--moss-light); }
+  .role-option.selected { border-color: var(--moss); background: var(--warm-white); box-shadow: 0 0 0 3px rgba(74,94,58,0.1); }
+  .role-option.selected .role-option-title { color: var(--moss-dark); }
+
   .modal-error { display: none; background: rgba(155,68,68,0.08); border-left: 3px solid var(--error); border-radius: 2px; padding: 10px 14px; font-size: 13px; color: var(--error); margin-bottom: 18px; }
   .modal-success { display: none; background: rgba(74,94,58,0.1); border-left: 3px solid var(--moss); border-radius: 2px; padding: 10px 14px; font-size: 13px; color: var(--moss-dark); margin-bottom: 18px; }
 
@@ -295,8 +310,7 @@
       </div>
 
 	    <div class="form-footer">
-	      <a href="/saborearte/pages/html/admin/esqueci-senha.html" class="forgot-link">Esqueceu a senha?</a>
-	    </div>
+			<a href="<%= request.getContextPath() %>/pages/esqueci-senha.jsp" class="forgot-link">Esqueceu a senha?</a>	    </div>
 
       <button type="submit" class="btn-login">
         Entrar <span class="btn-arrow">→</span>
@@ -344,6 +358,24 @@
         <div class="modal-success" id="modalSuc"></div>
 
         <div class="field">
+          <label>Como você quer participar? <span class="req">*</span></label>
+          <%-- name="role" — UsuarioController lerá com getParameter("role") --%>
+          <input type="hidden" name="role" id="addRole" value="">
+          <div class="role-group">
+            <button type="button" class="role-option" id="roleAutor" onclick="selecionarRole('author')">
+              <span class="role-option-icon">✍️</span>
+              <span class="role-option-title">Autor</span>
+              <span class="role-option-desc">Publica receitas e artigos</span>
+            </button>
+            <button type="button" class="role-option" id="roleVisitante" onclick="selecionarRole('viewer')">
+              <span class="role-option-icon">👀</span>
+              <span class="role-option-title">Visitante</span>
+              <span class="role-option-desc">Lê, curte e comenta</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
           <label>Nome completo <span class="req">*</span></label>
           <%-- name="nome" — CadastroController lerá com getParameter("nome") --%>
           <input type="text" name="nome" id="addNome" placeholder="Ex: Ana Beatriz" autocomplete="name">
@@ -387,6 +419,12 @@
     document.getElementById('modalCadastro').classList.add('open');
   }
 
+  function selecionarRole(role) {
+    document.getElementById('addRole').value = role;
+    document.getElementById('roleAutor').classList.toggle('selected', role === 'author');
+    document.getElementById('roleVisitante').classList.toggle('selected', role === 'viewer');
+  }
+
   function closeModal() {
     document.getElementById('modalCadastro').classList.remove('open');
     document.getElementById('modalErr').style.display = 'none';
@@ -394,6 +432,9 @@
     ['addNome','addEmail','addSenha','addConfirm'].forEach(function(id) {
       document.getElementById(id).value = '';
     });
+    document.getElementById('addRole').value = '';
+    document.getElementById('roleAutor').classList.remove('selected');
+    document.getElementById('roleVisitante').classList.remove('selected');
   }
 
   function outsideClose(e) {
@@ -405,6 +446,7 @@
     var email   = document.getElementById('addEmail').value.trim();
     var senha   = document.getElementById('addSenha').value;
     var confirm = document.getElementById('addConfirm').value;
+    var role    = document.getElementById('addRole').value;
     var err     = document.getElementById('modalErr');
     var suc     = document.getElementById('modalSuc');
 
@@ -412,6 +454,11 @@
     suc.style.display = 'none';
 
     // Validações no front antes de enviar ao servidor
+    if (!role) {
+      err.textContent = '⚠️ Escolha se você quer se cadastrar como Autor ou Visitante.';
+      err.style.display = 'block';
+      return;
+    }
     if (!nome || !email || !senha || !confirm) {
       err.textContent = '⚠️ Preencha todos os campos obrigatórios.';
       err.style.display = 'block';
