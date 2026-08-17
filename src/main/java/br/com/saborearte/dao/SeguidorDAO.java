@@ -6,6 +6,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import br.com.saborearte.model.Usuario;
 
 /**
  * DAO responsável pela tabela usuario_seguidor (id_seguidor, id_seguido, data_seguir).
@@ -118,5 +122,45 @@ public class SeguidorDAO {
             ps.setInt(2, idSeguido);
             ps.executeUpdate();
         }
+    }
+
+    // =========================================================================
+    // LISTAR
+    // =========================================================================
+
+    /**
+     * Autores que idSeguidor está seguindo, mais recentes primeiro.
+     * Usado em autores-seguidos.jsp. Traz só os campos usados no card
+     * (id, nome, título profissional, foto) — se precisar de mais campos do
+     * Usuario ali, amplie o SELECT e o mapeamento abaixo.
+     */
+    public List<Usuario> listarSeguidos(int idSeguidor) throws SQLException {
+
+        List<Usuario> lista = new ArrayList<>();
+
+        String sql = """
+                SELECT u.id_usuario, u.nome_usuario, u.titulo_usuario, u.foto_usuario
+                FROM usuario_seguidor s
+                JOIN usuario u ON u.id_usuario = s.id_seguido
+                WHERE s.id_seguidor = ?
+                ORDER BY s.data_seguir DESC
+                """;
+
+        try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+            ps.setInt(1, idSeguidor);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Usuario u = new Usuario();
+                    u.setId_usuario(rs.getInt("id_usuario"));
+                    u.setNome_usuario(rs.getString("nome_usuario"));
+                    u.setTitulo_usuario(rs.getString("titulo_usuario"));
+                    u.setFoto_usuario(rs.getString("foto_usuario"));
+                    lista.add(u);
+                }
+            }
+        }
+
+        return lista;
     }
 }

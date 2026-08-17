@@ -3,6 +3,7 @@ package br.com.saborearte.controller;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -11,7 +12,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import br.com.saborearte.dao.ReceitaDAO;
 import br.com.saborearte.dao.SeguidorDAO;
+import br.com.saborearte.model.Receita.StatusReceita;
 import br.com.saborearte.model.Usuario;
 import br.com.saborearte.utils.Conexao;
 
@@ -41,12 +44,14 @@ public class SeguidorController extends HttpServlet {
 
     private Connection conexao;
     private SeguidorDAO seguidorDAO;
+    private ReceitaDAO receitaDAO;
 
     @Override
     public void init() {
         try {
             conexao = Conexao.getConnection();
             seguidorDAO = new SeguidorDAO(conexao);
+            receitaDAO = new ReceitaDAO(conexao);
             System.out.println("SeguidorController iniciado com sucesso");
         } catch (Exception e) {
             throw new RuntimeException("Erro ao iniciar SeguidorController", e);
@@ -54,12 +59,18 @@ public class SeguidorController extends HttpServlet {
     }
 
     // =========================================================================
-    // GET — status "já segue?" (usado pelo JS pra pintar o botão certo)
+    // GET — "action=listar" -> tela autores-seguidos.jsp
+    //       (sem action) -> status "já segue?" (usado pelo JS pra pintar o botão certo)
     // =========================================================================
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        if ("listar".equals(request.getParameter("action"))) {
+            listarSeguidos(request, response);
+            return;
+        }
 
         Usuario logado = usuarioLogado(request);
 
@@ -87,6 +98,40 @@ public class SeguidorController extends HttpServlet {
 		}
 
         response.getWriter().write(String.valueOf(segue));
+    }
+
+    /**
+     * Lista os autores que o usuário logado segue + a contagem de receitas
+     * publicadas de cada um (via ReceitaDAO), e encaminha pra autores-seguidos.jsp.
+     */
+    private void listarSeguidos(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        Usuario logado = usuarioLogado(request);
+
+        if (logado == null) {
+            response.sendRedirect(request.getContextPath() + "/LoginController");
+            return;
+        }
+
+        try {
+            List<Usuario> seguidos = seguidorDAO.listarSeguidos(logado.getId_usuario());
+
+            // total_receitas_publicadas é campo extra (não persistido) do Usuario —
+            // preenchido aqui pra alimentar o "🍽️ N receitas publicadas" do card.
+            for (Usuario autor : seguidos) {
+                int total = receitaDAO.contarPorStatusEAutor(autor.getId_usuario(), StatusReceita.publicada);
+                autor.setTotal_receitas_publicadas(total);
+            }
+
+            request.setAttribute("seguidos", seguidos);
+            request.getRequestDispatcher("/pages/autores-seguidos.jsp").forward(request, response);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            request.setAttribute("erro", "Erro ao carregar autores seguidos: " + e.getMessage());
+            request.getRequestDispatcher("/pages/autores-seguidos.jsp").forward(request, response);
+        }
     }
 
     // =========================================================================
