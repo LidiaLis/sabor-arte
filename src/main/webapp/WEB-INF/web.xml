@@ -3,7 +3,7 @@
   <display-name>saborearte</display-name>
   
   <welcome-file-list>
-    <welcome-file>home-publico.html</welcome-file>
+    <welcome-file>HomeController</welcome-file>
   </welcome-file-list>
   
 </web-app>

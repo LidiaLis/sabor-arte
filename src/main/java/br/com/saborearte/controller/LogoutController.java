@@ -34,7 +34,7 @@ public class LogoutController extends HttpServlet {
             session.invalidate();
         }
 
-        response.sendRedirect(request.getContextPath() + "/home-publico.html");
+        response.sendRedirect(request.getContextPath() + "/HomeController");
     }
 
     @Override

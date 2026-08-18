@@ -217,7 +217,7 @@
 </head>
 <body>
 
-<jsp:include page="/pages/includes/sidebar-editor-admin.jsp" />
+<jsp:include page="/pages/includes/sidebar.jsp" />
 
 <main class="main">
   <div class="topbar">

@@ -27,6 +27,20 @@
     - erro (opcional)    -> String, se der erro de SQL no Controller
   ============================================================================
 --%>
+<%!
+  // Resolve o caminho de imagem vindo do banco (normalmente relativo, ex:
+  // "/uploads/avatars/123.jpg") prefixando o context path da aplicação.
+  // Se já for uma URL absoluta (http/https/data), devolve como está.
+  // Se vier nulo/vazio, devolve null (quem chamar decide o fallback).
+  private String resolveImgUrl(String ctx, String path) {
+    if (path == null || path.trim().isEmpty()) return null;
+    if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) {
+      return path;
+    }
+    String p = path.startsWith("/") ? path : "/" + path;
+    return ctx + p;
+  }
+%>
 <%
   Usuario usuarioSessao = (Usuario) session.getAttribute("usuarioLogado");
   boolean logado = (usuarioSessao != null);
@@ -40,6 +54,7 @@
 
   @SuppressWarnings("unchecked")
   List<Usuario> autoresDestaque = (List<Usuario>) request.getAttribute("autoresDestaque");
+  if (autoresDestaque == null) autoresDestaque = new java.util.ArrayList<Usuario>();
 
   String erro = (String) request.getAttribute("erro");
 
@@ -174,6 +189,8 @@
   .author-item-name{font-size:13px;font-weight:600;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .author-item-specialty{font-size:11px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .author-item-count{font-family:'Nunito',sans-serif;font-size:11px;color:var(--moss);font-weight:700;background:rgba(74,94,58,0.08);padding:3px 9px;border-radius:10px;flex-shrink:0;}
+  .author-avatar-fallback{display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--moss-dark);background:linear-gradient(135deg,var(--gold),var(--gold-light));}
+  .author-dot-fallback{display:inline-flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:9px;color:var(--moss-dark);background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:50%;}
 
   @media(max-width:1280px){.recipes-grid{grid-template-columns:repeat(2,1fr);}}
   @media(max-width:1100px){.bottom-grid{grid-template-columns:1fr;}}
@@ -210,11 +227,18 @@
 
       <div class="recipes-grid">
         <% if (receitasDestaque != null && !receitasDestaque.isEmpty()) {
-             for (Receita r : receitasDestaque) { %>
+             for (Receita r : receitasDestaque) {
+               String imgReceita = resolveImgUrl(_ctx, r.getImagem_receita());
+               String fotoAutorReceita = resolveImgUrl(_ctx, r.getFoto_usuario());
+          %>
 
         <a href="<%= _ctx %>/ReceitaController?action=detalhe&amp;id=<%= r.getId_receita() %>" class="recipe-card">
           <div class="recipe-img-wrap">
-            <img src="<%= r.getImagem_receita() %>" alt="<%= r.getTitulo_receita() %>">
+            <% if (imgReceita != null) { %>
+              <img src="<%= imgReceita %>" alt="<%= r.getTitulo_receita() %>">
+            <% } else { %>
+              <img src="<%= _ctx %>/assets/img/receita-placeholder.png" alt="<%= r.getTitulo_receita() %>">
+            <% } %>
             <div class="img-time">⏱ <%= r.getTempo_preparo_receita() %> min</div>
           </div>
           <div class="recipe-body">
@@ -222,7 +246,11 @@
             <div class="recipe-name"><%= r.getTitulo_receita() %></div>
             <div class="recipe-meta">
               <div class="recipe-author">
-                <img class="author-dot" src="<%= r.getFoto_usuario() %>" alt="">
+                <% if (fotoAutorReceita != null) { %>
+                  <img class="author-dot" src="<%= fotoAutorReceita %>" alt="">
+                <% } else { %>
+                  <span class="author-dot author-dot-fallback"><%= r.getNome_usuario().substring(0,1).toUpperCase() %></span>
+                <% } %>
                 <span class="author-name"><%= r.getNome_usuario() %></span>
               </div>
               <div class="recipe-stars">★ <%= String.format("%.1f", r.getNota_media()) %></div>
@@ -246,6 +274,7 @@
             <a href="<%= _ctx %>/CategoriaController" class="card-action">Ver todas</a>
           <% } %>
         </div>
+        <div id="listaCategorias">
         <% if (categoriasPrincipais != null && !categoriasPrincipais.isEmpty()) {
              for (Categoria c : categoriasPrincipais) { %>
         <div class="cat-item">
@@ -256,6 +285,7 @@
         <% } } else { %>
           <div class="empty-state">Nenhuma categoria cadastrada ainda.</div>
         <% } %>
+        </div>
       </div>
 
       <div class="side-card">
@@ -265,10 +295,17 @@
             <a href="<%= _ctx %>/AutorController" class="card-action">Ver todos</a>
           <% } %>
         </div>
+        <div id="listaAutores">
         <% if (autoresDestaque != null && !autoresDestaque.isEmpty()) {
-             for (Usuario a : autoresDestaque) { %>
+             for (Usuario a : autoresDestaque) {
+               String fotoAutor = resolveImgUrl(_ctx, a.getFoto_usuario());
+          %>
         <div class="author-item">
-          <img class="author-avatar-lg" src="<%= a.getFoto_usuario() %>" alt="<%= a.getNome_usuario() %>">
+          <% if (fotoAutor != null) { %>
+            <img class="author-avatar-lg" src="<%= fotoAutor %>" alt="<%= a.getNome_usuario() %>">
+          <% } else { %>
+            <div class="author-avatar-lg author-avatar-fallback"><%= a.getNome_usuario().substring(0,1).toUpperCase() %></div>
+          <% } %>
           <div class="author-info">
             <div class="author-item-name"><%= a.getNome_usuario() %></div>
             <div class="author-item-specialty"><%= (a.getTitulo_usuario() != null) ? a.getTitulo_usuario() : "" %></div>
@@ -278,6 +315,7 @@
         <% } } else { %>
           <div class="empty-state">Nenhum autor em destaque ainda.</div>
         <% } %>
+        </div>
       </div>
 
     </div>
@@ -287,3 +325,4 @@
 
 </body>
 </html>
+	

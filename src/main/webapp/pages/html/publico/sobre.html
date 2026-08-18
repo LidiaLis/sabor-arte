@@ -50,12 +50,12 @@
   .page-crumb{font-size:12px;color:var(--text-light);display:flex;align-items:center;gap:6px;font-weight:300;}
   .page-crumb .current{color:var(--moss);font-weight:500;}
 
-  .content{flex:1;padding:20px 56px 60px;display:flex;flex-direction:column;gap:30px;max-width:1020px;}
+  .content{flex:1;padding:20px 56px 60px;display:flex;flex-direction:column;gap:30px;}
 
   /* ===== INTRO ===== */
-  .about-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--text-dark);}
+  .about-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--text-dark);}
   .about-title em{font-style:italic;color:var(--moss);}
-  .about-text{font-size:13.5px;line-height:1.75;color:var(--text-mid);font-weight:300;margin-top:10px;}
+  .about-text{font-size:13px;line-height:1.75;color:var(--text-mid);font-weight:300;margin-top:10px;text-align:justify;text-justify:inter-word;}
   .about-text + .about-text{margin-top:12px;}
 
   .section-label{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--moss-light);font-weight:700;margin-bottom:10px;}
@@ -64,7 +64,7 @@
   .feature-row-item{display:flex;gap:14px;background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:4px;padding:14px 18px;}
   .feature-row-item .ic{font-size:19px;flex-shrink:0;line-height:1.4;}
   .feature-row-item-title{font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:3px;}
-  .feature-row-item-desc{font-size:12px;line-height:1.6;color:var(--text-mid);font-weight:300;}
+  .feature-row-item-desc{font-size:12px;line-height:1.6;color:var(--text-mid);font-weight:300;text-align:justify;text-justify:inter-word;}
 
   /* ===== DESENVOLVEDORES ===== */
   .devs-block{}
@@ -73,10 +73,10 @@
   .dev-avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:16px;color:white;flex-shrink:0;}
   .dev-name{font-size:14px;font-weight:700;color:var(--text-dark);}
   .dev-role{font-size:11px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:0.6px;margin:2px 0 6px;}
-  .dev-bio{font-size:12px;line-height:1.6;color:var(--text-mid);font-weight:300;}
+  .dev-bio{font-size:12px;line-height:1.6;color:var(--text-mid);font-weight:300;text-align:justify;text-justify:inter-word;}
 
   /* ===== RODAPÉ / ORIGEM ===== */
-  .origin-note{display:flex;align-items:center;gap:10px;background:var(--gold-pale);border:1px solid rgba(196,162,101,0.35);border-radius:4px;padding:12px 18px;font-size:12.5px;color:var(--moss-dark);font-weight:500;}
+  .origin-note{display:flex;align-items:center;gap:10px;background:var(--gold-pale);border:1px solid rgba(196,162,101,0.35);border-radius:4px;padding:12px 18px;font-size:12px;line-height:1.55;color:var(--moss-dark);font-weight:500;text-align:justify;text-justify:inter-word;}
   .origin-note .ic{font-size:16px;flex-shrink:0;}
 
   @media(max-width:768px){
@@ -105,7 +105,7 @@
     <!-- No lugar do sidebar-user (visitante não está logado) -->
     <div class="sidebar-auth">
         <div class="sidebar-auth-hint">Faça parte da nossa comunidade</div>
-        <a href="/saborearte/login.jsp" class="btn-sidebar btn-sidebar-solid">Cadastre-se</a>
+        <a href="/saborearte/pages/cadastro.jsp" class="btn-sidebar btn-sidebar-solid">Cadastre-se</a>
         <a href="/saborearte/login.jsp" class="btn-sidebar btn-sidebar-outline">Entrar</a>
     </div>
 
@@ -113,7 +113,7 @@
 
         <div class="nav-section-label">Principal</div>
 
-        <a href="/saborearte/home-publico.html" class="nav-item">
+        <a href="/saborearte/HomeController" class="nav-item">
             <span class="nav-icon">🏠</span>
             <span class="nav-label">Início</span>
         </a>

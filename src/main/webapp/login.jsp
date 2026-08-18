@@ -160,11 +160,11 @@
   .divider-line { flex: 1; height: 1px; background: var(--cream-dark); }
   .divider-text { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; }
 
-  .btn-register {
-    width: 100%; padding: 14px; background: transparent;
+  .btn-register { width: 100%; padding: 14px; background: transparent;
     border: 1.5px solid var(--sage); border-radius: 2px;
     font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; color: var(--moss);
     cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+    text-decoration: none;
     animation: fadeUp 0.6s 0.57s both; transition: background 0.2s, border-color 0.2s;
   }
   .btn-register:hover { background: rgba(74,94,58,0.06); border-color: var(--moss-light); }
@@ -190,96 +190,8 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* ── MODAL ── */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(30,39,24,0.75); z-index: 200; align-items: center; justify-content: center; padding: 24px; }
-  .modal-overlay.open { display: flex; }
-
-  .modal-box {
-    background: var(--warm-white); border-radius: 2px;
-    width: 100%; max-width: 500px;
-    box-shadow: 0 32px 64px rgba(0,0,0,0.5);
-    overflow: hidden; max-height: 90vh; overflow-y: auto;
-    animation: cardReveal 0.35s cubic-bezier(0.16,1,0.3,1) both;
-  }
-
-  .modal-bar { height: 4px; background: linear-gradient(90deg, var(--gold), var(--sage), var(--moss)); }
-  .modal-header { padding: 28px 32px 22px; border-bottom: 1px solid var(--cream-dark); display: flex; align-items: center; justify-content: space-between; }
-  .modal-header-left { display: flex; align-items: center; gap: 14px; }
-  .modal-header-icon { width: 40px; height: 40px; background: var(--moss); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-  .modal-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 500; color: var(--text-dark); }
-  .modal-subtitle { font-size: 12px; color: var(--text-light); margin-top: 2px; font-weight: 300; }
-  .modal-close { background: none; border: none; font-size: 16px; color: var(--text-light); cursor: pointer; padding: 6px; line-height: 1; transition: color 0.2s; }
-  .modal-close:hover { color: var(--text-dark); }
-
-  .modal-body { padding: 28px 32px; }
-
-  .field { margin-bottom: 20px; }
-  .field label { display: block; font-size: 11px; font-weight: 500; color: var(--text-mid); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; }
-  .field .req { color: var(--error); }
-  .field input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--cream-dark); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-dark); background: var(--cream); outline: none; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s; }
-  .field input:focus { border-color: var(--moss); background: var(--warm-white); box-shadow: 0 0 0 3px rgba(74,94,58,0.1); }
-  .field input::placeholder { color: var(--text-light); font-weight: 300; }
-  .field-hint { font-size: 11px; color: var(--text-light); margin-top: 5px; }
-
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-  /* ── SELETOR DE TIPO DE CONTA ── */
-  .role-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .role-option {
-    display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
-    padding: 14px 16px; border: 1.5px solid var(--cream-dark); border-radius: 2px;
-    background: var(--cream); cursor: pointer; text-align: left;
-    font-family: 'DM Sans', sans-serif; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-  }
-  .role-option-icon { font-size: 17px; margin-bottom: 4px; }
-  .role-option-title { font-size: 13px; font-weight: 500; color: var(--text-dark); }
-  .role-option-desc { font-size: 11px; color: var(--text-light); font-weight: 300; line-height: 1.3; }
-  .role-option:hover { border-color: var(--moss-light); }
-  .role-option.selected { border-color: var(--moss); background: var(--warm-white); box-shadow: 0 0 0 3px rgba(74,94,58,0.1); }
-  .role-option.selected .role-option-title { color: var(--moss-dark); }
-
-  .modal-error { display: none; background: rgba(155,68,68,0.08); border-left: 3px solid var(--error); border-radius: 2px; padding: 10px 14px; font-size: 13px; color: var(--error); margin-bottom: 18px; }
-  .modal-success { display: none; background: rgba(74,94,58,0.1); border-left: 3px solid var(--moss); border-radius: 2px; padding: 10px 14px; font-size: 13px; color: var(--moss-dark); margin-bottom: 18px; }
-
-  /* ── VALIDAÇÃO INLINE (mesmo padrão do modal de criar usuário) ── */
-  .field-error { font-size: 11px; color: var(--danger); margin-top: 4px; font-weight: 500; display: none; }
-  .field-error.show { display: block; }
-
-  /* ── SENHA: olho de mostrar/ocultar + medidor de força ── */
-  .pw-wrap { position: relative; }
-  .pw-wrap input { padding-right: 44px; }
-  .pw-eye { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 15px; color: var(--text-light); transition: color 0.2s; }
-  .pw-eye:hover { color: var(--moss); }
-  .pw-wrap input[type="password"]::-ms-reveal,
-  .pw-wrap input[type="password"]::-ms-clear { display: none; }
-  .pw-wrap input::-webkit-credentials-auto-fill-button,
-  .pw-wrap input::-webkit-strong-password-auto-fill-button,
-  .pw-wrap input::-webkit-contacts-auto-fill-button {
-    display: none !important; visibility: hidden; pointer-events: none; position: absolute; right: 0;
-  }
-
-  .pw-strength { margin: 10px 0 2px; }
-  .pw-strength-bars { display: flex; gap: 4px; margin-bottom: 5px; }
-  .pw-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--cream-dark); transition: background 0.3s; }
-  .pw-bar.active-1 { background: var(--danger); }
-  .pw-bar.active-2 { background: var(--pending); }
-  .pw-bar.active-3 { background: var(--gold); }
-  .pw-bar.active-4 { background: var(--published); }
-  .pw-strength-label { font-size: 11px; font-weight: 600; }
-
-  .modal-footer { padding: 18px 32px 28px; display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid var(--cream-dark); }
-
-  .btn-modal-cancel { padding: 11px 22px; border: 1.5px solid var(--cream-dark); border-radius: 2px; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--text-mid); cursor: pointer; transition: background 0.2s; }
-  .btn-modal-cancel:hover { background: var(--cream); }
-
-  .btn-modal-primary { padding: 11px 24px; border: none; border-radius: 2px; background: var(--moss); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--cream); cursor: pointer; transition: background 0.2s, transform 0.15s; }
-  .btn-modal-primary:hover { background: var(--moss-dark); transform: translateY(-1px); }
-  .btn-modal-primary:active { transform: translateY(0); }
-
   @media (max-width: 520px) {
     .card-header, .card-body { padding-left: 28px; padding-right: 28px; }
-    .modal-header, .modal-body, .modal-footer { padding-left: 22px; padding-right: 22px; }
-    .form-row { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -353,9 +265,9 @@
       <div class="divider-line"></div>
     </div>
 
-    <button class="btn-register" onclick="abrirModalCadastro()">
+    <a class="btn-register" href="<%= request.getContextPath() %>/cadastro.jsp">
       ✦ Criar minha conta
-    </button>
+    </a>
 
     <div class="version-tag">
       <span>Sabor &amp; Arte v1.0 · </span><strong>Painel Editorial</strong>
@@ -363,172 +275,12 @@
   </div>
 </div>
 
-<!-- ── MODAL: CRIAR CONTA ──
-     Carregado sob demanda de /pages/includes/modal-cadastro.jsp via fetch()
-     quando o usuário clica em "Criar minha conta" (ver abrirModalCadastro()). -->
-<div id="modalCadastroContainer"></div>
-
 <script>
   var contextPath = "<%= request.getContextPath() %>";
 
   function toggleSenha() {
     var inp = document.getElementById('passwordField');
     inp.type = inp.type === 'password' ? 'text' : 'password';
-  }
-
-  /* ─────────────────────────────────────────
-     CARREGAMENTO DO MODAL (JSP separado)
-  ───────────────────────────────────────── */
-  function abrirModalCadastro() {
-    // Se o modal já foi carregado antes, só reabre — evita fetch repetido
-    var existente = document.getElementById('modalCadastro');
-    if (existente) {
-      existente.classList.add('open');
-      return;
-    }
-
-    fetch(contextPath + '/pages/modal-cadastro.jsp')
-      .then(function(resp) {
-        if (!resp.ok) throw new Error('Falha ao carregar o modal de cadastro');
-        return resp.text();
-      })
-      .then(function(html) {
-        document.getElementById('modalCadastroContainer').innerHTML = html;
-        document.getElementById('modalCadastro').classList.add('open');
-      })
-      .catch(function(e) {
-        console.error(e);
-        alert('Não foi possível abrir o formulário de cadastro. Tente novamente.');
-      });
-  }
-
-  function togglePw(id) {
-    var i = document.getElementById(id);
-    i.type = i.type === 'password' ? 'text' : 'password';
-  }
-
-  /* ── Medidor de força de senha (mesmo critério do modal de criar usuário) ── */
-  function updateStrength(v, prefixo) {
-    var s = 0;
-    if (v.length >= 8) s++;
-    if (/[A-Z]/.test(v)) s++;
-    if (/[0-9]/.test(v)) s++;
-    if (/[^A-Za-z0-9]/.test(v)) s++;
-
-    var cls = ['', 'active-1', 'active-2', 'active-3', 'active-4'];
-    var lbs = ['', 'Fraca', 'Média', 'Boa', 'Forte'];
-    var tc  = ['var(--text-light)', 'var(--danger)', 'var(--pending)', 'var(--gold)', 'var(--published)'];
-
-    [1, 2, 3, 4].forEach(function(i) {
-      var el = document.getElementById(prefixo + '-pwb' + i);
-      if (el) el.className = 'pw-bar' + (i <= s ? ' ' + cls[s] : '');
-    });
-
-    var label = document.getElementById(prefixo + '-pw-label');
-    if (label) {
-      label.textContent = v.length === 0 ? 'Digite uma senha' : lbs[s];
-      label.style.color = v.length === 0 ? 'var(--text-light)' : tc[s];
-    }
-  }
-
-  function selecionarRole(role) {
-    document.getElementById('addRole').value = role;
-    document.getElementById('roleAutor').classList.toggle('selected', role === 'author');
-    document.getElementById('roleVisitante').classList.toggle('selected', role === 'viewer');
-    var errRole = document.getElementById('errRole');
-    if (errRole) errRole.classList.remove('show');
-  }
-
-  /* ── Validações ao vivo, iguais ao modal de criar usuário ── */
-  function validarNomeLive() {
-    var nome = document.getElementById('addNome').value.trim();
-    var err  = document.getElementById('errNome');
-    var ok   = nome.length >= 2;
-    err.classList.toggle('show', nome.length > 0 && !ok);
-    return ok;
-  }
-
-  function validarEmailLive() {
-    var email = document.getElementById('addEmail').value.trim();
-    var err   = document.getElementById('errEmail');
-    var emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
-    var ok = emailRegex.test(email);
-    err.classList.toggle('show', email.length > 0 && !ok);
-    return ok;
-  }
-
-  function validarSenhaLive() {
-    var s1 = document.getElementById('addSenha').value;
-    var s2 = document.getElementById('addConfirm').value;
-    var errCurta = document.getElementById('errSenhaCurta');
-    var errMatch = document.getElementById('errSenha');
-
-    var senhaOk = s1.length >= 8;
-    errCurta.classList.toggle('show', s1.length > 0 && !senhaOk);
-
-    errMatch.classList.toggle('show', s2.length > 0 && s1 !== s2);
-
-    return senhaOk && (s2.length > 0 && s1 === s2);
-  }
-
-  function closeModal() {
-    var modal = document.getElementById('modalCadastro');
-    if (!modal) return;
-    modal.classList.remove('open');
-    document.getElementById('modalErr').style.display = 'none';
-    document.getElementById('modalSuc').style.display = 'none';
-    ['addNome', 'addEmail', 'addSenha', 'addConfirm'].forEach(function(id) {
-      document.getElementById(id).value = '';
-    });
-    document.getElementById('addRole').value = '';
-    document.getElementById('roleAutor').classList.remove('selected');
-    document.getElementById('roleVisitante').classList.remove('selected');
-    ['errNome', 'errEmail', 'errSenhaCurta', 'errSenha', 'errRole'].forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el) el.classList.remove('show');
-    });
-    updateStrength('', 'add');
-  }
-
-  function outsideClose(e) {
-    var modal = document.getElementById('modalCadastro');
-    if (modal && e.target === modal) closeModal();
-  }
-
-  function doRegister() {
-    var role  = document.getElementById('addRole').value;
-    var err   = document.getElementById('modalErr');
-    var suc   = document.getElementById('modalSuc');
-
-    err.style.display = 'none';
-    suc.style.display = 'none';
-
-    var nomeOk  = validarNomeLive();
-    var emailOk = validarEmailLive();
-    var senhaOk = validarSenhaLive();
-
-    var errRole = document.getElementById('errRole');
-    errRole.classList.toggle('show', !role);
-
-    if (!role) {
-      document.getElementById('roleAutor').focus();
-      return;
-    }
-    if (!nomeOk) {
-      document.getElementById('addNome').focus();
-      return;
-    }
-    if (!emailOk) {
-      document.getElementById('addEmail').focus();
-      return;
-    }
-    if (!senhaOk) {
-      document.getElementById('addSenha').focus();
-      return;
-    }
-
-    // Tudo ok — envia o form para o UsuarioController
-    document.getElementById('formCadastro').submit();
   }
 </script>
 </body>
