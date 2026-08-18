@@ -111,7 +111,7 @@
   <% } else { %>
     <div class="sidebar-auth">
       <div class="sidebar-auth-hint">Faça parte da nossa comunidade</div>
-      <a href="<%= _ctx %>/login.jsp" class="btn-sidebar btn-sidebar-solid">Cadastre-se</a>
+      <a href="<%= _ctx %>/pages/cadastro.jsp" class="btn-sidebar btn-sidebar-solid">Cadastre-se</a>
       <a href="<%= _ctx %>/login.jsp" class="btn-sidebar btn-sidebar-outline">Entrar</a>
     </div>
   <% } %>
@@ -126,8 +126,8 @@
       <a href="<%= _ctx %>/AutorPublicoController" class="<%= navClass("autores", currentPage) %>"><span class="nav-icon">👩‍🍳</span><span class="nav-label">Autores</span></a>
 
       <div class="nav-section-label">Sobre</div>
-      <a href="<%= _ctx %>/pages/sobre.jsp" class="<%= navClass("sobre", currentPage) %>"><span class="nav-icon">ℹ️</span><span class="nav-label">Sobre o Sabor &amp; Arte</span></a>
-
+        <a href="/saborearte/pages/html/publico/sobre.html" class="nav-item"><span class="nav-icon">ℹ️</span><span class="nav-label">Sobre o Sabor &amp; Arte</span></a>
+        
     <% } else if ("ADMIN".equals(tipo)) { %>
 
       <div class="nav-section-label">Principal</div>

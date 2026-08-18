@@ -230,7 +230,7 @@
 
       <!-- ── TEMPORIZADOR / REENVIO ── -->
       <div class="resend-row" id="resendRow">
-        <span class="resend-timer" id="resendTimer">Reenviar código em 00:59</span>
+        <span class="resend-timer" id="resendTimer">Reenviar código em 4:59</span>
         <span id="resendLinkWrap" style="display:none;">
           <span class="resend-text">Não recebeu? </span><button type="button" class="resend-link" id="btnReenviar">Reenviar código</button>
         </span>
@@ -278,7 +278,7 @@
   });
 
   // ── LÓGICA DO CRONÔMETRO E REENVIO ──
-  var TEMPO_INICIAL = 59; // segundos
+  var TEMPO_INICIAL = 299; // segundos
   var segundosRestantes = TEMPO_INICIAL;
   var intervaloId = null;
 

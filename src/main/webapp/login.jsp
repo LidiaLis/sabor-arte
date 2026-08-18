@@ -40,6 +40,9 @@
     --text-light:  #8a9480;
     --gold:        #c4a265;
     --error:       #9b4444;
+    --danger:      #9b4444;
+    --pending:     #c4832a;
+    --published:   #3a7a4a;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -157,11 +160,11 @@
   .divider-line { flex: 1; height: 1px; background: var(--cream-dark); }
   .divider-text { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; }
 
-  .btn-register {
-    width: 100%; padding: 14px; background: transparent;
+  .btn-register { width: 100%; padding: 14px; background: transparent;
     border: 1.5px solid var(--sage); border-radius: 2px;
     font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; color: var(--moss);
     cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+    text-decoration: none;
     animation: fadeUp 0.6s 0.57s both; transition: background 0.2s, border-color 0.2s;
   }
   .btn-register:hover { background: rgba(74,94,58,0.06); border-color: var(--moss-light); }
@@ -187,70 +190,8 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* ── MODAL ── */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(30,39,24,0.75); z-index: 200; align-items: center; justify-content: center; padding: 24px; }
-  .modal-overlay.open { display: flex; }
-
-  .modal-box {
-    background: var(--warm-white); border-radius: 2px;
-    width: 100%; max-width: 500px;
-    box-shadow: 0 32px 64px rgba(0,0,0,0.5);
-    overflow: hidden; max-height: 90vh; overflow-y: auto;
-    animation: cardReveal 0.35s cubic-bezier(0.16,1,0.3,1) both;
-  }
-
-  .modal-bar { height: 4px; background: linear-gradient(90deg, var(--gold), var(--sage), var(--moss)); }
-  .modal-header { padding: 28px 32px 22px; border-bottom: 1px solid var(--cream-dark); display: flex; align-items: center; justify-content: space-between; }
-  .modal-header-left { display: flex; align-items: center; gap: 14px; }
-  .modal-header-icon { width: 40px; height: 40px; background: var(--moss); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-  .modal-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 500; color: var(--text-dark); }
-  .modal-subtitle { font-size: 12px; color: var(--text-light); margin-top: 2px; font-weight: 300; }
-  .modal-close { background: none; border: none; font-size: 16px; color: var(--text-light); cursor: pointer; padding: 6px; line-height: 1; transition: color 0.2s; }
-  .modal-close:hover { color: var(--text-dark); }
-
-  .modal-body { padding: 28px 32px; }
-
-  .field { margin-bottom: 20px; }
-  .field label { display: block; font-size: 11px; font-weight: 500; color: var(--text-mid); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; }
-  .field .req { color: var(--error); }
-  .field input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--cream-dark); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text-dark); background: var(--cream); outline: none; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s; }
-  .field input:focus { border-color: var(--moss); background: var(--warm-white); box-shadow: 0 0 0 3px rgba(74,94,58,0.1); }
-  .field input::placeholder { color: var(--text-light); font-weight: 300; }
-  .field-hint { font-size: 11px; color: var(--text-light); margin-top: 5px; }
-
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-  /* ── SELETOR DE TIPO DE CONTA ── */
-  .role-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .role-option {
-    display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
-    padding: 14px 16px; border: 1.5px solid var(--cream-dark); border-radius: 2px;
-    background: var(--cream); cursor: pointer; text-align: left;
-    font-family: 'DM Sans', sans-serif; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-  }
-  .role-option-icon { font-size: 17px; margin-bottom: 4px; }
-  .role-option-title { font-size: 13px; font-weight: 500; color: var(--text-dark); }
-  .role-option-desc { font-size: 11px; color: var(--text-light); font-weight: 300; line-height: 1.3; }
-  .role-option:hover { border-color: var(--moss-light); }
-  .role-option.selected { border-color: var(--moss); background: var(--warm-white); box-shadow: 0 0 0 3px rgba(74,94,58,0.1); }
-  .role-option.selected .role-option-title { color: var(--moss-dark); }
-
-  .modal-error { display: none; background: rgba(155,68,68,0.08); border-left: 3px solid var(--error); border-radius: 2px; padding: 10px 14px; font-size: 13px; color: var(--error); margin-bottom: 18px; }
-  .modal-success { display: none; background: rgba(74,94,58,0.1); border-left: 3px solid var(--moss); border-radius: 2px; padding: 10px 14px; font-size: 13px; color: var(--moss-dark); margin-bottom: 18px; }
-
-  .modal-footer { padding: 18px 32px 28px; display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid var(--cream-dark); }
-
-  .btn-modal-cancel { padding: 11px 22px; border: 1.5px solid var(--cream-dark); border-radius: 2px; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--text-mid); cursor: pointer; transition: background 0.2s; }
-  .btn-modal-cancel:hover { background: var(--cream); }
-
-  .btn-modal-primary { padding: 11px 24px; border: none; border-radius: 2px; background: var(--moss); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--cream); cursor: pointer; transition: background 0.2s, transform 0.15s; }
-  .btn-modal-primary:hover { background: var(--moss-dark); transform: translateY(-1px); }
-  .btn-modal-primary:active { transform: translateY(0); }
-
   @media (max-width: 520px) {
     .card-header, .card-body { padding-left: 28px; padding-right: 28px; }
-    .modal-header, .modal-body, .modal-footer { padding-left: 22px; padding-right: 22px; }
-    .form-row { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -324,9 +265,9 @@
       <div class="divider-line"></div>
     </div>
 
-    <button class="btn-register" onclick="openModal()">
+    <a class="btn-register" href="<%= request.getContextPath() %>/cadastro.jsp">
       ✦ Criar minha conta
-    </button>
+    </a>
 
     <div class="version-tag">
       <span>Sabor &amp; Arte v1.0 · </span><strong>Painel Editorial</strong>
@@ -334,149 +275,12 @@
   </div>
 </div>
 
-<!-- ── MODAL: CRIAR CONTA ── -->
-<div class="modal-overlay" id="modalCadastro" onclick="outsideClose(event)">
-  <div class="modal-box">
-    <div class="modal-bar"></div>
-
-    <div class="modal-header">
-      <div class="modal-header-left">
-        <div class="modal-header-icon">👤</div>
-        <div>
-          <div class="modal-title">Criar conta</div>
-          <div class="modal-subtitle">Preencha os dados para se cadastrar</div>
-        </div>
-      </div>
-      <button class="modal-close" onclick="closeModal()" title="Fechar">✕</button>
-    </div>
-
-    <%-- O modal envia para um CadastroController (POST) --%>
-    <form id="formCadastro" action="<%= request.getContextPath() %>/UsuarioController" method="post">
-     <input type="hidden" name="action" value="cadastrar">
-      <div class="modal-body">
-        <div class="modal-error" id="modalErr"></div>
-        <div class="modal-success" id="modalSuc"></div>
-
-        <div class="field">
-          <label>Como você quer participar? <span class="req">*</span></label>
-          <%-- name="role" — UsuarioController lerá com getParameter("role") --%>
-          <input type="hidden" name="role" id="addRole" value="">
-          <div class="role-group">
-            <button type="button" class="role-option" id="roleAutor" onclick="selecionarRole('author')">
-              <span class="role-option-icon">✍️</span>
-              <span class="role-option-title">Autor</span>
-              <span class="role-option-desc">Publica receitas e artigos</span>
-            </button>
-            <button type="button" class="role-option" id="roleVisitante" onclick="selecionarRole('viewer')">
-              <span class="role-option-icon">👀</span>
-              <span class="role-option-title">Visitante</span>
-              <span class="role-option-desc">Lê, curte e comenta</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Nome completo <span class="req">*</span></label>
-          <%-- name="nome" — CadastroController lerá com getParameter("nome") --%>
-          <input type="text" name="nome" id="addNome" placeholder="Ex: Ana Beatriz" autocomplete="name">
-        </div>
-
-        <div class="field">
-          <label>E-mail <span class="req">*</span></label>
-          <input type="email" name="email" id="addEmail" placeholder="usuario@saborarte.com.br" autocomplete="email">
-          <div class="field-hint">Será usado para login e notificações</div>
-        </div>
-
-        <div class="form-row">
-          <div class="field">
-            <label>Senha <span class="req">*</span></label>
-            <input type="password" name="senha" id="addSenha" placeholder="Mín. 8 caracteres" autocomplete="new-password">
-          </div>
-          <div class="field">
-            <label>Confirmar senha <span class="req">*</span></label>
-            <%-- Confirmação só é validada no JS; não precisa de name --%>
-            <input type="password" id="addConfirm" placeholder="Repita a senha" autocomplete="new-password">
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn-modal-cancel" onclick="closeModal()">Cancelar</button>
-        <button type="button" class="btn-modal-primary" onclick="doRegister()">✚ Criar conta</button>
-      </div>
-    </form>
-
-  </div>
-</div>
-
 <script>
+  var contextPath = "<%= request.getContextPath() %>";
+
   function toggleSenha() {
     var inp = document.getElementById('passwordField');
     inp.type = inp.type === 'password' ? 'text' : 'password';
-  }
-
-  function openModal() {
-    document.getElementById('modalCadastro').classList.add('open');
-  }
-
-  function selecionarRole(role) {
-    document.getElementById('addRole').value = role;
-    document.getElementById('roleAutor').classList.toggle('selected', role === 'author');
-    document.getElementById('roleVisitante').classList.toggle('selected', role === 'viewer');
-  }
-
-  function closeModal() {
-    document.getElementById('modalCadastro').classList.remove('open');
-    document.getElementById('modalErr').style.display = 'none';
-    document.getElementById('modalSuc').style.display = 'none';
-    ['addNome','addEmail','addSenha','addConfirm'].forEach(function(id) {
-      document.getElementById(id).value = '';
-    });
-    document.getElementById('addRole').value = '';
-    document.getElementById('roleAutor').classList.remove('selected');
-    document.getElementById('roleVisitante').classList.remove('selected');
-  }
-
-  function outsideClose(e) {
-    if (e.target === document.getElementById('modalCadastro')) closeModal();
-  }
-
-  function doRegister() {
-    var nome    = document.getElementById('addNome').value.trim();
-    var email   = document.getElementById('addEmail').value.trim();
-    var senha   = document.getElementById('addSenha').value;
-    var confirm = document.getElementById('addConfirm').value;
-    var role    = document.getElementById('addRole').value;
-    var err     = document.getElementById('modalErr');
-    var suc     = document.getElementById('modalSuc');
-
-    err.style.display = 'none';
-    suc.style.display = 'none';
-
-    // Validações no front antes de enviar ao servidor
-    if (!role) {
-      err.textContent = '⚠️ Escolha se você quer se cadastrar como Autor ou Visitante.';
-      err.style.display = 'block';
-      return;
-    }
-    if (!nome || !email || !senha || !confirm) {
-      err.textContent = '⚠️ Preencha todos os campos obrigatórios.';
-      err.style.display = 'block';
-      return;
-    }
-    if (senha.length < 8) {
-      err.textContent = '⚠️ A senha deve ter no mínimo 8 caracteres.';
-      err.style.display = 'block';
-      return;
-    }
-    if (senha !== confirm) {
-      err.textContent = '⚠️ As senhas não coincidem.';
-      err.style.display = 'block';
-      return;
-    }
-
-    // Tudo ok — envia o form para o UsuarioController
-    document.getElementById('formCadastro').submit();
   }
 </script>
 </body>

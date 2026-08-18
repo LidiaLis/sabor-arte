@@ -69,7 +69,7 @@ public class LoginController extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/pages/html/autor/dashboard-autor.html");
 
                 } else if (tipo == TipoUsuario.VISITANTE) {
-                    response.sendRedirect(request.getContextPath() + "/pages/html/visitante/home-visitante.html");
+                    response.sendRedirect(request.getContextPath() + "/HomeController");
 
                 } else {
                     session.setAttribute("erro", "Perfil não reconhecido. Fale com o administrador.");

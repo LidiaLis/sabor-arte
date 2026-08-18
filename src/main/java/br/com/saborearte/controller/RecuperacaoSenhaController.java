@@ -13,24 +13,12 @@ import javax.servlet.http.HttpSession;
 import br.com.saborearte.dao.CodigoRecuperacaoDAO;
 import br.com.saborearte.dao.UsuarioDAO;
 import br.com.saborearte.model.Usuario;
+import br.com.saborearte.service.EmailService;
 import br.com.saborearte.utils.Conexao;
 
 /**
  * Controller do fluxo de recuperação de senha:
- * esqueci-senha.html -> verificar-codigo.html -> nova-senha.html
- *
- * IMPORTANTE — mudança de abordagem em relação às 3 HTMLs como estão hoje:
- * as telas guardam e-mail/código em sessionStorage (só no navegador, nada
- * vai pro servidor). Isso não é seguro nem funcional de verdade: qualquer
- * um pode abrir nova-senha.html direto e trocar a senha de outra pessoa,
- * porque não existe checagem nenhuma no backend.
- *
- * Este Controller usa HttpSession (servidor) pra guardar o estado real do
- * fluxo: id do usuário buscado pelo e-mail, e se o código já foi validado.
- * Isso significa que as 3 páginas precisam trocar o sessionStorage por
- * chamadas fetch() pra estas 4 ações — as HTMLs como estão AINDA NÃO fazem
- * isso (só simulam com setTimeout). Vou sinalizar exatamente o que precisa
- * mudar em cada uma depois que você validar este Controller.
+ * esqueci-senha.jsp -> verificar-codigo.jsp -> nova-senha.jsp
  *
  * Ações via POST (parametro "action"):
  *   - enviarCodigo    -> param "email"
@@ -38,17 +26,31 @@ import br.com.saborearte.utils.Conexao;
  *   - verificarCodigo -> param "codigo" (os 6 dígitos concatenados)
  *   - redefinirSenha  -> params "novaSenha" e "confirmSenha"
  *
- * Resposta sempre em texto puro: "OK" (sucesso) ou mensagem de erro com
- * status 400 — mesmo contrato usado no SeguidorController/FavoritoController.
+ * Resposta sempre em texto puro: "OK" (sucesso) ou mensagem de erro.
+ * Status usados:
+ *   - 400 (Bad Request)  -> erro de validação/sistema genérico
+ *   - 404 (Not Found)    -> e-mail não cadastrado (só na ação enviarCodigo)
+ *
+ * NOTA DE SEGURANÇA: a versão anterior deste Controller respondia "OK" mesmo
+ * quando o e-mail não existia, de propósito — pra não deixar visitantes
+ * descobrirem quais e-mails estão cadastrados testando o formulário
+ * ("user enumeration"). A pedido, isso foi trocado: agora o Controller avisa
+ * explicitamente quando o e-mail não está cadastrado (status 404). Se algum
+ * dia isso virar um problema (bots testando e-mails em massa, por exemplo),
+ * a solução mais simples é colocar um rate-limit por IP nesse endpoint.
  */
 @WebServlet("/RecuperacaoSenhaController")
 public class RecuperacaoSenhaController extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
+    /** Quantos minutos o código de recuperação vale antes de expirar. */
+    private static final int VALIDADE_CODIGO_MINUTOS = 5;
+
     private Connection conexao;
     private UsuarioDAO usuarioDAO;
     private CodigoRecuperacaoDAO codigoDAO;
+    private EmailService emailService;
 
     @Override
     public void init() {
@@ -56,6 +58,7 @@ public class RecuperacaoSenhaController extends HttpServlet {
             conexao = Conexao.getConnection();
             usuarioDAO = new UsuarioDAO(conexao);
             codigoDAO = new CodigoRecuperacaoDAO(conexao);
+            emailService = new EmailService();
             System.out.println("RecuperacaoSenhaController iniciado com sucesso");
         } catch (Exception e) {
             throw new RuntimeException("Erro ao iniciar RecuperacaoSenhaController", e);
@@ -90,7 +93,7 @@ public class RecuperacaoSenhaController extends HttpServlet {
     }
 
     // =========================================================================
-    // 1) ESQUECI-SENHA.HTML — enviar código pro e-mail
+    // 1) ESQUECI-SENHA.JSP — enviar código pro e-mail
     // =========================================================================
 
     private void enviarCodigo(HttpServletRequest request, HttpServletResponse response)
@@ -111,24 +114,36 @@ public class RecuperacaoSenhaController extends HttpServlet {
 
         Usuario usuario = usuarioDAO.buscarUsuarioPorEmail(email.trim());
 
-        if (usuario != null) {
-            String codigo = codigoDAO.gerarCodigo(usuario.getId_usuario());
-
-            session.setAttribute("recuperacaoIdUsuario", usuario.getId_usuario());
-            session.setAttribute("recuperacaoEmail", usuario.getEmail_usuario());
-
-            // TODO: disparar e-mail de verdade aqui (ex.: JavaMail), enviando "codigo".
-            // Por enquanto só loga no console pra facilitar teste local.
-            System.out.println("[Recuperação de senha] código para " + usuario.getEmail_usuario() + ": " + codigo);
+        if (usuario == null) {
+            erroNaoEncontrado(response, "Este e-mail não está cadastrado em nossa base.");
+            return;
         }
 
-        // Responde OK mesmo se o e-mail não existir — evita que alguém descubra
-        // quais e-mails estão cadastrados só testando esse formulário.
+        String codigo = codigoDAO.gerarCodigo(usuario.getId_usuario(), VALIDADE_CODIGO_MINUTOS);
+
+        session.setAttribute("recuperacaoIdUsuario", usuario.getId_usuario());
+        session.setAttribute("recuperacaoEmail", usuario.getEmail_usuario());
+
+        try {
+            emailService.enviarCodigoRecuperacao(
+                usuario.getEmail_usuario(),
+                usuario.getNome_usuario(),
+                codigo,
+                VALIDADE_CODIGO_MINUTOS
+            );
+        } catch (Exception e) {
+            // O código já foi gravado no banco — se o envio falhar, quem pedir
+            // "reenviar" na tela seguinte gera um código novo e tenta de novo.
+            e.printStackTrace();
+            erro(response, "Não foi possível enviar o e-mail agora. Tente novamente em instantes.");
+            return;
+        }
+
         response.getWriter().write("OK");
     }
 
     // =========================================================================
-    // 2) VERIFICAR-CODIGO.HTML — reenviar
+    // 2) VERIFICAR-CODIGO.JSP — reenviar
     // =========================================================================
 
     private void reenviarCodigo(HttpServletRequest request, HttpServletResponse response)
@@ -142,16 +157,29 @@ public class RecuperacaoSenhaController extends HttpServlet {
             return;
         }
 
-        String codigo = codigoDAO.gerarCodigo(idUsuario);
-
         String email = (String) session.getAttribute("recuperacaoEmail");
-        System.out.println("[Recuperação de senha] novo código para " + email + ": " + codigo);
+        Usuario usuario = usuarioDAO.buscarUsuarioPorEmail(email);
+
+        String codigo = codigoDAO.gerarCodigo(idUsuario, VALIDADE_CODIGO_MINUTOS);
+
+        try {
+            emailService.enviarCodigoRecuperacao(
+                email,
+                usuario != null ? usuario.getNome_usuario() : null,
+                codigo,
+                VALIDADE_CODIGO_MINUTOS
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            erro(response, "Não foi possível enviar o e-mail agora. Tente novamente em instantes.");
+            return;
+        }
 
         response.getWriter().write("OK");
     }
 
     // =========================================================================
-    // 2) VERIFICAR-CODIGO.HTML — validar os 6 dígitos
+    // 2) VERIFICAR-CODIGO.JSP — validar os 6 dígitos
     // =========================================================================
 
     private void verificarCodigo(HttpServletRequest request, HttpServletResponse response)
@@ -184,7 +212,7 @@ public class RecuperacaoSenhaController extends HttpServlet {
     }
 
     // =========================================================================
-    // 3) NOVA-SENHA.HTML — redefinir
+    // 3) NOVA-SENHA.JSP — redefinir
     // =========================================================================
 
     private void redefinirSenha(HttpServletRequest request, HttpServletResponse response)
@@ -251,6 +279,11 @@ public class RecuperacaoSenhaController extends HttpServlet {
 
     private void erro(HttpServletResponse response, String msg) throws IOException {
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        response.getWriter().write(msg);
+    }
+
+    private void erroNaoEncontrado(HttpServletResponse response, String msg) throws IOException {
+        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         response.getWriter().write(msg);
     }
 }
