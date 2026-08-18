@@ -111,7 +111,7 @@
   <% } else { %>
     <div class="sidebar-auth">
       <div class="sidebar-auth-hint">Faça parte da nossa comunidade</div>
-      <a href="<%= _ctx %>/login.jsp" class="btn-sidebar btn-sidebar-solid">Cadastre-se</a>
+      <a href="<%= _ctx %>/modal-cadastro.jsp" class="btn-sidebar btn-sidebar-solid">Cadastre-se</a>
       <a href="<%= _ctx %>/login.jsp" class="btn-sidebar btn-sidebar-outline">Entrar</a>
     </div>
   <% } %>

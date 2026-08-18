@@ -39,14 +39,21 @@ public class CodigoRecuperacaoDAO {
      * código numérico de 6 dígitos, salva com validade de 5 minutos e retorna
      * o código gerado (para o Servlet enviar por e-mail).
      */
+    /** Validade padrão do código, caso ninguém especifique outra. */
+    /** Mantido por compatibilidade — usa a validade padrão (5 min). */
     public String gerarCodigo(int idUsuario) throws SQLException {
+        return gerarCodigo(idUsuario, VALIDADE_MINUTOS);
+    }
+
+    /** Versão usada pelo RecuperacaoSenhaController — validade explícita. */
+    public String gerarCodigo(int idUsuario, int minutosValidade) throws SQLException {
 
         invalidarCodigosAnteriores(idUsuario);
 
         String codigo = gerarNumeroAleatorio();
 
         LocalDateTime agora = LocalDateTime.now();
-        LocalDateTime expiracao = agora.plusMinutes(VALIDADE_MINUTOS);
+        LocalDateTime expiracao = agora.plusMinutes(minutosValidade);
 
         String sql = """
                 INSERT INTO codigo_recuperacao (usuario, codigo, data_criacao, data_expiracao, usado)

@@ -40,6 +40,9 @@
     --text-light:  #8a9480;
     --gold:        #c4a265;
     --error:       #9b4444;
+    --danger:      #9b4444;
+    --pending:     #c4832a;
+    --published:   #3a7a4a;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -238,6 +241,32 @@
   .modal-error { display: none; background: rgba(155,68,68,0.08); border-left: 3px solid var(--error); border-radius: 2px; padding: 10px 14px; font-size: 13px; color: var(--error); margin-bottom: 18px; }
   .modal-success { display: none; background: rgba(74,94,58,0.1); border-left: 3px solid var(--moss); border-radius: 2px; padding: 10px 14px; font-size: 13px; color: var(--moss-dark); margin-bottom: 18px; }
 
+  /* ── VALIDAÇÃO INLINE (mesmo padrão do modal de criar usuário) ── */
+  .field-error { font-size: 11px; color: var(--danger); margin-top: 4px; font-weight: 500; display: none; }
+  .field-error.show { display: block; }
+
+  /* ── SENHA: olho de mostrar/ocultar + medidor de força ── */
+  .pw-wrap { position: relative; }
+  .pw-wrap input { padding-right: 44px; }
+  .pw-eye { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 15px; color: var(--text-light); transition: color 0.2s; }
+  .pw-eye:hover { color: var(--moss); }
+  .pw-wrap input[type="password"]::-ms-reveal,
+  .pw-wrap input[type="password"]::-ms-clear { display: none; }
+  .pw-wrap input::-webkit-credentials-auto-fill-button,
+  .pw-wrap input::-webkit-strong-password-auto-fill-button,
+  .pw-wrap input::-webkit-contacts-auto-fill-button {
+    display: none !important; visibility: hidden; pointer-events: none; position: absolute; right: 0;
+  }
+
+  .pw-strength { margin: 10px 0 2px; }
+  .pw-strength-bars { display: flex; gap: 4px; margin-bottom: 5px; }
+  .pw-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--cream-dark); transition: background 0.3s; }
+  .pw-bar.active-1 { background: var(--danger); }
+  .pw-bar.active-2 { background: var(--pending); }
+  .pw-bar.active-3 { background: var(--gold); }
+  .pw-bar.active-4 { background: var(--published); }
+  .pw-strength-label { font-size: 11px; font-weight: 600; }
+
   .modal-footer { padding: 18px 32px 28px; display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid var(--cream-dark); }
 
   .btn-modal-cancel { padding: 11px 22px; border: 1.5px solid var(--cream-dark); border-radius: 2px; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--text-mid); cursor: pointer; transition: background 0.2s; }
@@ -324,7 +353,7 @@
       <div class="divider-line"></div>
     </div>
 
-    <button class="btn-register" onclick="openModal()">
+    <button class="btn-register" onclick="abrirModalCadastro()">
       ✦ Criar minha conta
     </button>
 
@@ -334,144 +363,167 @@
   </div>
 </div>
 
-<!-- ── MODAL: CRIAR CONTA ── -->
-<div class="modal-overlay" id="modalCadastro" onclick="outsideClose(event)">
-  <div class="modal-box">
-    <div class="modal-bar"></div>
-
-    <div class="modal-header">
-      <div class="modal-header-left">
-        <div class="modal-header-icon">👤</div>
-        <div>
-          <div class="modal-title">Criar conta</div>
-          <div class="modal-subtitle">Preencha os dados para se cadastrar</div>
-        </div>
-      </div>
-      <button class="modal-close" onclick="closeModal()" title="Fechar">✕</button>
-    </div>
-
-    <%-- O modal envia para um CadastroController (POST) --%>
-    <form id="formCadastro" action="<%= request.getContextPath() %>/UsuarioController" method="post">
-     <input type="hidden" name="action" value="cadastrar">
-      <div class="modal-body">
-        <div class="modal-error" id="modalErr"></div>
-        <div class="modal-success" id="modalSuc"></div>
-
-        <div class="field">
-          <label>Como você quer participar? <span class="req">*</span></label>
-          <%-- name="role" — UsuarioController lerá com getParameter("role") --%>
-          <input type="hidden" name="role" id="addRole" value="">
-          <div class="role-group">
-            <button type="button" class="role-option" id="roleAutor" onclick="selecionarRole('author')">
-              <span class="role-option-icon">✍️</span>
-              <span class="role-option-title">Autor</span>
-              <span class="role-option-desc">Publica receitas e artigos</span>
-            </button>
-            <button type="button" class="role-option" id="roleVisitante" onclick="selecionarRole('viewer')">
-              <span class="role-option-icon">👀</span>
-              <span class="role-option-title">Visitante</span>
-              <span class="role-option-desc">Lê, curte e comenta</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Nome completo <span class="req">*</span></label>
-          <%-- name="nome" — CadastroController lerá com getParameter("nome") --%>
-          <input type="text" name="nome" id="addNome" placeholder="Ex: Ana Beatriz" autocomplete="name">
-        </div>
-
-        <div class="field">
-          <label>E-mail <span class="req">*</span></label>
-          <input type="email" name="email" id="addEmail" placeholder="usuario@saborarte.com.br" autocomplete="email">
-          <div class="field-hint">Será usado para login e notificações</div>
-        </div>
-
-        <div class="form-row">
-          <div class="field">
-            <label>Senha <span class="req">*</span></label>
-            <input type="password" name="senha" id="addSenha" placeholder="Mín. 8 caracteres" autocomplete="new-password">
-          </div>
-          <div class="field">
-            <label>Confirmar senha <span class="req">*</span></label>
-            <%-- Confirmação só é validada no JS; não precisa de name --%>
-            <input type="password" id="addConfirm" placeholder="Repita a senha" autocomplete="new-password">
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn-modal-cancel" onclick="closeModal()">Cancelar</button>
-        <button type="button" class="btn-modal-primary" onclick="doRegister()">✚ Criar conta</button>
-      </div>
-    </form>
-
-  </div>
-</div>
+<!-- ── MODAL: CRIAR CONTA ──
+     Carregado sob demanda de /pages/includes/modal-cadastro.jsp via fetch()
+     quando o usuário clica em "Criar minha conta" (ver abrirModalCadastro()). -->
+<div id="modalCadastroContainer"></div>
 
 <script>
+  var contextPath = "<%= request.getContextPath() %>";
+
   function toggleSenha() {
     var inp = document.getElementById('passwordField');
     inp.type = inp.type === 'password' ? 'text' : 'password';
   }
 
-  function openModal() {
-    document.getElementById('modalCadastro').classList.add('open');
+  /* ─────────────────────────────────────────
+     CARREGAMENTO DO MODAL (JSP separado)
+  ───────────────────────────────────────── */
+  function abrirModalCadastro() {
+    // Se o modal já foi carregado antes, só reabre — evita fetch repetido
+    var existente = document.getElementById('modalCadastro');
+    if (existente) {
+      existente.classList.add('open');
+      return;
+    }
+
+    fetch(contextPath + '/pages/modal-cadastro.jsp')
+      .then(function(resp) {
+        if (!resp.ok) throw new Error('Falha ao carregar o modal de cadastro');
+        return resp.text();
+      })
+      .then(function(html) {
+        document.getElementById('modalCadastroContainer').innerHTML = html;
+        document.getElementById('modalCadastro').classList.add('open');
+      })
+      .catch(function(e) {
+        console.error(e);
+        alert('Não foi possível abrir o formulário de cadastro. Tente novamente.');
+      });
+  }
+
+  function togglePw(id) {
+    var i = document.getElementById(id);
+    i.type = i.type === 'password' ? 'text' : 'password';
+  }
+
+  /* ── Medidor de força de senha (mesmo critério do modal de criar usuário) ── */
+  function updateStrength(v, prefixo) {
+    var s = 0;
+    if (v.length >= 8) s++;
+    if (/[A-Z]/.test(v)) s++;
+    if (/[0-9]/.test(v)) s++;
+    if (/[^A-Za-z0-9]/.test(v)) s++;
+
+    var cls = ['', 'active-1', 'active-2', 'active-3', 'active-4'];
+    var lbs = ['', 'Fraca', 'Média', 'Boa', 'Forte'];
+    var tc  = ['var(--text-light)', 'var(--danger)', 'var(--pending)', 'var(--gold)', 'var(--published)'];
+
+    [1, 2, 3, 4].forEach(function(i) {
+      var el = document.getElementById(prefixo + '-pwb' + i);
+      if (el) el.className = 'pw-bar' + (i <= s ? ' ' + cls[s] : '');
+    });
+
+    var label = document.getElementById(prefixo + '-pw-label');
+    if (label) {
+      label.textContent = v.length === 0 ? 'Digite uma senha' : lbs[s];
+      label.style.color = v.length === 0 ? 'var(--text-light)' : tc[s];
+    }
   }
 
   function selecionarRole(role) {
     document.getElementById('addRole').value = role;
     document.getElementById('roleAutor').classList.toggle('selected', role === 'author');
     document.getElementById('roleVisitante').classList.toggle('selected', role === 'viewer');
+    var errRole = document.getElementById('errRole');
+    if (errRole) errRole.classList.remove('show');
+  }
+
+  /* ── Validações ao vivo, iguais ao modal de criar usuário ── */
+  function validarNomeLive() {
+    var nome = document.getElementById('addNome').value.trim();
+    var err  = document.getElementById('errNome');
+    var ok   = nome.length >= 2;
+    err.classList.toggle('show', nome.length > 0 && !ok);
+    return ok;
+  }
+
+  function validarEmailLive() {
+    var email = document.getElementById('addEmail').value.trim();
+    var err   = document.getElementById('errEmail');
+    var emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+    var ok = emailRegex.test(email);
+    err.classList.toggle('show', email.length > 0 && !ok);
+    return ok;
+  }
+
+  function validarSenhaLive() {
+    var s1 = document.getElementById('addSenha').value;
+    var s2 = document.getElementById('addConfirm').value;
+    var errCurta = document.getElementById('errSenhaCurta');
+    var errMatch = document.getElementById('errSenha');
+
+    var senhaOk = s1.length >= 8;
+    errCurta.classList.toggle('show', s1.length > 0 && !senhaOk);
+
+    errMatch.classList.toggle('show', s2.length > 0 && s1 !== s2);
+
+    return senhaOk && (s2.length > 0 && s1 === s2);
   }
 
   function closeModal() {
-    document.getElementById('modalCadastro').classList.remove('open');
+    var modal = document.getElementById('modalCadastro');
+    if (!modal) return;
+    modal.classList.remove('open');
     document.getElementById('modalErr').style.display = 'none';
     document.getElementById('modalSuc').style.display = 'none';
-    ['addNome','addEmail','addSenha','addConfirm'].forEach(function(id) {
+    ['addNome', 'addEmail', 'addSenha', 'addConfirm'].forEach(function(id) {
       document.getElementById(id).value = '';
     });
     document.getElementById('addRole').value = '';
     document.getElementById('roleAutor').classList.remove('selected');
     document.getElementById('roleVisitante').classList.remove('selected');
+    ['errNome', 'errEmail', 'errSenhaCurta', 'errSenha', 'errRole'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('show');
+    });
+    updateStrength('', 'add');
   }
 
   function outsideClose(e) {
-    if (e.target === document.getElementById('modalCadastro')) closeModal();
+    var modal = document.getElementById('modalCadastro');
+    if (modal && e.target === modal) closeModal();
   }
 
   function doRegister() {
-    var nome    = document.getElementById('addNome').value.trim();
-    var email   = document.getElementById('addEmail').value.trim();
-    var senha   = document.getElementById('addSenha').value;
-    var confirm = document.getElementById('addConfirm').value;
-    var role    = document.getElementById('addRole').value;
-    var err     = document.getElementById('modalErr');
-    var suc     = document.getElementById('modalSuc');
+    var role  = document.getElementById('addRole').value;
+    var err   = document.getElementById('modalErr');
+    var suc   = document.getElementById('modalSuc');
 
     err.style.display = 'none';
     suc.style.display = 'none';
 
-    // Validações no front antes de enviar ao servidor
+    var nomeOk  = validarNomeLive();
+    var emailOk = validarEmailLive();
+    var senhaOk = validarSenhaLive();
+
+    var errRole = document.getElementById('errRole');
+    errRole.classList.toggle('show', !role);
+
     if (!role) {
-      err.textContent = '⚠️ Escolha se você quer se cadastrar como Autor ou Visitante.';
-      err.style.display = 'block';
+      document.getElementById('roleAutor').focus();
       return;
     }
-    if (!nome || !email || !senha || !confirm) {
-      err.textContent = '⚠️ Preencha todos os campos obrigatórios.';
-      err.style.display = 'block';
+    if (!nomeOk) {
+      document.getElementById('addNome').focus();
       return;
     }
-    if (senha.length < 8) {
-      err.textContent = '⚠️ A senha deve ter no mínimo 8 caracteres.';
-      err.style.display = 'block';
+    if (!emailOk) {
+      document.getElementById('addEmail').focus();
       return;
     }
-    if (senha !== confirm) {
-      err.textContent = '⚠️ As senhas não coincidem.';
-      err.style.display = 'block';
+    if (!senhaOk) {
+      document.getElementById('addSenha').focus();
       return;
     }
 
