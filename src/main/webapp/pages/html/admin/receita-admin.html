@@ -300,13 +300,9 @@
     </div>
 
     <a href="perfil-admin.html" class="sidebar-user" title="Meu perfil">
-        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
-			<img src="/saborearte/img/g.png"
-			     style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
-			     alt="A">        
-	    </div>
+        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);"></div>
         <div class="user-info">
-            <div class="user-name">Ana Silva</div>
+            <div class="user-name">Nome do administrador</div>
             <div class="user-role-badge">👑 Administrador</div>
         </div>
     </a>
@@ -407,238 +403,19 @@
       -->
       <select class="filter-select" id="filterCategoria">
         <option value="" selected>Todas as categorias</option>
-        <option value="Massas">🍝 Massas</option>
-        <option value="Sobremesas">🎂 Sobremesas</option>
-        <option value="Saladas">🥗 Saladas</option>
-        <option value="Sopas">🥣 Sopas</option>
-        <option value="Café da Manhã">🥞 Café da Manhã</option>
-        <option value="Confeitaria">🍬 Confeitaria</option>
-        <option value="Tortas">🥧 Tortas</option>
-        <option value="Bowls">🫐 Bowls</option>
-        <option value="Frutos do Mar">🐟 Frutos do Mar</option>
       </select>
       <div class="toolbar-spacer"></div>
     </div>
 
     <!-- GRID -->
     <div class="recipes-grid" id="recipesGrid">
-
-      <div class="recipe-card" data-status="pendente" data-name="Risoto de Cogumelos Selvagens" data-ativo="true" data-cat="Massas">
-        <div class="recipe-img-wrap">
-          <img src="https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=600&q=80" alt="Risoto">
-        </div>
-        <div class="recipe-body">
-          <div class="recipe-cat">🍝 Massas</div>
-          <div class="recipe-name">Risoto de Cogumelos Selvagens</div>
-          <div class="recipe-author">
-            <div class="author-dot" style="background:linear-gradient(135deg,#4a5e3a,#6b7f59)">CA</div>
-            <span class="author-name">Carlos Andrade</span>
-          </div>
-        </div>
-        <div class="recipe-footer">
-          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-			<button class="footer-btn" onclick="window.location.href='receita-detalhe-admin.html'">👁 Ver</button>          
-			<button class="footer-btn toggle-status">🚫 Inativar</button>
-        </div>
-      </div>
-
-      <div class="recipe-card" data-status="publicado" data-name="Bolo de Cenoura com Calda de Chocolate" data-ativo="true" data-cat="Sobremesas">
-        <div class="recipe-img-wrap">
-          <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&q=80" alt="Bolo">
-        </div>
-        <div class="recipe-body">
-          <div class="recipe-cat">🎂 Sobremesas</div>
-          <div class="recipe-name">Bolo de Cenoura com Calda de Chocolate</div>
-          <div class="recipe-author">
-            <div class="author-dot" style="background:linear-gradient(135deg,#c4a265,#dfc094)">MA</div>
-            <span class="author-name">Maria Andrade</span>
-          </div>
-        </div>
-        <div class="recipe-footer">
-          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-          <button class="footer-btn">👁 Ver</button>
-          <button class="footer-btn toggle-status">🚫 Inativar</button>
-        </div>
-      </div>
-
-
-      <div class="recipe-card" data-status="pendente" data-name="Salada Mediterrânea Fresca com Feta" data-ativo="true" data-cat="Saladas">
-        <div class="recipe-img-wrap">
-          <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80" alt="Salada">
-        </div>
-        <div class="recipe-body">
-          <div class="recipe-cat">🥗 Saladas</div>
-          <div class="recipe-name">Salada Mediterrânea Fresca com Feta</div>
-          <div class="recipe-author">
-            <div class="author-dot" style="background:linear-gradient(135deg,#7a6aa0,#9a8ac0)">JP</div>
-            <span class="author-name">João Pedro</span>
-          </div>
-        </div>
-        <div class="recipe-footer">
-          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-          <button class="footer-btn">👁 Ver</button>
-          <button class="footer-btn toggle-status">🚫 Inativar</button>
-        </div>
-      </div>
-
-      <div class="recipe-card" data-status="publicado" data-name="Sopa de Abóbora Cremosa com Gengibre" data-ativo="true" data-cat="Sopas">
-        <div class="recipe-img-wrap">
-          <img src="https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=80" alt="Sopa">
-        </div>
-        <div class="recipe-body">
-          <div class="recipe-cat">🥣 Sopas</div>
-          <div class="recipe-name">Sopa de Abóbora Cremosa com Gengibre</div>
-          <div class="recipe-author">
-            <div class="author-dot" style="background:linear-gradient(135deg,#c46042,#e08060)">FT</div>
-            <span class="author-name">Fernanda Torres</span>
-          </div>
-        </div>
-        <div class="recipe-footer">
-          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-          <button class="footer-btn">👁 Ver</button>
-          <button class="footer-btn toggle-status">🚫 Inativar</button>
-        </div>
-      </div>
-
-      <div class="recipe-card" data-status="rascunho" data-name="Espaguete ao Pesto de Manjericão Fresco" data-ativo="true" data-cat="Massas">
-        <div class="recipe-img-wrap">
-          <img src="https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=600&q=80" alt="Espaguete">
-        </div>
-        <div class="recipe-body">
-          <div class="recipe-cat">🍝 Massas</div>
-          <div class="recipe-name">Espaguete ao Pesto de Manjericão Fresco</div>
-          <div class="recipe-author">
-            <div class="author-dot" style="background:linear-gradient(135deg,#3a7a8a,#5a9aaa)">RB</div>
-            <span class="author-name">Rafael Braga</span>
-          </div>
-        </div>
-        <div class="recipe-footer">
-          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-          <button class="footer-btn">👁 Ver</button>
-          <button class="footer-btn toggle-status">🚫 Inativar</button>
-        </div>
-      </div>
-
-      <div class="recipe-card" data-status="publicado" data-name="Tapioca Recheada com Queijo Coalho e Mel" data-ativo="true" data-cat="Café da Manhã">
-        <div class="recipe-img-wrap">
-          <img src="https://images.unsplash.com/photo-1587314168485-3236d6710814?w=600&q=80" alt="Tapioca">
-        </div>
-        <div class="recipe-body">
-          <div class="recipe-cat">🥞 Café da Manhã</div>
-          <div class="recipe-name">Tapioca Recheada com Queijo Coalho e Mel</div>
-          <div class="recipe-author">
-            <div class="author-dot" style="background:linear-gradient(135deg,#a05a3a,#c07a5a)">AM</div>
-            <span class="author-name">Ana Moura</span>
-          </div>
-        </div>
-        <div class="recipe-footer">
-          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-          <button class="footer-btn">👁 Ver</button>
-          <button class="footer-btn toggle-status">🚫 Inativar</button>
-        </div>
-      </div>
-
-      <div class="recipe-card" data-status="publicado" data-name="Brigadeiro Gourmet de Pistache" data-ativo="false" data-cat="Confeitaria">
-        <div class="recipe-img-wrap">
-          <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&q=80" alt="Brigadeiro">
-        </div>
-        <div class="recipe-body">
-          <div class="recipe-cat">🍬 Confeitaria</div>
-          <div class="recipe-name">Brigadeiro Gourmet de Pistache</div>
-          <div class="recipe-author">
-            <div class="author-dot" style="background:linear-gradient(135deg,#c4a265,#dfc094)">MA</div>
-            <span class="author-name">Maria Andrade</span>
-          </div>
-        </div>
-        <div class="recipe-footer">
-          <span class="recipe-status"><span class="status-dot-sm inactive-dot"></span>Inativa</span>
-          <button class="footer-btn">👁 Ver</button>
-          <button class="footer-btn toggle-status reactivate">🔄 Ativar</button>
-        </div>
-      </div>
-
-      <div class="recipe-card" data-status="pendente" data-name="Quiche de Alho Poró e Gruyère" data-ativo="true" data-cat="Tortas">
-        <div class="recipe-img-wrap">
-          <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80" alt="Quiche">
-        </div>
-        <div class="recipe-body">
-          <div class="recipe-cat">🥧 Tortas</div>
-          <div class="recipe-name">Quiche de Alho Poró e Gruyère</div>
-          <div class="recipe-author">
-            <div class="author-dot" style="background:linear-gradient(135deg,#6a9a5a,#8aba7a)">PL</div>
-            <span class="author-name">Paula Lima</span>
-          </div>
-        </div>
-        <div class="recipe-footer">
-          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-          <button class="footer-btn">👁 Ver</button>
-          <button class="footer-btn toggle-status">🚫 Inativar</button>
-        </div>
-      </div>
-
-      <div class="recipe-card" data-status="rascunho" data-name="Açaí na Tigela com Granola Artesanal" data-ativo="true" data-cat="Bowls">
-        <div class="recipe-img-wrap">
-          <img src="https://images.unsplash.com/photo-1590301157890-4810ed352733?w=600&q=80" alt="Açaí">
-        </div>
-        <div class="recipe-body">
-          <div class="recipe-cat">🫐 Bowls</div>
-          <div class="recipe-name">Açaí na Tigela com Granola Artesanal</div>
-          <div class="recipe-author">
-            <div class="author-dot" style="background:linear-gradient(135deg,#6a5a9a,#8a7aba)">VR</div>
-            <span class="author-name">Vitor Reis</span>
-          </div>
-        </div>
-        <div class="recipe-footer">
-          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-          <button class="footer-btn">👁 Ver</button>
-          <button class="footer-btn toggle-status">🚫 Inativar</button>
-        </div>
-      </div>
-
-      <div class="recipe-card" data-status="publicado" data-name="Moqueca de Peixe Baiana" data-ativo="true" data-cat="Frutos do Mar">
-        <div class="recipe-img-wrap">
-          <img src="https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600&q=80" alt="Moqueca">
-        </div>
-        <div class="recipe-body">
-          <div class="recipe-cat">🐟 Frutos do Mar</div>
-          <div class="recipe-name">Moqueca de Peixe Baiana</div>
-          <div class="recipe-author">
-            <div class="author-dot" style="background:linear-gradient(135deg,#c46042,#e08060)">FT</div>
-            <span class="author-name">Fernanda Torres</span>
-          </div>
-        </div>
-        <div class="recipe-footer">
-          <span class="recipe-status"><span class="status-dot-sm active-dot"></span>Ativa</span>
-          <button class="footer-btn">👁 Ver</button>
-          <button class="footer-btn toggle-status">🚫 Inativar</button>
-        </div>
-      </div>
-
-      <div class="recipe-card" data-status="arquivado" data-name="Mousse de Maracujá Clássico" data-ativo="false" data-cat="Sobremesas">
-        <div class="recipe-img-wrap">
-          <img src="https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&q=80" alt="Mousse">
-        </div>
-        <div class="recipe-body">
-          <div class="recipe-cat">🍮 Sobremesas</div>
-          <div class="recipe-name">Mousse de Maracujá Clássico</div>
-          <div class="recipe-author">
-            <div class="author-dot" style="background:linear-gradient(135deg,#4a5e3a,#6b7f59)">CA</div>
-            <span class="author-name">Carlos Andrade</span>
-          </div>
-        </div>
-        <div class="recipe-footer">
-          <span class="recipe-status"><span class="status-dot-sm inactive-dot"></span>Inativa</span>
-          <button class="footer-btn">👁 Ver</button>
-          <button class="footer-btn toggle-status reactivate">🔄 Ativar</button>
-        </div>
-      </div>
-
-      <div class="empty-state" id="emptyState" style="display:none;">
+      <!-- Conteúdo intencionalmente vazio no protótipo HTML.
+           A versão JSP renderiza os dados recebidos pelo Controller. -->
+      <div class="empty-state" id="emptyState">
         <div class="empty-icon">🍽️</div>
-        <h3>Nenhuma receita encontrada</h3>
-        <p>Tente ajustar os filtros ou o termo de busca.</p>
+        <h3>Nenhuma receita carregada</h3>
+        <p>Os dados serão fornecidos pela aplicação Java.</p>
       </div>
-
     </div><!-- /recipes-grid -->
 
     <!-- ===== PAGINAÇÃO ===== -->
@@ -651,121 +428,30 @@
 </main>
 
 <script>
-(function() {
-  var PAGE_SIZE = 6;
-  var paginaAtual = 1;
-  var todosCards = Array.from(document.querySelectorAll('#recipesGrid .recipe-card'));
+(function () {
+  var cards = Array.from(document.querySelectorAll('#recipesGrid .recipe-card'));
+  var search = document.getElementById('campoBusca');
+  var category = document.getElementById('filterCategoria');
+  var empty = document.getElementById('emptyState');
 
-  function getCardsFiltrados() {
-    var termo = document.getElementById('campoBusca').value.trim().toLowerCase();
-    var status = document.getElementById('filterStatus').value;
-    var categoria = document.getElementById('filterCategoria').value;
-
-    return todosCards.filter(function(card) {
-      var nome = card.dataset.name.toLowerCase();
-      var bateNome = nome.indexOf(termo) !== -1;
-      var ativo = card.dataset.ativo === 'true';
-      var bateStatus = status === '' || (status === 'ativo' && ativo) || (status === 'inativo' && !ativo);
-      var bateCategoria = categoria === '' || card.dataset.cat === categoria;
-      return bateNome && bateStatus && bateCategoria;
+  function filterCards() {
+    var term = search ? search.value.trim().toLowerCase() : '';
+    var selected = category ? category.value : '';
+    var visible = 0;
+    cards.forEach(function (card) {
+      var matches = (!term || (card.dataset.name || '').toLowerCase().includes(term)) &&
+        (!selected || card.dataset.cat === selected);
+      card.style.display = matches ? '' : 'none';
+      if (matches) visible++;
     });
-  }
-
-  function renderPagina() {
-    var filtrados = getCardsFiltrados();
-    var totalPaginas = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE));
-
-    if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
-    if (paginaAtual < 1) paginaAtual = 1;
-
-    todosCards.forEach(function(card) { card.style.display = 'none'; });
-
-    var inicio = (paginaAtual - 1) * PAGE_SIZE;
-    var fim = inicio + PAGE_SIZE;
-    filtrados.slice(inicio, fim).forEach(function(card) { card.style.display = ''; });
-
-    document.getElementById('emptyState').style.display = filtrados.length === 0 ? '' : 'none';
-
-    renderInfo(filtrados.length, inicio, fim);
-    renderBotoes(totalPaginas);
-  }
-
-  function renderInfo(total, inicio, fim) {
+    if (empty) empty.style.display = visible ? 'none' : '';
     var info = document.getElementById('pagInfo');
-    if (total === 0) {
-      info.textContent = 'Nenhuma receita encontrada';
-      return;
-    }
-    var mostrandoAte = Math.min(fim, total);
-    info.textContent = 'Mostrando ' + (inicio + 1) + '–' + mostrandoAte + ' de ' + total;
+    if (info) info.textContent = visible ? visible + ' receita(s)' : 'Nenhuma receita encontrada';
   }
 
-  function renderBotoes(totalPaginas) {
-    var wrap = document.getElementById('pagBtns');
-    wrap.innerHTML = '';
-
-    function criarBtn(label, page, opts) {
-      opts = opts || {};
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'pag-btn' + (opts.active ? ' active' : '');
-      b.textContent = label;
-      if (opts.disabled) b.disabled = true;
-      b.addEventListener('click', function() {
-        paginaAtual = page;
-        renderPagina();
-      });
-      wrap.appendChild(b);
-    }
-
-    criarBtn('‹', paginaAtual - 1, { disabled: paginaAtual === 1 });
-    for (var p = 1; p <= totalPaginas; p++) {
-      criarBtn(String(p), p, { active: p === paginaAtual });
-    }
-    criarBtn('›', paginaAtual + 1, { disabled: paginaAtual === totalPaginas });
-  }
-
-  document.getElementById('campoBusca').addEventListener('input', function() {
-    paginaAtual = 1;
-    renderPagina();
-  });
-  document.getElementById('filterStatus').addEventListener('change', function() {
-    paginaAtual = 1;
-    renderPagina();
-  });
-  document.getElementById('filterCategoria').addEventListener('change', function() {
-    paginaAtual = 1;
-    renderPagina();
-  });
-
-  document.getElementById('recipesGrid').addEventListener('click', function(e) {
-    var btn = e.target.closest('.toggle-status');
-    if (!btn) return;
-    var card = btn.closest('.recipe-card');
-    var statusSpan = card.querySelector('.recipe-status');
-    var dot = statusSpan.querySelector('.status-dot-sm');
-    var ativo = card.dataset.ativo === 'true';
-
-    if (ativo) {
-      card.dataset.ativo = 'false';
-      dot.classList.remove('active-dot');
-      dot.classList.add('inactive-dot');
-      statusSpan.lastChild.textContent = 'Inativa';
-      btn.textContent = '🔄 Ativar';
-      btn.classList.add('reactivate');
-    } else {
-      card.dataset.ativo = 'true';
-      dot.classList.remove('inactive-dot');
-      dot.classList.add('active-dot');
-      statusSpan.lastChild.textContent = 'Ativa';
-      btn.textContent = '🚫 Inativar';
-      btn.classList.remove('reactivate');
-    }
-
-    renderPagina();
-  });
-
-  renderPagina();
+  if (search) search.addEventListener('input', filterCards);
+  if (category) category.addEventListener('change', filterCards);
+  filterCards();
 })();
 </script>
 </body>

@@ -137,7 +137,7 @@ public class LogDAO {
         }
 
         if (dataFim != null) {
-            where.append(" AND l.data_log <= ? ");
+            where.append(" AND l.data_log < ? ");
             params.add(java.sql.Date.valueOf(dataFim.plusDays(1)));
         }
 

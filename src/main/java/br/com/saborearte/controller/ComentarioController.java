@@ -17,7 +17,9 @@ import br.com.saborearte.model.Comentario;
 import br.com.saborearte.model.Comentario.StatusComentario;
 import br.com.saborearte.model.Usuario;
 import br.com.saborearte.model.Usuario.TipoUsuario;
+import br.com.saborearte.model.Usuario.StatusUsuario;
 import br.com.saborearte.utils.Conexao;
+import br.com.saborearte.utils.LogUtil;
 
 /**
  * Controller único de comentários - serve as duas telas:
@@ -71,7 +73,7 @@ import br.com.saborearte.utils.Conexao;
  *   POST action=remover  -> remove o comentario
  *   POST action=bloquear -> bloqueia o usuario autor do comentario
  */
-@WebServlet(urlPatterns = {"/comentarios-moderacao", "/mensagens-autor"})
+@WebServlet(urlPatterns = {"/comentarios-moderacao", "/mensagens-autor", "/comentarios", "/ComentarioController"})
 public class ComentarioController extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -113,7 +115,7 @@ public class ComentarioController extends HttpServlet {
 
         if (isRotaAutor(request)) {
             Usuario usuarioLogado = getUsuarioLogado(session);
-            if (usuarioLogado == null) {
+            if (!isAutor(usuarioLogado)) {
                 response.sendRedirect(request.getContextPath() + "/LoginController");
                 return;
             }
@@ -132,16 +134,30 @@ public class ComentarioController extends HttpServlet {
             throws ServletException, IOException {
 
         try {
-            String filtro = request.getParameter("filtro");
+            String busca = request.getParameter("busca");
+            String statusResposta = request.getParameter("statusResposta");
             int page = parseIntOrDefault(request.getParameter("page"), 1);
             int size = parseIntOrDefault(request.getParameter("size"), 10);
 
-            List<Comentario> comentarios = comentarioDAO.listarComentariosPorAutor(autorId, filtro, page, size);
+            page = Math.max(1, page);
+            size = Math.max(1, Math.min(50, size));
+            int total = comentarioDAO.contarComentariosPorAutor(autorId, busca, statusResposta);
+            int totalPages = Math.max(1, (int) Math.ceil(total / (double) size));
+            page = Math.min(page, totalPages);
+            List<Comentario> comentarios = comentarioDAO.listarComentariosPorAutor(
+                    autorId, busca, statusResposta, page, size);
 
             request.setAttribute("comentarios", comentarios);
-            request.setAttribute("filtro", filtro);
+            request.setAttribute("busca", busca);
+            request.setAttribute("statusResposta", statusResposta);
             request.setAttribute("page", page);
             request.setAttribute("size", size);
+            request.setAttribute("total", total);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("totalRecebidos", comentarioDAO.contarComentariosPorAutor(autorId, null, null));
+            request.setAttribute("totalPendentesResposta", comentarioDAO.contarRespostasPorAutor(autorId, false));
+            request.setAttribute("totalRespondidos", comentarioDAO.contarRespostasPorAutor(autorId, true));
+            request.setAttribute("avaliacaoMedia", comentarioDAO.calcularAvaliacaoMediaPorAutor(autorId));
 
             request.getRequestDispatcher("/pages/mensagens-autor.jsp").forward(request, response);
 
@@ -163,6 +179,9 @@ public class ComentarioController extends HttpServlet {
             int page = parseIntOrDefault(request.getParameter("page"), 1);
             int size = parseIntOrDefault(request.getParameter("size"), 10);
 
+            page = Math.max(1, page);
+            size = Math.max(1, Math.min(50, size));
+
             List<Comentario> denunciados = comentarioDAO.listarComentariosModeracao(filtro, status, data, page, size);
             int total = comentarioDAO.contarComentariosModeracao(filtro, status, data);
 
@@ -173,13 +192,17 @@ public class ComentarioController extends HttpServlet {
             request.setAttribute("data", data);
             request.setAttribute("page", page);
             request.setAttribute("size", size);
+            request.setAttribute("totalPendentes", comentarioDAO.contarPorStatus(StatusComentario.PENDENTE));
+            request.setAttribute("totalAprovados", comentarioDAO.contarPorStatus(StatusComentario.APROVADO));
+            request.setAttribute("totalRemovidos", comentarioDAO.contarPorStatus(StatusComentario.REMOVIDO));
+            request.setAttribute("totalComentarios", comentarioDAO.contarComentarios());
 
-            request.getRequestDispatcher("/pages/comentarios-moderacao.jsp").forward(request, response);
+            request.getRequestDispatcher("/pages/comentarios.jsp").forward(request, response);
 
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("erro", "Erro ao carregar comentarios denunciados: " + e.getMessage());
-            request.getRequestDispatcher("/pages/comentarios-moderacao.jsp").forward(request, response);
+            request.getRequestDispatcher("/pages/comentarios.jsp").forward(request, response);
         }
     }
 
@@ -197,9 +220,25 @@ public class ComentarioController extends HttpServlet {
         HttpSession session = request.getSession(false);
         String action = request.getParameter("action");
 
-        if (isRotaAutor(request)) {
+        if ("comentar".equals(action)) {
             Usuario usuarioLogado = getUsuarioLogado(session);
             if (usuarioLogado == null) {
+                response.sendRedirect(request.getContextPath() + "/LoginController");
+                return;
+            }
+            try {
+                comentar(request, response, usuarioLogado);
+            } catch (Exception e) {
+                e.printStackTrace();
+                request.getSession().setAttribute("erro", "Erro ao publicar comentário: " + e.getMessage());
+                response.sendRedirect(request.getContextPath() + "/receitas");
+            }
+            return;
+        }
+
+        if (isRotaAutor(request)) {
+            Usuario usuarioLogado = getUsuarioLogado(session);
+            if (!isAutor(usuarioLogado)) {
                 response.sendRedirect(request.getContextPath() + "/LoginController");
                 return;
             }
@@ -207,7 +246,7 @@ public class ComentarioController extends HttpServlet {
             try {
                 switch (action != null ? action : "") {
                     case "responder" -> responder(request, response, usuarioLogado.getId_usuario());
-                    case "denunciar" -> denunciar(request, response);
+                    case "denunciar" -> denunciar(request, response, usuarioLogado.getId_usuario());
                     default -> response.sendRedirect(request.getContextPath() + "/mensagens-autor");
                 }
             } catch (Exception e) {
@@ -226,7 +265,7 @@ public class ComentarioController extends HttpServlet {
                 switch (action != null ? action : "") {
                     case "manter"   -> manter(request, response);
                     case "remover"  -> remover(request, response);
-                    case "bloquear" -> bloquear(request, response);
+                    case "inativarUsuario" -> inativarUsuario(request, response);
                     default -> response.sendRedirect(request.getContextPath() + "/comentarios-moderacao");
                 }
             } catch (Exception e) {
@@ -235,6 +274,28 @@ public class ComentarioController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/comentarios-moderacao");
             }
         }
+    }
+
+    private void comentar(HttpServletRequest request, HttpServletResponse response, Usuario usuario) throws Exception {
+        int receitaId = parseIntOrDefault(request.getParameter("receitaId"), -1);
+        int avaliacao = parseIntOrDefault(request.getParameter("avaliacao"), 0);
+        String texto = request.getParameter("texto");
+        if (receitaId < 1 || isBlank(texto) || avaliacao < 0 || avaliacao > 5) {
+            throw new IllegalArgumentException("Comentário, receita ou avaliação inválidos.");
+        }
+
+        Comentario comentario = new Comentario();
+        comentario.setReceita(receitaId);
+        comentario.setUsuario(usuario.getId_usuario());
+        comentario.setTexto_comentario(texto.trim());
+        comentario.setAvaliacao_comentario(avaliacao);
+        comentario.setStatus_comentario(StatusComentario.APROVADO);
+        comentarioDAO.cadastrarComentario(comentario);
+        LogUtil.registrar(conexao, request, "criacao", "Comentário",
+                "Comentário publicado na receita #" + receitaId);
+
+        request.getSession().setAttribute("sucesso", "Comentário publicado.");
+        response.sendRedirect(request.getContextPath() + "/receitas?acao=detalhar&id=" + receitaId);
     }
 
     // ===== AUTOR: RESPONDER =====
@@ -250,20 +311,20 @@ public class ComentarioController extends HttpServlet {
         }
 
         comentarioDAO.salvarResposta(comentarioId, autorId, texto.trim());
+        LogUtil.registrar(conexao, request, "resposta", "Comentário",
+                "Resposta publicada no comentário #" + comentarioId);
 
         request.getSession().setAttribute("sucesso", "Resposta enviada com sucesso!");
         response.sendRedirect(request.getContextPath() + "/mensagens-autor");
     }
 
     // ===== AUTOR: DENUNCIAR (marca o proprio comentario como PENDENTE) =====
-    private void denunciar(HttpServletRequest request, HttpServletResponse response)
+    private void denunciar(HttpServletRequest request, HttpServletResponse response, int autorId)
             throws Exception {
 
         int comentarioId = parseIntOrDefault(request.getParameter("comentarioId"), -1);
-        String motivo = request.getParameter("motivo");
-
-        if (isBlank(motivo)) {
-            setErroERedirect(request, response, "/mensagens-autor", "Informe o motivo da denuncia.");
+        if (comentarioId < 1) {
+            setErroERedirect(request, response, "/mensagens-autor", "Comentario invalido.");
             return;
         }
 
@@ -272,7 +333,9 @@ public class ComentarioController extends HttpServlet {
         // que alimenta os cards de "Pendentes"/"Denunciados" no dashboard do
         // editor. O texto do motivo so e persistido se o ComentarioDAO tiver
         // suporte pra isso (nao confirmado).
-        comentarioDAO.atualizarStatusComentario(comentarioId, StatusComentario.PENDENTE);
+        comentarioDAO.denunciarComentarioDoAutor(comentarioId, autorId);
+        LogUtil.registrar(conexao, request, "denuncia", "Comentário",
+                "Comentário enviado para moderação: #" + comentarioId);
 
         request.getSession().setAttribute("sucesso", "Comentario denunciado. A moderacao vai revisar.");
         response.sendRedirect(request.getContextPath() + "/mensagens-autor");
@@ -284,6 +347,8 @@ public class ComentarioController extends HttpServlet {
 
         int comentarioId = parseIntOrDefault(request.getParameter("comentarioId"), -1);
         comentarioDAO.atualizarStatusComentario(comentarioId, StatusComentario.APROVADO);
+        LogUtil.registrar(conexao, request, "aprovacao", "Comentário",
+                "Comentário mantido pela moderação: #" + comentarioId);
 
         request.getSession().setAttribute("sucesso", "Comentario mantido no ar.");
         response.sendRedirect(request.getContextPath() + "/comentarios-moderacao");
@@ -295,20 +360,32 @@ public class ComentarioController extends HttpServlet {
 
         int comentarioId = parseIntOrDefault(request.getParameter("comentarioId"), -1);
         comentarioDAO.removerComentario(comentarioId);
+        LogUtil.registrar(conexao, request, "exclusao", "Comentário",
+                "Comentário removido pela moderação: #" + comentarioId);
 
         request.getSession().setAttribute("sucesso", "Comentario removido.");
         response.sendRedirect(request.getContextPath() + "/comentarios-moderacao");
     }
 
     // ===== EDITOR/ADMIN: BLOQUEAR USUARIO AUTOR DO COMENTARIO =====
-    private void bloquear(HttpServletRequest request, HttpServletResponse response)
+    private void inativarUsuario(HttpServletRequest request, HttpServletResponse response)
             throws Exception {
 
         int usuarioId = parseIntOrDefault(request.getParameter("usuarioId"), -1);
-        // TODO: confirmar se alterarStatus espera String "BLOQUEADO" ou um enum.
-        usuarioDAO.alterarStatus(usuarioId, "BLOQUEADO");
+        Usuario moderador = getUsuarioLogado(request.getSession(false));
+        if (usuarioId < 1) {
+            setErroERedirect(request, response, "/comentarios-moderacao", "Usuário inválido.");
+            return;
+        }
+        if (moderador != null && moderador.getId_usuario() == usuarioId) {
+            setErroERedirect(request, response, "/comentarios-moderacao", "Você não pode inativar a própria conta.");
+            return;
+        }
+        usuarioDAO.alterarStatus(usuarioId, StatusUsuario.INATIVO.name());
+        LogUtil.registrar(conexao, request, "alteracao", "Usuário",
+                "Usuário inativado durante moderação: #" + usuarioId);
 
-        request.getSession().setAttribute("sucesso", "Usuario bloqueado.");
+        request.getSession().setAttribute("sucesso", "Usuario inativado.");
         response.sendRedirect(request.getContextPath() + "/comentarios-moderacao");
     }
 
@@ -332,6 +409,10 @@ public class ComentarioController extends HttpServlet {
             || u.getTipo_usuario() == TipoUsuario.EDITOR;
     }
 
+    private boolean isAutor(Usuario usuario) {
+        return usuario != null && usuario.getTipo_usuario() == TipoUsuario.AUTOR;
+    }
+
     private boolean isBlank(String s) {
         return s == null || s.trim().isEmpty();
     }
@@ -350,3 +431,4 @@ public class ComentarioController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + rota);
     }
 }
+

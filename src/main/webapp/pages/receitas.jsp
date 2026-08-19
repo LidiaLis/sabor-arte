@@ -1,3 +1,36 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="br.com.saborearte.model.Receita" %>
+<%@ page import="br.com.saborearte.model.Categoria" %>
+<%@ page import="br.com.saborearte.model.Usuario" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.Collections" %>
+<%!
+  private String h(Object value) {
+    if (value == null) return "";
+    return String.valueOf(value)
+      .replace("&", "&amp;")
+      .replace("<", "&lt;")
+      .replace(">", "&gt;")
+      .replace("\"", "&quot;")
+      .replace("'", "&#39;");
+  }
+  private int intAttr(javax.servlet.http.HttpServletRequest req, String name) {
+    Object value = req.getAttribute(name);
+    return value instanceof Number ? ((Number) value).intValue() : 0;
+  }
+%>
+<%
+  List<Receita> receitas = (List<Receita>) request.getAttribute("receitas");
+  if (receitas == null) receitas = Collections.emptyList();
+  List<Categoria> categorias = (List<Categoria>) request.getAttribute("categorias");
+  if (categorias == null) categorias = Collections.emptyList();
+  Usuario usuario = (Usuario) session.getAttribute("usuarioLogado");
+  boolean usuarioAutenticado = usuario != null;
+  String tipoUsuario = usuarioAutenticado && usuario.getTipo_usuario() != null
+      ? usuario.getTipo_usuario().toString()
+      : "PUBLICO";
+  String ctx = request.getContextPath();
+%>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -294,66 +327,10 @@ a.sidebar-user:active {
 <body>
 
 <!-- ===== SIDEBAR VISITANTE (estático) ===== -->
-<aside class="sidebar" id="sidebar">
-
-    <div class="sidebar-brand">
-        <div class="brand-row">
-            <div class="brand-badge">🌿</div>
-            <div>
-                <span class="brand-title">Sabor &amp; Arte</span>
-                <span class="brand-sub">Blog Editorial</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Avatar do visitante -->
-    <a href="perfil-visitante.html" class="sidebar-user" title="Meu perfil">
-        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);"></div>
-        <div class="user-info">
-            <div class="user-name">Nome do visitante</div>
-            <div class="user-role-badge">Visitante</div>
-        </div>
-    </a>
-    <nav class="sidebar-nav">
-        <div class="nav-section-label">Explorar</div>
-
-        
-        <a href="home-visitante.html" class="nav-item">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-label">Home</span>
-        </a>
-
-	<a href="receitas-visitante.html" class="nav-item active">
-            <span class="nav-icon">📝</span>
-            <span class="nav-label">Receitas</span>
-        </a>
-
-        <a href="autores-visitante.html" class="nav-item">
-            <span class="nav-icon">✍️</span>
-            <span class="nav-label">Autores</span>
-        </a>
-
-        <a href="receitas-favoritas.html" class="nav-item">
-            <span class="nav-icon">⭐</span>
-            <span class="nav-label">Favoritas</span>
-        </a>
-
-        <div class="nav-section-label">Conta</div>
-        <a href="/saborearte/ConfiguracaoController" class="nav-item">
-            <span class="nav-icon">⚙️</span>
-            <span class="nav-label">Configurações</span>
-        </a>
-
-    </nav>
-
-    <div class="sidebar-bottom">
-	    <a href="/saborearte/LogoutController" class="btn-logout">
-	        <span class="nav-icon">🚪</span>
-	        <span>Sair</span>
-	    </a>
-    </div>
-
-</aside>
+<%
+  request.setAttribute("currentPage", "receitas");
+%>
+<jsp:include page="/pages/includes/sidebar.jsp" />
 
 
 
@@ -387,19 +364,49 @@ a.sidebar-user:active {
       -->
       <select class="filter-select" id="filterCategoria">
         <option value="" selected>Todas as categorias</option>
+        <% for (Categoria categoria : categorias) { %>
+          <option value="<%= h(categoria.getNome_categoria()) %>"><%= h(categoria.getEmoji_categoria()) %> <%= h(categoria.getNome_categoria()) %></option>
+        <% } %>
       </select>
       <div class="toolbar-spacer"></div>
     </div>
 
     <!-- GRID -->
     <div class="recipes-grid" id="recipesGrid">
-      <!-- Conteúdo intencionalmente vazio no protótipo HTML.
-           A versão JSP renderiza os dados recebidos pelo Controller. -->
-      <div class="empty-state" id="emptyState">
-        <div class="empty-icon">🍽️</div>
-        <h3>Nenhuma receita carregada</h3>
-        <p>Os dados serão fornecidos pela aplicação Java.</p>
-      </div>
+      <% for (Receita receita : receitas) { %>
+        <article class="recipe-card" data-name="<%= h(receita.getTitulo_receita()) %>" data-cat="<%= h(receita.getNome_categoria()) %>">
+          <div class="recipe-img-wrap">
+            <img src="<%= h(receita.getImagem_receita()) %>" alt="<%= h(receita.getTitulo_receita()) %>">
+          </div>
+          <div class="recipe-body">
+            <div class="recipe-cat"><%= h(receita.getEmoji_categoria()) %> <%= h(receita.getNome_categoria()) %></div>
+            <div class="recipe-name"><%= h(receita.getTitulo_receita()) %></div>
+            <div class="recipe-author">
+              <div class="author-dot"><%= h(receita.getNome_usuario()).isEmpty() ? "?" : h(receita.getNome_usuario()).substring(0, 1).toUpperCase() %></div>
+              <span class="author-name"><%= h(receita.getNome_usuario()) %></span>
+            </div>
+          </div>
+          <div class="recipe-footer">
+            <a class="footer-btn" href="<%= ctx %>/ReceitaController?action=detalhar&id=<%= receita.getId_receita() %>">👁 Ver</a>
+            <% if (usuarioAutenticado) { %>
+              <form method="post" action="<%= ctx %>/FavoritoController">
+                <input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>">
+                <button class="footer-btn" type="submit">☆ Favoritar</button>
+              </form>
+            <% } %>
+            <% if ("ADMIN".equals(tipoUsuario)) { %>
+              <form method="post" action="<%= ctx %>/receitas">
+                <input type="hidden" name="action" value="toggleStatus">
+                <input type="hidden" name="receitaId" value="<%= receita.getId_receita() %>">
+                <button class="footer-btn" type="submit">Ativar/Inativar</button>
+              </form>
+            <% } %>
+          </div>
+        </article>
+      <% } %>
+      <% if (receitas.isEmpty()) { %>
+        <div class="empty-state" id="emptyState"><div class="empty-icon">🍽️</div><h3>Nenhuma receita encontrada</h3><p>Tente novamente mais tarde.</p></div>
+      <% } %>
     </div><!-- /recipes-grid -->
 
     <!-- ===== PAGINAÇÃO ===== -->

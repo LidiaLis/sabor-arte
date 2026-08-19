@@ -1,3 +1,33 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="br.com.saborearte.model.Receita" %>
+<%@ page import="br.com.saborearte.model.Categoria" %>
+<%@ page import="br.com.saborearte.model.Usuario" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.Collections" %>
+<%!
+  private String h(Object value) {
+    if (value == null) return "";
+    return String.valueOf(value)
+      .replace("&", "&amp;")
+      .replace("<", "&lt;")
+      .replace(">", "&gt;")
+      .replace("\"", "&quot;")
+      .replace("'", "&#39;");
+  }
+  private int intAttr(javax.servlet.http.HttpServletRequest req, String name) {
+    Object value = req.getAttribute(name);
+    return value instanceof Number ? ((Number) value).intValue() : 0;
+  }
+%>
+<%
+  List<Receita> receitas = (List<Receita>) request.getAttribute("receitas");
+  if (receitas == null) receitas = Collections.emptyList();
+  List<Categoria> categorias = (List<Categoria>) request.getAttribute("categorias");
+  if (categorias == null) categorias = Collections.emptyList();
+  Usuario usuario = (Usuario) session.getAttribute("usuarioLogado");
+  boolean usuarioAutenticado = usuario != null;
+  String ctx = request.getContextPath();
+%>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -516,6 +546,12 @@
     flex-shrink: 0;
   }
   .passo-title-text { font-size: 13px; font-weight: 600; color: var(--text-dark); flex: 1; }
+  .passo-title-input {
+    flex: 1; min-width: 0; border: 0; border-bottom: 1px solid var(--cream-dark);
+    background: transparent; padding: 6px 4px; color: var(--text-dark);
+    font: 600 13px 'Nunito', sans-serif; outline: none;
+  }
+  .passo-title-input:focus { border-bottom-color: var(--moss); }
   .passo-status-text { font-size: 11px; color: var(--text-light); }
   .passo-chevron {
     font-size: 12px; color: var(--text-light);
@@ -603,7 +639,7 @@
     <a href="perfil-autor.html" class="sidebar-user" title="Meu perfil">
         <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);"></div>
         <div class="user-info">
-            <div class="user-name">Nome do autor</div>
+            <div class="user-name"><%= usuarioAutenticado ? h(usuario.getNome_usuario()) : "Autor" %></div>
             <div class="user-role-badge">✍️ Autor</div>
         </div>
     </a>
@@ -618,7 +654,7 @@
 
         <div class="nav-section-label">Conteúdo</div>
 
-        <a href="receitas-autor.html" class="nav-item active">
+       <a href="<%= request.getContextPath() %>/receitas" class="nav-item active">
             <span class="nav-icon">📖</span>
             <span class="nav-label">Minhas Receitas</span>
         </a>
@@ -679,9 +715,9 @@
       </div>
       <span class="filter-label">Filtrar:</span>
       <div class="filter-chips">
-        <button class="chip active" data-filter="todos" onclick="setFilter(this)">🍴 Todas <span class="chip-count">0</span></button>
-        <button class="chip publicado" data-filter="publicado" onclick="setFilter(this)">✅ Publicadas <span class="chip-count">0</span></button>
-        <button class="chip rascunho" data-filter="rascunho" onclick="setFilter(this)">📝 Rascunhos <span class="chip-count">0</span></button>
+        <button class="chip active" data-filter="todos" onclick="setFilter(this)">🍴 Todas <span class="chip-count"><%= intAttr(request, "totalReceitas") %></span></button>
+        <button class="chip publicado" data-filter="publicado" onclick="setFilter(this)">✅ Publicadas <span class="chip-count"><%= intAttr(request, "totalPublicadas") %></span></button>
+        <button class="chip rascunho" data-filter="rascunho" onclick="setFilter(this)">📝 Rascunhos <span class="chip-count"><%= intAttr(request, "totalRascunhos") %></span></button>
       </div>
       <div class="filter-right">
         <select class="sort-select" onchange="applyFilters()">
@@ -696,10 +732,19 @@
     <div class="results-info" id="resultsInfo">Nenhuma receita carregada</div>
 
     <div class="recipes-grid" id="recipesGrid">
-      <!-- Conteúdo intencionalmente vazio no protótipo HTML.
-           A versão JSP renderiza os dados recebidos pelo Controller. -->
-      <div class="empty-state" id="emptyState">
-        <div class="empty-icon">🍽️</div>
+      <% for (Receita receita : receitas) { %>
+        <article class="recipe-card" data-id="<%= receita.getId_receita() %>" data-status="<%= h(receita.getStatus_receita()).toLowerCase() %>" data-name="<%= h(receita.getTitulo_receita()) %>">
+          <div class="recipe-img-wrap"><img src="<%= h(receita.getImagem_receita()) %>" alt="<%= h(receita.getTitulo_receita()) %>"></div>
+          <div class="recipe-body"><div class="recipe-cat"><%= h(receita.getEmoji_categoria()) %> <%= h(receita.getNome_categoria()) %></div><div class="recipe-name"><%= h(receita.getTitulo_receita()) %></div></div>
+          <div class="recipe-footer">
+            <a class="footer-btn" href="<%= ctx %>/receitas?acao=detalhar&id=<%= receita.getId_receita() %>">👁 Ver</a>
+            <a class="footer-btn" href="<%= ctx %>/receitas?acao=editar&id=<%= receita.getId_receita() %>">✏️ Editar</a>
+            <form method="post" action="<%= ctx %>/receitas"><input type="hidden" name="action" value="enviarRevisao"><input type="hidden" name="receitaId" value="<%= receita.getId_receita() %>"><button class="footer-btn submit" type="submit">📤 Enviar</button></form>
+          </div>
+        </article>
+      <% } %>
+      <% if (receitas.isEmpty()) { %><div class="empty-state show" id="emptyState"><div class="empty-icon">🍽️</div><h3>Nenhuma receita encontrada</h3></div><% } %>
+    </div>
         <h3>Nenhuma receita carregada</h3>
         <p>Os dados serão fornecidos pela aplicação Java.</p>
       </div>
@@ -716,12 +761,14 @@
 <!-- ===================== MODAL NOVA RECEITA ===================== -->
 <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
   <div class="modal" id="modal">
+    <form id="receitaForm" method="post" action="<%= ctx %>/receitas" style="display:contents">
+    <input type="hidden" name="action" id="formAction" value="salvarRascunho">
     <div class="modal-header">
       <div class="modal-header-left">
         <div class="modal-header-label">✚ Criação de Receita</div>
         <div class="modal-header-title">Nova Receita</div>
       </div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <button class="modal-close" type="button" onclick="closeModal()">✕</button>
     </div>
 
     <div class="modal-body">
@@ -751,29 +798,35 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Título da Receita <span>*</span></label>
-            <input class="form-input" type="text" placeholder="Título da receita" id="f-titulo">
+            <input class="form-input" type="text" placeholder="Título da receita" id="f-titulo" name="titulo" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Descrição</label>
+            <textarea class="form-textarea" id="f-descricao" name="descricao" placeholder="Apresente brevemente a receita"></textarea>
           </div>
         </div>
         <div class="form-row cols-2">
           <div class="form-group">
             <label class="form-label">Categoria <span>*</span></label>
-            <select class="form-select" id="f-categoria"><option value="">Selecionar categoria…</option></select>
+            <select class="form-select" id="f-categoria" name="categoriaId" required><option value="">Selecionar categoria…</option><% for (Categoria categoria : categorias) { %><option value="<%= categoria.getId_categoria() %>"><%= h(categoria.getNome_categoria()) %></option><% } %></select>
           </div>
           <div class="form-group">
             <label class="form-label">Tempo de Preparo (minutos) <span>*</span></label>
-            <input class="form-input" type="number" placeholder="Ex: 45" min="1" id="f-tempo">
+            <input class="form-input" type="number" placeholder="Ex: 45" min="1" id="f-tempo" name="tempoPreparo" required>
           </div>
         </div>
         <div class="form-row cols-2">
           <div class="form-group">
             <label class="form-label">Rendimento (porções) <span>*</span></label>
-            <input class="form-input" type="number" placeholder="Ex: 8" min="1" id="f-rendimento">
+            <input class="form-input" type="number" placeholder="Ex: 8" min="1" id="f-rendimento" name="rendimento" required>
           </div>
           <div class="form-group">
             <label class="form-label">Status inicial</label>
             <select class="form-select" id="f-status">
               <option value="rascunho">📝 Salvar como Rascunho</option>
-              <option value="publicado">🚀 Publicar Agora</option>
+              <option value="aguardando_aprovacao">📤 Enviar para Revisão</option>
             </select>
           </div>
         </div>
@@ -798,14 +851,14 @@
           <span></span>
         </div>
         <div class="ing-list" id="ingList"></div>
-        <button class="btn-add-row" onclick="addIngrediente()">＋ Adicionar Ingrediente</button>
+        <button class="btn-add-row" type="button" onclick="addIngrediente()">＋ Adicionar Ingrediente</button>
       </div>
 
       <!-- PANEL 3: Passos -->
       <div class="form-panel" id="panel-3">
         <div class="form-section-title">👨‍🍳 Modo de Preparo</div>
         <div class="steps-list" id="stepsList"></div>
-        <button class="btn-add-row" id="btnAddPasso" onclick="addPasso()">＋ Adicionar Passo</button>
+        <button class="btn-add-row" id="btnAddPasso" type="button" onclick="addPasso()">＋ Adicionar Passo</button>
       </div>
 
       <!-- PANEL 4: Imagem & Revisão -->
@@ -814,16 +867,17 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">URL da Imagem</label>
-            <input class="form-input" type="text" placeholder="https://…" id="f-imagem">
-            <span class="form-hint">Cole o link de uma imagem ou use o upload abaixo</span>
+            <input class="form-input" type="url" placeholder="https://…" id="f-imagem" name="imagemUrl" oninput="previewImagemUrl()">
+            <span class="form-hint">Cole o link que será salvo com a receita ou escolha um arquivo para pré-visualizar.</span>
           </div>
         </div>
-        <div class="upload-zone" onclick="showToast('📎 Selecione uma imagem do seu computador')">
-          <div class="upload-icon">📸</div>
-          <div class="upload-text">Clique para fazer upload</div>
-          <div class="upload-sub">JPG, PNG ou WEBP · máx. 5 MB</div>
-        </div>
-
+        <input type="file" id="imagemArquivo" accept="image/jpeg,image/png,image/webp" hidden onchange="previewImagemArquivo(event)">
+        <label class="upload-zone" for="imagemArquivo">
+          <img id="imagemPreview" alt="Pré-visualização da capa" style="display:none;max-width:100%;max-height:220px;margin:0 auto 12px;border-radius:6px;object-fit:contain">
+          <div class="upload-icon" id="uploadIcon">📸</div>
+          <div class="upload-text">Clique para escolher uma imagem</div>
+          <div class="upload-sub">Pré-visualização local · para salvar, informe também a URL acima</div>
+        </label>
         <div class="form-section-title" style="margin-top:24px">✅ Resumo da Receita</div>
         <div id="reviewSummary" style="background:var(--cream);border-radius:6px;padding:16px;font-size:13px;color:var(--text-mid);line-height:1.8;">
           Preencha os campos anteriores para ver o resumo aqui.
@@ -833,13 +887,14 @@
     </div><!-- end modal-body -->
 
     <div class="modal-footer">
-      <button class="btn-secondary" id="btnBack" onclick="changePanel(-1)" style="display:none">← Voltar</button>
+      <button class="btn-secondary" type="button" id="btnBack" onclick="changePanel(-1)" style="display:none">← Voltar</button>
       <div style="font-size:12px;color:var(--text-light)" id="stepCounter">Etapa 1 de 4</div>
       <div class="modal-footer-right">
-        <button class="btn-save-draft" onclick="saveAction('rascunho')">💾 Salvar Rascunho</button>
-        <button class="btn-submit-review" id="btnNext" onclick="changePanel(1)">Próximo →</button>
+        <button class="btn-save-draft" type="button" onclick="saveAction('rascunho')">💾 Salvar Rascunho</button>
+        <button class="btn-submit-review" type="button" id="btnNext" onclick="handleNext()">Próximo →</button>
       </div>
     </div>
+    </form>
   </div>
 </div>
 
@@ -930,20 +985,73 @@ function changePanel(direction) {
   document.getElementById('panel-' + currentPanel)?.classList.add('active');
   document.getElementById('btnBack').style.display = currentPanel > 1 ? 'flex' : 'none';
   document.getElementById('stepCounter').textContent = 'Etapa ' + currentPanel + ' de ' + totalPanels;
+  document.querySelectorAll('.form-steps .step-item').forEach((item, index) => {
+    item.classList.toggle('active', index + 1 === currentPanel);
+  });
+  const btnNext = document.getElementById('btnNext');
+  if (currentPanel === totalPanels) {
+    btnNext.textContent = 'Enviar para revisão';
+  } else {
+    btnNext.textContent = 'Próximo →';
+  }
+  if (currentPanel === totalPanels) updateReviewSummary();
+}
+function handleNext() {
+  if (currentPanel < totalPanels) {
+    changePanel(1);
+    return;
+  }
+  const formAction = document.getElementById('formAction');
+  formAction.value = 'enviarRevisao';
+  document.getElementById('receitaForm').requestSubmit();
 }
 function addIngrediente() {
   const row = document.createElement('div');
   row.className = 'ing-row';
   row.innerHTML = '<input class="form-input" name="ingredienteNome" placeholder="Ingrediente">' +
-    '<input class="form-input" name="ingredienteQuantidade" placeholder="Quantidade">' +
+    '<input class="form-input" type="number" min="1" name="ingredienteQuantidade" placeholder="Quantidade">' +
+    '<select class="form-select" name="ingredienteUnidade"><option value="">Unidade</option>' +
+    '<option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option>' +
+    '<option value="l">l</option><option value="unidade">unidade</option><option value="xícara">xícara</option>' +
+    '<option value="colher de sopa">colher de sopa</option><option value="colher de chá">colher de chá</option>' +
+    '<option value="pitada">pitada</option><option value="a gosto">a gosto</option></select>' +
     '<button type="button" class="ing-remove" onclick="this.parentElement.remove()">✕</button>';
   document.getElementById('ingList')?.appendChild(row);
 }
 function addPasso() {
   const row = document.createElement('div');
   row.className = 'passo-block open';
-  row.innerHTML = '<div class="passo-body"><textarea class="form-textarea" name="passo" placeholder="Descreva o passo"></textarea></div>';
+  row.innerHTML = '<div class="passo-header"><span class="passo-num-badge"></span>' +
+    '<input class="passo-title-input" name="passoTitulo" placeholder="Título do passo (opcional)">' +
+    '<button type="button" class="passo-remove-btn" onclick="removerPasso(this)">Remover</button></div>' +
+    '<div class="passo-body"><textarea class="form-textarea" name="passoDescricao" placeholder="Descreva o passo"></textarea></div>';
   document.getElementById('stepsList')?.appendChild(row);
+  renumerarPassos();
+}
+function removerPasso(button) {
+  button.closest('.passo-block')?.remove();
+  renumerarPassos();
+}
+function renumerarPassos() {
+  document.querySelectorAll('#stepsList .passo-block').forEach((item, index) => {
+    item.querySelector('.passo-num-badge').textContent = index + 1;
+  });
+}
+function previewImagemArquivo(event) {
+  const arquivo = event.target.files?.[0];
+  if (!arquivo) return;
+  const preview = document.getElementById('imagemPreview');
+  preview.src = URL.createObjectURL(arquivo);
+  preview.style.display = 'block';
+  document.getElementById('uploadIcon').style.display = 'none';
+}
+function previewImagemUrl() {
+  const url = document.getElementById('f-imagem').value.trim();
+  if (!url) return;
+  const preview = document.getElementById('imagemPreview');
+  preview.src = url;
+  preview.style.display = 'block';
+  document.getElementById('uploadIcon').style.display = 'none';
 }
 function handleTagInput(event) {
   if (event.key !== 'Enter' && event.key !== ',') return;
@@ -956,8 +1064,23 @@ function handleTagInput(event) {
   event.target.parentElement.insertBefore(pill, event.target);
   event.target.value = '';
 }
-function saveAction() {
-  document.getElementById('receitaForm')?.requestSubmit();
+function updateReviewSummary() {
+  const categoria = document.getElementById('f-categoria');
+  const ingredientes = document.querySelectorAll('#ingList .ing-row').length;
+  const passos = document.querySelectorAll('#stepsList .passo-block').length;
+  const summary = document.getElementById('reviewSummary');
+  summary.textContent = [
+    'Título: ' + (document.getElementById('f-titulo').value || 'Não informado'),
+    'Categoria: ' + (categoria.options[categoria.selectedIndex]?.text || 'Não informada'),
+    'Tempo: ' + (document.getElementById('f-tempo').value || '0') + ' minutos',
+    'Ingredientes: ' + ingredientes,
+    'Passos: ' + passos
+  ].join(' · ');
+}
+function saveAction(status) {
+  const formAction = document.getElementById('formAction');
+  formAction.value = 'salvarRascunho';
+  document.getElementById('receitaForm').requestSubmit();
 }
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') { closeModal(); closeViewModal(); }

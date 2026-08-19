@@ -20,16 +20,9 @@ import br.com.saborearte.utils.Conexao;
 /**
  * Controller da tela log-admin.html — acesso restrito a ADMIN.
  *
- * Por padrão (sem parâmetros na query string) traz TODOS os logs, sem
- * limite, porque a tela hoje filtra e pagina inteiramente no client-side
- * (applyFilters()/renderPage() em cima do array LOGS[]). A ideia é a JSP
- * gerar esse mesmo array via JSTL a partir de ${logs}, e o JS que já existe
- * (filtro, paginação, export PDF/Excel/Print) continua funcionando igual,
- * só que com dado real em vez de mock.
- *
- * Também aceita filtros via query string (busca, acao, entidade, periodo),
- * usando LogDAO.listarComFiltro — útil se no futuro você quiser migrar
- * esses filtros pra server-side (menos dado trafegado quando o log crescer).
+ * Aplica filtros e paginação no servidor. A lista completa que corresponde
+ * aos filtros é fornecida separadamente para as exportações em PDF, Excel e
+ * impressão, sem alterar a página exibida ao administrador.
  */
 @WebServlet("/LogController")
 public class LogController extends HttpServlet {
@@ -69,6 +62,10 @@ public class LogController extends HttpServlet {
         String acao     = request.getParameter("acao");
         String entidade = request.getParameter("entidade");
         String periodo  = request.getParameter("periodo");
+        int page = parseIntOrDefault(request.getParameter("page"), 1);
+        int size = parseIntOrDefault(request.getParameter("size"), 20);
+        page = Math.max(1, page);
+        size = Math.max(1, Math.min(100, size));
 
         LocalDate dataInicio = null;
         LocalDate dataFim    = null;
@@ -84,11 +81,21 @@ public class LogController extends HttpServlet {
         }
 
         try {
+            ResultadoLogs contagem = logDAO.listarComFiltro(
+                    busca, acao, entidade, dataInicio, dataFim, 0, 1);
+            int totalPages = Math.max(1, (int) Math.ceil(contagem.total / (double) size));
+            page = Math.min(page, totalPages);
             ResultadoLogs resultado = logDAO.listarComFiltro(
-                    busca, acao, entidade, dataInicio, dataFim, 0, Integer.MAX_VALUE);
+                    busca, acao, entidade, dataInicio, dataFim, (page - 1) * size, size);
+            ResultadoLogs exportacao = logDAO.listarComFiltro(
+                    busca, acao, entidade, dataInicio, dataFim, 0, Math.max(1, contagem.total));
 
             request.setAttribute("logs", resultado.logs);
             request.setAttribute("totalLogs", resultado.total);
+            request.setAttribute("logsExportacao", exportacao.logs);
+            request.setAttribute("page", page);
+            request.setAttribute("size", size);
+            request.setAttribute("totalPages", totalPages);
 
             // ===== Devolve os filtros aplicados, pra JSP marcar os <select>/<input> certos =====
             request.setAttribute("filtroBusca", busca);
@@ -113,5 +120,13 @@ public class LogController extends HttpServlet {
         if (session == null) return false;
         Usuario u = (Usuario) session.getAttribute("usuarioLogado");
         return u != null && u.getTipo_usuario() == TipoUsuario.ADMIN;
+    }
+
+    private int parseIntOrDefault(String valor, int padrao) {
+        try {
+            return Integer.parseInt(valor);
+        } catch (Exception e) {
+            return padrao;
+        }
     }
 }

@@ -11,6 +11,8 @@ public class Comentario {
     private String texto_comentario;
     private String data_criacao_comentario;
     private String data_modera_comentario;
+    private String resposta_comentario;
+    private String data_resposta_comentario;
     private int avaliacao_comentario;
 
     // ===== ENUMS =====
@@ -31,6 +33,7 @@ public class Comentario {
 
     private String nome_usuario;
     private String foto_usuario;
+    private String titulo_receita;
 
     // ===== Construtor vazio =====
 
@@ -106,6 +109,12 @@ public class Comentario {
     public int getAvaliacao_comentario() { return avaliacao_comentario; }
     public void setAvaliacao_comentario(int avaliacao_comentario) { this.avaliacao_comentario = avaliacao_comentario; }
 
+    public String getResposta_comentario() { return resposta_comentario; }
+    public void setResposta_comentario(String resposta_comentario) { this.resposta_comentario = resposta_comentario; }
+
+    public String getData_resposta_comentario() { return data_resposta_comentario; }
+    public void setData_resposta_comentario(String data_resposta_comentario) { this.data_resposta_comentario = data_resposta_comentario; }
+
     // ===== Getters e Setters — campos extras (não persistidos) =====
 
     public String getNome_usuario() { return nome_usuario; }
@@ -113,4 +122,9 @@ public class Comentario {
 
     public String getFoto_usuario() { return foto_usuario; }
     public void setFoto_usuario(String foto_usuario) { this.foto_usuario = foto_usuario; }
+
+    public String getTitulo_receita() { return titulo_receita; }
+    public void setTitulo_receita(String titulo_receita) { this.titulo_receita = titulo_receita; }
 }
+
+

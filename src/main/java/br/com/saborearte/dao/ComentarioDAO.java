@@ -55,6 +55,8 @@ public class ComentarioDAO {
         c.setTexto_comentario(rs.getString("texto_comentario"));
         c.setData_criacao_comentario(rs.getString("data_criacao_comentario"));
         c.setData_modera_comentario(rs.getString("data_modera_comentario"));
+        c.setResposta_comentario(rs.getString("resposta_comentario"));
+        c.setData_resposta_comentario(rs.getString("data_resposta_comentario"));
         c.setAvaliacao_comentario(rs.getInt("avaliacao_comentario"));
 
         c.setStatus_comentario(
@@ -134,6 +136,47 @@ public class ComentarioDAO {
         }
     }
 
+    public void cadastrarComentario(Comentario comentario) throws SQLException {
+        String sql = """
+                INSERT INTO comentario
+                    (receita, usuario, texto_comentario, data_criacao_comentario,
+                     data_modera_comentario, status_comentario, avaliacao_comentario)
+                VALUES (?, ?, ?, NOW(), NULL, ?, ?)
+                """;
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, comentario.getReceita());
+            stmt.setInt(2, comentario.getUsuario());
+            stmt.setString(3, comentario.getTexto_comentario());
+            stmt.setString(4, comentario.getStatus_comentario().name());
+            stmt.setInt(5, comentario.getAvaliacao_comentario());
+            stmt.executeUpdate();
+        }
+    }
+
+    public List<Comentario> listarComentariosPorReceita(int receitaId) throws SQLException {
+        String sql = """
+                SELECT c.*, u.nome_usuario, u.foto_usuario
+                  FROM comentario c
+                  JOIN usuario u ON u.id_usuario = c.usuario
+                 WHERE c.receita = ? AND c.status_comentario = ?
+                 ORDER BY c.data_criacao_comentario DESC
+                """;
+        List<Comentario> lista = new ArrayList<>();
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, receitaId);
+            stmt.setString(2, StatusComentario.APROVADO.name());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Comentario c = mapear(rs);
+                    c.setNome_usuario(rs.getString("nome_usuario"));
+                    c.setFoto_usuario(rs.getString("foto_usuario"));
+                    lista.add(c);
+                }
+            }
+        }
+        return lista;
+    }
+
     // =========================================================================
     // ADICIONADO — AUTOR: mensagens-autor.jsp
     // =========================================================================
@@ -146,44 +189,98 @@ public class ComentarioDAO {
      * curtos usada em fluxo.receita/fluxo.usuario. Se a coluna real for
      * outro nome, so trocar "r.autor" abaixo).
      */
-    public List<Comentario> listarComentariosPorAutor(int autorId, String filtro, int page, int size) throws SQLException {
-
+    public List<Comentario> listarComentariosPorAutor(int autorId, String busca, String statusResposta,
+                                                       int page, int size) throws SQLException {
         List<Comentario> lista = new ArrayList<>();
-        boolean temFiltro = filtro != null && !filtro.isBlank();
+        boolean temBusca = busca != null && !busca.isBlank();
+        boolean respondidos = "respondido".equalsIgnoreCase(statusResposta);
+        boolean pendentes = "pendente".equalsIgnoreCase(statusResposta);
         int offset = Math.max(0, (page - 1) * size);
 
         String sql = """
-                SELECT c.*, u.nome_usuario, u.foto_usuario
+                SELECT c.*, u.nome_usuario, u.foto_usuario, r.titulo_receita
                 FROM comentario c
                 JOIN usuario u ON u.id_usuario = c.usuario
                 JOIN receita r ON r.id_receita = c.receita
-                WHERE r.autor = ?
+                WHERE r.usuario = ?
                 """
-                + (temFiltro ? " AND (c.texto_comentario LIKE ? OR u.nome_usuario LIKE ?) " : "")
+                + (temBusca ? " AND (c.texto_comentario LIKE ? OR u.nome_usuario LIKE ? OR r.titulo_receita LIKE ?) " : "")
+                + (respondidos ? " AND c.resposta_comentario IS NOT NULL AND TRIM(c.resposta_comentario) <> '' " : "")
+                + (pendentes ? " AND (c.resposta_comentario IS NULL OR TRIM(c.resposta_comentario) = '') " : "")
                 + " ORDER BY c.data_criacao_comentario DESC LIMIT ? OFFSET ? ";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             int i = 1;
             stmt.setInt(i++, autorId);
-            if (temFiltro) {
-                String like = "%" + filtro.trim() + "%";
+            if (temBusca) {
+                String like = "%" + busca.trim() + "%";
+                stmt.setString(i++, like);
                 stmt.setString(i++, like);
                 stmt.setString(i++, like);
             }
             stmt.setInt(i++, size);
             stmt.setInt(i, offset);
-
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Comentario c = mapear(rs);
                     c.setNome_usuario(rs.getString("nome_usuario"));
                     c.setFoto_usuario(rs.getString("foto_usuario"));
+                    c.setTitulo_receita(rs.getString("titulo_receita"));
                     lista.add(c);
                 }
             }
         }
-
         return lista;
+    }
+
+    public int contarComentariosPorAutor(int autorId, String busca, String statusResposta) throws SQLException {
+        boolean temBusca = busca != null && !busca.isBlank();
+        boolean respondidos = "respondido".equalsIgnoreCase(statusResposta);
+        boolean pendentes = "pendente".equalsIgnoreCase(statusResposta);
+        String sql = "SELECT COUNT(*) AS total FROM comentario c "
+                + "JOIN usuario u ON u.id_usuario = c.usuario "
+                + "JOIN receita r ON r.id_receita = c.receita WHERE r.usuario = ? "
+                + (temBusca ? "AND (c.texto_comentario LIKE ? OR u.nome_usuario LIKE ? OR r.titulo_receita LIKE ?) " : "")
+                + (respondidos ? "AND c.resposta_comentario IS NOT NULL AND TRIM(c.resposta_comentario) <> '' " : "")
+                + (pendentes ? "AND (c.resposta_comentario IS NULL OR TRIM(c.resposta_comentario) = '') " : "");
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            int i = 1;
+            stmt.setInt(i++, autorId);
+            if (temBusca) {
+                String like = "%" + busca.trim() + "%";
+                stmt.setString(i++, like);
+                stmt.setString(i++, like);
+                stmt.setString(i, like);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("total") : 0;
+            }
+        }
+    }
+
+    public int contarRespostasPorAutor(int autorId, boolean respondidas) throws SQLException {
+        String condicao = respondidas
+                ? "c.resposta_comentario IS NOT NULL AND TRIM(c.resposta_comentario) <> ''"
+                : "c.resposta_comentario IS NULL OR TRIM(c.resposta_comentario) = ''";
+        String sql = "SELECT COUNT(*) AS total FROM comentario c JOIN receita r ON r.id_receita = c.receita "
+                + "WHERE r.usuario = ? AND (" + condicao + ")";
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, autorId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("total") : 0;
+            }
+        }
+    }
+
+    public double calcularAvaliacaoMediaPorAutor(int autorId) throws SQLException {
+        String sql = "SELECT COALESCE(AVG(c.avaliacao_comentario), 0) AS media FROM comentario c "
+                + "JOIN receita r ON r.id_receita = c.receita WHERE r.usuario = ? AND c.avaliacao_comentario > 0";
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, autorId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getDouble("media") : 0;
+            }
+        }
     }
 
     /**
@@ -200,16 +297,40 @@ public class ComentarioDAO {
     public void salvarResposta(int comentarioId, int autorId, String texto) throws SQLException {
 
         String sql = """
-                UPDATE comentario
-                   SET resposta_comentario = ?,
-                       data_resposta_comentario = NOW()
-                 WHERE id_comentario = ?
+                UPDATE comentario c
+                JOIN receita r ON r.id_receita = c.receita
+                   SET c.resposta_comentario = ?,
+                       c.data_resposta_comentario = NOW()
+                 WHERE c.id_comentario = ?
+                   AND r.usuario = ?
                 """;
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setString(1, texto);
             stmt.setInt(2, comentarioId);
-            stmt.executeUpdate();
+            stmt.setInt(3, autorId);
+            if (stmt.executeUpdate() == 0) {
+                throw new SQLException("Comentario inexistente ou nao pertence ao autor logado.");
+            }
+        }
+    }
+
+    public void denunciarComentarioDoAutor(int comentarioId, int autorId) throws SQLException {
+        String sql = """
+                UPDATE comentario c
+                JOIN receita r ON r.id_receita = c.receita
+                   SET c.status_comentario = ?,
+                       c.data_modera_comentario = NULL
+                 WHERE c.id_comentario = ?
+                   AND r.usuario = ?
+                """;
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setString(1, StatusComentario.PENDENTE.name());
+            stmt.setInt(2, comentarioId);
+            stmt.setInt(3, autorId);
+            if (stmt.executeUpdate() == 0) {
+                throw new SQLException("Comentario inexistente ou nao pertence ao autor logado.");
+            }
         }
     }
 
@@ -232,12 +353,13 @@ public class ComentarioDAO {
         int offset = Math.max(0, (page - 1) * size);
 
         StringBuilder sql = new StringBuilder("""
-                SELECT c.*, u.nome_usuario, u.foto_usuario
+                SELECT c.*, u.nome_usuario, u.foto_usuario, r.titulo_receita
                 FROM comentario c
                 JOIN usuario u ON u.id_usuario = c.usuario
+                JOIN receita r ON r.id_receita = c.receita
                 WHERE 1=1
                 """);
-        if (temFiltro) sql.append(" AND (c.texto_comentario LIKE ? OR u.nome_usuario LIKE ?) ");
+        if (temFiltro) sql.append(" AND (c.texto_comentario LIKE ? OR u.nome_usuario LIKE ? OR r.titulo_receita LIKE ?) ");
         if (temStatus) sql.append(" AND c.status_comentario = ? ");
         if (temData)   sql.append(" AND c.data_criacao_comentario >= ? ");
         sql.append(" ORDER BY c.data_criacao_comentario DESC LIMIT ? OFFSET ? ");
@@ -246,6 +368,7 @@ public class ComentarioDAO {
             int i = 1;
             if (temFiltro) {
                 String like = "%" + filtro.trim() + "%";
+                stmt.setString(i++, like);
                 stmt.setString(i++, like);
                 stmt.setString(i++, like);
             }
@@ -259,6 +382,7 @@ public class ComentarioDAO {
                     Comentario c = mapear(rs);
                     c.setNome_usuario(rs.getString("nome_usuario"));
                     c.setFoto_usuario(rs.getString("foto_usuario"));
+                    c.setTitulo_receita(rs.getString("titulo_receita"));
                     lista.add(c);
                 }
             }
@@ -278,9 +402,10 @@ public class ComentarioDAO {
                 SELECT COUNT(*) AS total
                 FROM comentario c
                 JOIN usuario u ON u.id_usuario = c.usuario
+                JOIN receita r ON r.id_receita = c.receita
                 WHERE 1=1
                 """);
-        if (temFiltro) sql.append(" AND (c.texto_comentario LIKE ? OR u.nome_usuario LIKE ?) ");
+        if (temFiltro) sql.append(" AND (c.texto_comentario LIKE ? OR u.nome_usuario LIKE ? OR r.titulo_receita LIKE ?) ");
         if (temStatus) sql.append(" AND c.status_comentario = ? ");
         if (temData)   sql.append(" AND c.data_criacao_comentario >= ? ");
 
@@ -288,6 +413,7 @@ public class ComentarioDAO {
             int i = 1;
             if (temFiltro) {
                 String like = "%" + filtro.trim() + "%";
+                stmt.setString(i++, like);
                 stmt.setString(i++, like);
                 stmt.setString(i++, like);
             }
@@ -300,13 +426,9 @@ public class ComentarioDAO {
         }
     }
 
-    /** Remove definitivamente o comentario (acao "remover" da moderacao). */
+    /** Preserva o histórico marcando o comentário como removido. */
     public void removerComentario(int comentarioId) throws SQLException {
-        String sql = "DELETE FROM comentario WHERE id_comentario = ?";
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setInt(1, comentarioId);
-            stmt.executeUpdate();
-        }
+        atualizarStatusComentario(comentarioId, StatusComentario.REMOVIDO);
     }
 
     /**
@@ -328,3 +450,5 @@ public class ComentarioDAO {
         }
     }
 }
+
+

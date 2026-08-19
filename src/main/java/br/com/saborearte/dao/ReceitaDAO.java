@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,96 @@ public class ReceitaDAO {
 
     public ReceitaDAO(Connection conexao) {
         this.conexao = conexao;
+    }
+
+    /** Insere a receita e devolve a chave gerada para ingredientes e passos. */
+    public int cadastrarReceita(Receita receita) throws SQLException {
+        String sql = """
+                INSERT INTO receita
+                    (categoria, usuario, titulo_receita, descricao_receita,
+                     data_criacao_receita, data_publicacao_receita,
+                     tempo_preparo_receita, rendimento_receita, imagem_receita,
+                     status_receita, status_atividade, visualizacoes_receita)
+                VALUES (?, ?, ?, ?, NOW(), NULL, ?, ?, ?, ?, ?, 0)
+                """;
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, receita.getCategoria());
+            stmt.setInt(2, receita.getUsuario());
+            stmt.setString(3, receita.getTitulo_receita());
+            stmt.setString(4, receita.getDescricao_receita());
+            stmt.setInt(5, receita.getTempo_preparo_receita());
+            stmt.setString(6, receita.getRendimento_receita());
+            stmt.setString(7, receita.getImagem_receita());
+            stmt.setString(8, receita.getStatus_receita().name());
+            stmt.setString(9, receita.getStatus_atividade().name());
+            stmt.executeUpdate();
+
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (keys.next()) return keys.getInt(1);
+            }
+        }
+        throw new SQLException("Não foi possível obter o ID da receita cadastrada.");
+    }
+
+    public void atualizarStatusReceita(int idReceita, StatusReceita status) throws SQLException {
+        String sql = "UPDATE receita SET status_receita = ?, "
+                   + "data_publicacao_receita = CASE WHEN ? = 'publicada' THEN NOW() ELSE data_publicacao_receita END "
+                   + "WHERE id_receita = ?";
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setString(1, status.name());
+            stmt.setString(2, status.name());
+            stmt.setInt(3, idReceita);
+            if (stmt.executeUpdate() == 0) throw new SQLException("Receita não encontrada: id=" + idReceita);
+        }
+    }
+
+    public void atualizarReceita(Receita receita) throws SQLException {
+        String sql = """
+                UPDATE receita
+                   SET categoria = ?, titulo_receita = ?, descricao_receita = ?,
+                       tempo_preparo_receita = ?, rendimento_receita = ?, imagem_receita = ?
+                 WHERE id_receita = ? AND usuario = ?
+                """;
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, receita.getCategoria());
+            stmt.setString(2, receita.getTitulo_receita());
+            stmt.setString(3, receita.getDescricao_receita());
+            stmt.setInt(4, receita.getTempo_preparo_receita());
+            stmt.setString(5, receita.getRendimento_receita());
+            stmt.setString(6, receita.getImagem_receita());
+            stmt.setInt(7, receita.getId_receita());
+            stmt.setInt(8, receita.getUsuario());
+            if (stmt.executeUpdate() == 0) {
+                throw new SQLException("Receita não encontrada ou não pertence ao autor.");
+            }
+        }
+    }
+
+    public List<Receita> listarReceitasPorAutor(int idUsuario) throws SQLException {
+        String sql = """
+                SELECT r.*, c.nome_categoria, c.emoji_categoria, u.nome_usuario,
+                       u.foto_usuario, COALESCE(AVG(cm.avaliacao_comentario), 0) AS nota_media
+                  FROM receita r
+                  JOIN categoria c ON c.id_categoria = r.categoria
+                  JOIN usuario u ON u.id_usuario = r.usuario
+                  LEFT JOIN comentario cm ON cm.receita = r.id_receita
+                 WHERE r.usuario = ?
+                 GROUP BY r.id_receita, r.categoria, r.usuario, r.titulo_receita,
+                          r.descricao_receita, r.data_criacao_receita, r.data_publicacao_receita,
+                          r.tempo_preparo_receita, r.rendimento_receita, r.imagem_receita,
+                          r.status_receita, r.status_atividade, r.visualizacoes_receita,
+                          c.nome_categoria, c.emoji_categoria, u.nome_usuario, u.foto_usuario
+                 ORDER BY r.data_criacao_receita DESC
+                """;
+        List<Receita> lista = new ArrayList<>();
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, idUsuario);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) lista.add(mapearComExtras(rs));
+            }
+        }
+        return lista;
     }
 
     // ===== MAPEAR (campos da própria tabela receita) =====
