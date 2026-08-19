@@ -125,7 +125,6 @@ public class ConfiguracaoController extends HttpServlet {
 
         Usuario logado = (Usuario) session.getAttribute("usuarioLogado");
 
-        String senhaAtual     = request.getParameter("senhaAtual");
         String novaSenha      = request.getParameter("novaSenha");
         String confirmarSenha = request.getParameter("confirmarSenha");
 
@@ -141,12 +140,12 @@ public class ConfiguracaoController extends HttpServlet {
             return;
         }
 
-        // Busca o usuário completo (a senha atual salva vem junto)
+        // Busca o usuário completo (necessário pois "logado" na sessão pode
+        // estar desatualizado em relação ao banco)
         Usuario usuario = usuarioDAO.buscarUsuarioPorId(logado.getId_usuario());
 
-        if (usuario == null || usuario.getSenha_usuario() == null
-                || !usuario.getSenha_usuario().equals(senhaAtual)) {
-            session.setAttribute("erro", "A senha atual informada está incorreta.");
+        if (usuario == null) {
+            session.setAttribute("erro", "Não foi possível localizar seu usuário. Tente novamente.");
             response.sendRedirect(request.getContextPath() + "/ConfiguracaoController?aba=seguranca");
             return;
         }

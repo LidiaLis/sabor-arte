@@ -257,6 +257,6 @@ public class SeguidorController extends HttpServlet {
     private void redirecionarDeVolta(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String referer = request.getHeader("Referer");
-        response.sendRedirect(referer != null ? referer : request.getContextPath() + "/autores-publico.html");
+        response.sendRedirect(referer != null ? referer : request.getContextPath() + "/pages/autores.jsp");
     }
 }

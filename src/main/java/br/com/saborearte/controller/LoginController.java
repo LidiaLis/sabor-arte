@@ -61,12 +61,12 @@ public class LoginController extends HttpServlet {
                 TipoUsuario tipo = usuario.getTipo_usuario();
 
                 if (tipo == TipoUsuario.ADMIN){
-                   response.sendRedirect(request.getContextPath() + "/pages/html/admin/dashboard-admin.html");
+                   response.sendRedirect(request.getContextPath() + "/DashboardController");
                 } else if (tipo == TipoUsuario.EDITOR) {
-                    response.sendRedirect(request.getContextPath() + "/pages/html/editor/dashboard-editor.html");
+                    response.sendRedirect(request.getContextPath() + "/DashboardController");
 
                 } else if (tipo == TipoUsuario.AUTOR) {
-                    response.sendRedirect(request.getContextPath() + "/pages/html/autor/dashboard-autor.html");
+                    response.sendRedirect(request.getContextPath() + "/DashboardController");
 
                 } else if (tipo == TipoUsuario.VISITANTE) {
                     response.sendRedirect(request.getContextPath() + "/HomeController");

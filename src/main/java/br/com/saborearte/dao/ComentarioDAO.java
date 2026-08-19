@@ -53,7 +53,7 @@ public class ComentarioDAO {
         c.setUsuario(rs.getInt("usuario"));
 
         c.setTexto_comentario(rs.getString("texto_comentario"));
-        c.setData_criacao_comentario(rs.getString("data_criacao_comentario"));
+        c.setData_criacao_comentario(rs.getString("data_comentario"));
         c.setData_modera_comentario(rs.getString("data_modera_comentario"));
         c.setAvaliacao_comentario(rs.getInt("avaliacao_comentario"));
 
@@ -98,7 +98,7 @@ public class ComentarioDAO {
                 FROM comentario c
                 JOIN usuario u ON u.id_usuario = c.usuario
                 WHERE c.status_comentario = ?
-                ORDER BY c.data_criacao_comentario DESC
+                ORDER BY c.data_comentario DESC
                 LIMIT ?
                 """;
 
@@ -160,7 +160,7 @@ public class ComentarioDAO {
                 WHERE r.autor = ?
                 """
                 + (temFiltro ? " AND (c.texto_comentario LIKE ? OR u.nome_usuario LIKE ?) " : "")
-                + " ORDER BY c.data_criacao_comentario DESC LIMIT ? OFFSET ? ";
+                + " ORDER BY c.data_comentario DESC LIMIT ? OFFSET ? ";
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             int i = 1;
@@ -239,8 +239,8 @@ public class ComentarioDAO {
                 """);
         if (temFiltro) sql.append(" AND (c.texto_comentario LIKE ? OR u.nome_usuario LIKE ?) ");
         if (temStatus) sql.append(" AND c.status_comentario = ? ");
-        if (temData)   sql.append(" AND c.data_criacao_comentario >= ? ");
-        sql.append(" ORDER BY c.data_criacao_comentario DESC LIMIT ? OFFSET ? ");
+        if (temData)   sql.append(" AND c.data_comentario >= ? ");
+        sql.append(" ORDER BY c.data_comentario DESC LIMIT ? OFFSET ? ");
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql.toString())) {
             int i = 1;
@@ -282,7 +282,7 @@ public class ComentarioDAO {
                 """);
         if (temFiltro) sql.append(" AND (c.texto_comentario LIKE ? OR u.nome_usuario LIKE ?) ");
         if (temStatus) sql.append(" AND c.status_comentario = ? ");
-        if (temData)   sql.append(" AND c.data_criacao_comentario >= ? ");
+        if (temData)   sql.append(" AND c.data_comentario >= ? ");
 
         try (PreparedStatement stmt = conexao.prepareStatement(sql.toString())) {
             int i = 1;

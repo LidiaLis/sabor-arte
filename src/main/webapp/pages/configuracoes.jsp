@@ -8,28 +8,14 @@
         return;
     }
 
-    // Define qual sidebar incluir de acordo com o perfil do usuário
-
-    String sidebarPage;
-
-    switch (usuarioLogado.getTipo_usuario()) {
-        case ADMIN:
-            sidebarPage = "/pages/includes/sidebar-editor-admin.jsp";
-            break;
-        case EDITOR:
-            sidebarPage = "/pages/includes/sidebar-editor.html";
-            break;
-        case AUTOR:
-            sidebarPage = "/pages/includes/sidebar-autor.html";
-            break;
-        case VISITANTE:
-            sidebarPage = "/pages/includes/sidebar-visitante.html";
-            break;
-        default:
-            sidebarPage = "/pages/includes/sidebar-editor-admin.jsp"; // fallback de segurança
-            break;
-    }
-    request.setAttribute("sidebarPage", sidebarPage);
+    // Sidebar unificado (o mesmo /pages/includes/sidebar.jsp usado nas
+    // demais telas do sistema, ex: home.jsp) - ele já resolve sozinho o
+    // menu certo pra cada perfil (ADMIN/EDITOR/AUTOR/VISITANTE) olhando a
+    // sessão, entao nao precisamos mais escolher entre varios arquivos de
+    // sidebar separados aqui. Isso evita depender de fragmentos antigos
+    // (sidebar-editor-admin.jsp, sidebar-editor.html, sidebar-visitante.html)
+    // que podiam estar ausentes/desatualizados e derrubar a tela.
+    request.setAttribute("currentPage", "configuracoes");
     
     // Iniciais do avatar (ex: "Maria Andrade" -> "MA")
     String nome = usuarioLogado.getNome_usuario() != null ? usuarioLogado.getNome_usuario() : "";
@@ -72,16 +58,16 @@
     --gold:#c4a265;--gold-light:#dfc094;
   }
   body.dark-mode .sidebar{background:#111810;}
-  body.dark-mode .sidebar .sb-title{color:#dde8d0;}
-  body.dark-mode .sidebar .sb-sub{color:#6b9c55;}
-  body.dark-mode .sidebar .sb-uname{color:#dde8d0;}
-  body.dark-mode .sidebar .sb-urole{color:#88b870;}
-  body.dark-mode .sidebar .sb-section{color:rgba(107,156,85,0.45);}
-  body.dark-mode .sidebar .sb-item{color:rgba(221,232,208,0.6);}
-  body.dark-mode .sidebar .sb-item:hover{color:#dde8d0;background:rgba(255,255,255,0.05);}
-  body.dark-mode .sidebar .sb-item.active{color:#dde8d0;background:rgba(107,156,85,0.14);}
-  body.dark-mode .sidebar .sb-logout{color:rgba(221,232,208,0.6);border-color:rgba(221,232,208,0.12);background:rgba(255,255,255,0.04);}
-  body.dark-mode .sidebar .sb-logout:hover{background:rgba(155,68,68,0.2);border-color:rgba(155,68,68,0.3);color:#e8a0a0;}
+  body.dark-mode .sidebar .brand-title{color:#dde8d0;}
+  body.dark-mode .sidebar .brand-sub{color:#6b9c55;}
+  body.dark-mode .sidebar .user-name{color:#dde8d0;}
+  body.dark-mode .sidebar .user-role-badge{color:#88b870;}
+  body.dark-mode .sidebar .nav-section-label{color:rgba(107,156,85,0.45);}
+  body.dark-mode .sidebar .nav-item{color:rgba(221,232,208,0.6);}
+  body.dark-mode .sidebar .nav-item:hover{color:#dde8d0;background:rgba(255,255,255,0.05);}
+  body.dark-mode .sidebar .nav-item.active{color:#dde8d0;background:rgba(107,156,85,0.14);}
+  body.dark-mode .sidebar .btn-logout{color:rgba(221,232,208,0.6);border-color:rgba(221,232,208,0.12);background:rgba(255,255,255,0.04);}
+  body.dark-mode .sidebar .btn-logout:hover{background:rgba(155,68,68,0.2);border-color:rgba(155,68,68,0.3);color:#e8a0a0;}
   body.dark-mode .topbar{background:#1f2619;border-bottom-color:#252c1f;}
   body.dark-mode .card{background:#1f2619;border-color:#252c1f;}
   body.dark-mode .card-hd{border-bottom-color:#252c1f;}
@@ -107,18 +93,17 @@
     --error:#ff4444;--error-bg:#110000;--error-border:#ff4444;
   }
   body.high-contrast .sidebar{background:#000;border-right:3px solid #FFFF00;}
-  body.high-contrast .sidebar .sb-title{color:#FFFF00;}
-  body.high-contrast .sidebar .sb-sub{color:#888800;}
-  body.high-contrast .sidebar .sb-uname{color:#FFFF00;}
-  body.high-contrast .sidebar .sb-urole{color:#aaaa00;}
-  body.high-contrast .sidebar .sb-avatar{background:#FFFF00;color:#000;}
-  body.high-contrast .sidebar .sb-section{color:#555500;}
-  body.high-contrast .sidebar .sb-item{color:rgba(255,255,0,0.7);border-left-color:transparent;}
-  body.high-contrast .sidebar .sb-item:hover{background:rgba(255,255,0,0.1);color:#FFFF00;border-left-color:#FFFF00;}
-  body.high-contrast .sidebar .sb-item.active{background:rgba(255,255,0,0.15);color:#FFFF00;border-left-color:#FFFF00;}
-  body.high-contrast .sidebar .sb-badge-count{background:#FFFF00;color:#000;}
-  body.high-contrast .sidebar .sb-logout{color:rgba(255,255,0,0.7);border-color:rgba(255,255,0,0.3);background:rgba(255,255,0,0.05);}
-  body.high-contrast .sidebar .sb-logout:hover{background:rgba(255,68,68,0.2);border-color:#ff4444;color:#ff8888;}
+  body.high-contrast .sidebar .brand-title{color:#FFFF00;}
+  body.high-contrast .sidebar .brand-sub{color:#888800;}
+  body.high-contrast .sidebar .user-name{color:#FFFF00;}
+  body.high-contrast .sidebar .user-role-badge{color:#aaaa00;}
+  body.high-contrast .sidebar .user-avatar{background:#FFFF00;color:#000;}
+  body.high-contrast .sidebar .nav-section-label{color:#555500;}
+  body.high-contrast .sidebar .nav-item{color:rgba(255,255,0,0.7);border-left-color:transparent;}
+  body.high-contrast .sidebar .nav-item:hover{background:rgba(255,255,0,0.1);color:#FFFF00;border-left-color:#FFFF00;}
+  body.high-contrast .sidebar .nav-item.active{background:rgba(255,255,0,0.15);color:#FFFF00;border-left-color:#FFFF00;}
+  body.high-contrast .sidebar .btn-logout{color:rgba(255,255,0,0.7);border-color:rgba(255,255,0,0.3);background:rgba(255,255,0,0.05);}
+  body.high-contrast .sidebar .btn-logout:hover{background:rgba(255,68,68,0.2);border-color:#ff4444;color:#ff8888;}
   body.high-contrast .topbar{background:#000;border-bottom:3px solid #FFFF00;}
   body.high-contrast .card{background:#0a0a0a;border:2px solid #FFFF00;}
   body.high-contrast .card-hd{border-bottom:2px solid #FFFF00;}
@@ -248,7 +233,7 @@
 <body class="${temaAtual == 'DARK' ? 'dark-mode' : (temaAtual == 'HIGH_CONTRAST' ? 'high-contrast' : '')}">
 
 
-<jsp:include page="${sidebarPage}" />
+<jsp:include page="/pages/includes/sidebar.jsp" />
 
 <main class="main">
   <div class="topbar">
@@ -327,10 +312,6 @@
           </div>
           <div class="card-body">
             <div class="form-row">
-              <div class="fg">
-          
-              </div>
-              <div></div>
               <div class="fg">
                 <label class="fl">Nova Senha</label>
                 <div class="pw-wrap">

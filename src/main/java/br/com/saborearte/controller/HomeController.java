@@ -84,25 +84,22 @@ public class HomeController extends HttpServlet {
             List<Categoria> categoriasPrincipais = categoriaDAO.listarCategoriasComContagem(LIMITE_CATEGORIAS);
             request.setAttribute("categoriasPrincipais", categoriasPrincipais);
 
-            // listarAutoresPublicos ja traz total_receitas_publicadas pronto;
-            // aqui so ordena por quem publicou mais e pega os N primeiros.
+            // listarAutoresPublicos ja filtra tipo_usuario = 'AUTOR' e
+            // status = 'ATIVO' direto no SQL (UsuarioDAO), e ja traz
+            // total_receitas_publicadas pronto; aqui so ordena por quem
+            // publicou mais e pega os N primeiros.
             List<Usuario> autoresDestaque = usuarioDAO.listarAutoresPublicos().stream()
                     .sorted(Comparator.comparingInt(Usuario::getTotal_receitas_publicadas).reversed())
                     .limit(LIMITE_AUTORES_DESTAQUE)
                     .collect(Collectors.toList());
             request.setAttribute("autoresDestaque", autoresDestaque);
 
-            if (usuarioLogado != null) {
-                request.getRequestDispatcher("/home.jsp").forward(request, response);
-            } else {
-                request.getRequestDispatcher("/home.jsp").forward(request, response);
-            }
+            request.getRequestDispatcher("/home.jsp").forward(request, response);
 
         } catch (SQLException e) {
             e.printStackTrace();
             request.setAttribute("erro", "Erro ao carregar a página inicial: " + e.getMessage());
-            String destino = (usuarioLogado != null) ? "/pages/home-visitante.jsp" : "/pages/home-publico.jsp";
-            request.getRequestDispatcher(destino).forward(request, response);
+            request.getRequestDispatcher("/home.jsp").forward(request, response);
         }
     }
 }

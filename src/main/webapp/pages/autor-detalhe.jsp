@@ -1,18 +1,24 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="br.com.saborearte.model.Usuario" %>
 <%@ page import="br.com.saborearte.model.Receita" %>
+<%@ page import="br.com.saborearte.model.Categoria" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.LinkedHashMap" %>
 <%@ page import="java.util.Map" %>
 
 <%--
     SERVLET RESPONSÁVEL: AutorController  (GET /AutorController?id=<id_usuario>)
-    O servlet faz:
-      1. Usuario autor       = usuarioDAO.buscarAutorPublicoPorId(id);
-      2. List<Receita> lista = receitaDAO.listarReceitasPublicadasPorAutor(id, limite);
-      3. request.setAttribute("autor", autor);
-      4. request.setAttribute("receitas", lista);
-      5. forward pra /pages/autor-detalhe.jsp
+    O servlet faz (método carregarDetalheAutor):
+      1. Usuario autor            = usuarioDAO.buscarAutorPublicoPorId(id);
+      2. List<Categoria> esp      = especialidadeDAO.listarEspecialidadesPorUsuario(id);
+                                     // tabela "especialidade" (id_usuario, id_categoria)
+                                     // join categoria — é o que o autor tem cadastrado
+                                     // como especialidade, independe de receita publicada.
+      3. List<Receita> receitas   = receitaDAO.listarReceitasPublicadasPorAutor(id, limite);
+      4. request.setAttribute("autor", autor);
+      5. request.setAttribute("especialidades", esp);
+      6. request.setAttribute("receitas", receitas);   // ou "ultimasReceitas" no modal
+      7. forward pra /pages/autor-detalhe.jsp
 --%>
 <%
     Usuario autor = (Usuario) request.getAttribute("autor");
@@ -48,11 +54,26 @@
     Boolean souEuMesmoAttr = (Boolean) request.getAttribute("souEuMesmo");
     boolean souEuMesmo = Boolean.TRUE.equals(souEuMesmoAttr);
 
-    // ── Especialidades: categorias distintas presentes nas receitas do autor ──
-    Map<String, String> especialidades = new LinkedHashMap<>(); // nome_categoria -> emoji_categoria
+    // Regra de exibição do botão de Seguir (definida no AutorController):
+    // só usuário logado do tipo VISITANTE, olhando o perfil de outro autor
+    // (nunca o próprio). Autor/Editor/Admin e visitantes anônimos não veem.
+    Boolean mostrarBotaoSeguirAttr = (Boolean) request.getAttribute("mostrarBotaoSeguir");
+    boolean mostrarBotaoSeguir = Boolean.TRUE.equals(mostrarBotaoSeguirAttr);
+
+    // ── Especialidades do autor: vem da tabela "especialidade" (EspecialidadeDAO),
+    // ou seja, o que ele tem cadastrado como especialista — NÃO das receitas
+    // publicadas. Usada no card "🍽️ Especialidades" da aba Sobre.
+    @SuppressWarnings("unchecked")
+    List<Categoria> especialidades = (List<Categoria>) request.getAttribute("especialidades");
+    if (especialidades == null) especialidades = new java.util.ArrayList<>();
+
+    // ── Categorias presentes nas receitas do autor: usada só pra popular o
+    // <select> de filtro da aba Receitas (filtrar o grid de receitas por
+    // categoria só faz sentido com categorias que ele realmente tem receita). ──
+    Map<String, String> categoriasReceitas = new LinkedHashMap<>(); // nome_categoria -> emoji_categoria
     for (Receita r : receitas) {
-        if (r.getNome_categoria() != null && !especialidades.containsKey(r.getNome_categoria())) {
-            especialidades.put(r.getNome_categoria(), r.getEmoji_categoria());
+        if (r.getNome_categoria() != null && !categoriasReceitas.containsKey(r.getNome_categoria())) {
+            categoriasReceitas.put(r.getNome_categoria(), r.getEmoji_categoria());
         }
     }
 %>
@@ -126,24 +147,25 @@
   .tab-panel.active { display:block; animation:fadeIn 0.25s ease; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:translateY(0);} }
 
-  /* SOBRE — biografia em cima, redes + especialidades lado a lado embaixo */
-  .cards-grid { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1.3fr 1fr; gap:16px; height:calc(100vh - 300px); min-height:340px; }
+  /* SOBRE — biografia em cima, redes + especialidades lado a lado embaixo.
+     Altura acompanha o conteúdo (sem esticar pra ocupar a viewport). */
+  .cards-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
   .card-full { grid-column:1 / -1; }
-  .card { background:var(--warm-white); border:1px solid var(--cream-dark); border-radius:4px; overflow:hidden; display:flex; flex-direction:column; min-height:0; }
-  .card-head { padding:12px 20px; border-bottom:1px solid var(--cream-dark); flex-shrink:0; }
-  .card-head-title { font-size:13.5px; font-weight:600; color:var(--text-dark); display:flex; align-items:center; gap:9px; }
-  .card-body { padding:18px 20px; flex:1; overflow-y:auto; }
-  .about-text { font-size:13.5px; line-height:1.7; color:var(--text-mid); font-weight:300; }
+  .card { background:var(--warm-white); border:1px solid var(--cream-dark); border-radius:4px; overflow:hidden; display:flex; flex-direction:column; }
+  .card-head { padding:10px 18px; border-bottom:1px solid var(--cream-dark); flex-shrink:0; }
+  .card-head-title { font-size:13px; font-weight:600; color:var(--text-dark); display:flex; align-items:center; gap:8px; }
+  .card-body { padding:14px 18px; }
+  .about-text { font-size:13px; line-height:1.6; color:var(--text-mid); font-weight:300; }
 
-  .tags-wrap { display:flex; flex-wrap:wrap; gap:8px; }
-  .tag { display:inline-flex; align-items:center; gap:5px; background:rgba(74,94,58,0.1); border:1.5px solid rgba(74,94,58,0.22); padding:6px 13px; border-radius:20px; font-size:12.5px; color:var(--moss); font-weight:500; }
+  .tags-wrap { display:flex; flex-wrap:wrap; gap:7px; }
+  .tag { display:inline-flex; align-items:center; gap:5px; background:rgba(74,94,58,0.1); border:1.5px solid rgba(74,94,58,0.22); padding:5px 12px; border-radius:20px; font-size:12px; color:var(--moss); font-weight:500; }
   .empty-hint { font-size:12.5px; color:var(--text-light); font-weight:300; }
 
   /* REDES SOCIAIS — estilo caixinha (label + valor texto, não é link) */
-  .social-field { margin-bottom:14px; }
+  .social-field { margin-bottom:10px; }
   .social-field:last-child { margin-bottom:0; }
-  .social-label { font-size:10.5px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--text-light); margin-bottom:6px; }
-  .social-value-box { background:var(--cream); border:1.5px solid var(--cream-dark); border-radius:3px; padding:11px 14px; font-size:14px; color:var(--text-dark); font-weight:500; user-select:all; cursor:text; word-break:break-all; }
+  .social-label { font-size:10px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--text-light); margin-bottom:5px; }
+  .social-value-box { background:var(--cream); border:1.5px solid var(--cream-dark); border-radius:3px; padding:8px 12px; font-size:13px; color:var(--text-dark); font-weight:500; user-select:all; cursor:text; word-break:break-all; }
 
   /* TOOLBAR + GRID RECEITAS */
   .section-title-row { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:16px; }
@@ -168,7 +190,7 @@
   .empty-state { text-align:center; padding:60px 20px; }
 
   @media (max-width:1200px) { .recipes-grid { grid-template-columns:repeat(3,1fr); } }
-  @media (max-width:1000px) { .cards-grid { grid-template-columns:1fr; height:auto; } }
+  @media (max-width:1000px) { .cards-grid { grid-template-columns:1fr; } }
   @media (max-width:860px)  { .recipes-grid { grid-template-columns:1fr 1fr; } .author-hero { flex-direction:column; align-items:flex-start; } .ah-stats { flex-wrap:wrap; } }
   @media (max-width:768px)  { .main { margin-left:0; } .content { padding:0 20px 30px; } .topbar { padding:0 20px; } .author-hero { margin:0 -20px 22px; padding:26px 20px; } }
   @media (max-width:480px)  { .recipes-grid { grid-template-columns:1fr; } .tab-nav { overflow-x:auto; } }
@@ -207,11 +229,13 @@
         <div class="ah-stat"><div class="ah-stat-val"><%= autor.getTotal_receitas_publicadas() %></div><div class="ah-stat-lbl">Receitas</div></div>
         <div class="ah-stat"><div class="ah-stat-val"><%= autor.getTotal_comentarios() %></div><div class="ah-stat-lbl">Comentários</div></div>
       </div>
-      <%-- Botão "Seguir": some se for o próprio autor logado vendo o próprio perfil.
+      <%-- Botão "Seguir": só aparece pra usuário logado do tipo Visitante,
+           vendo o perfil de outro autor (regra calculada no AutorController,
+           não aqui — a JSP só obedece a flag mostrarBotaoSeguir).
            Estado inicial vem do servidor (seguindoInicial); o clique chama o
            SeguidorController via AJAX (action=toggle). Se não estiver logado,
            o servlet responde 401 e o JS manda pro login. --%>
-      <% if (!souEuMesmo) { %>
+      <% if (mostrarBotaoSeguir) { %>
         <button class="ah-follow-btn<%= seguindoInicial ? " following" : "" %>" id="ahFollowBtn" onclick="toggleFollowAuthor()">
           <span id="ahFollowIcon"><%= seguindoInicial ? "✓" : "+" %></span>
           <span id="ahFollowLabel"><%= seguindoInicial ? "Seguindo" : "Seguir" %></span>
@@ -267,11 +291,11 @@
           <div class="card-head"><div class="card-head-title">🍽️ Especialidades</div></div>
           <div class="card-body">
             <% if (especialidades.isEmpty()) { %>
-              <div class="empty-hint">Ainda sem receitas publicadas para gerar especialidades.</div>
+              <div class="empty-hint">Nenhuma especialidade cadastrada.</div>
             <% } else { %>
               <div class="tags-wrap">
-                <% for (Map.Entry<String,String> esp : especialidades.entrySet()) { %>
-                  <span class="tag"><%= esp.getValue() != null ? esp.getValue() + " " : "" %><%= esp.getKey() %></span>
+                <% for (Categoria c : especialidades) { %>
+                  <span class="tag"><%= c.getEmoji_categoria() != null ? c.getEmoji_categoria() + " " : "" %><%= c.getNome_categoria() %></span>
                 <% } %>
               </div>
             <% } %>
@@ -295,8 +319,8 @@
         </div>
         <select class="filter-select" id="filterCategoria" onchange="filtrarReceitas()">
           <option value="todos" selected>Todas as categorias</option>
-          <% for (String catNome : especialidades.keySet()) { %>
-            <option value="<%= catNome %>"><%= especialidades.get(catNome) != null ? especialidades.get(catNome) + " " : "" %><%= catNome %></option>
+          <% for (String catNome : categoriasReceitas.keySet()) { %>
+            <option value="<%= catNome %>"><%= categoriasReceitas.get(catNome) != null ? categoriasReceitas.get(catNome) + " " : "" %><%= catNome %></option>
           <% } %>
         </select>
         <div class="toolbar-spacer"></div>
