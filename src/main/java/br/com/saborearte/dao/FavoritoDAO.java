@@ -219,10 +219,13 @@ public class FavoritoDAO {
                     r.status_receita,
                     r.visualizacoes_receita,
                     c.nome_categoria,
-                    c.emoji_categoria
+                    c.emoji_categoria,
+                    u.nome_usuario,
+                    u.foto_usuario
                 FROM %s f
                 JOIN receita r   ON r.id_receita = f.id_receita
                 JOIN categoria c ON c.id_categoria = r.categoria
+                JOIN usuario u   ON u.id_usuario = r.usuario
                 WHERE f.id_usuario = ?
                   AND r.status_receita = 'publicada'
                 ORDER BY f.data_favorito DESC
@@ -305,6 +308,8 @@ public class FavoritoDAO {
         // ===== Campos extras (não persistidos) =====
         r.setNome_categoria(rs.getString("nome_categoria"));
         r.setEmoji_categoria(rs.getString("emoji_categoria"));
+        r.setNome_usuario(rs.getString("nome_usuario"));
+        r.setFoto_usuario(rs.getString("foto_usuario"));
 
         return r;
     }

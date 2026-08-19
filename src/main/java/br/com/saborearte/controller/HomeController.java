@@ -41,8 +41,8 @@ public class HomeController extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private static final int LIMITE_RECEITAS_DESTAQUE = 3;
-    private static final int LIMITE_CATEGORIAS        = 5;
-    private static final int LIMITE_AUTORES_DESTAQUE  = 4;
+    private static final int LIMITE_CATEGORIAS        = 6;
+    private static final int LIMITE_AUTORES_DESTAQUE  = 5;
 
     private Connection conexao;
     private ReceitaDAO receitaDAO;
@@ -93,9 +93,9 @@ public class HomeController extends HttpServlet {
             request.setAttribute("autoresDestaque", autoresDestaque);
 
             if (usuarioLogado != null) {
-                request.getRequestDispatcher("/pages/home-visitante.jsp").forward(request, response);
+                request.getRequestDispatcher("/home.jsp").forward(request, response);
             } else {
-                request.getRequestDispatcher("/pages/home-publico.jsp").forward(request, response);
+                request.getRequestDispatcher("/home.jsp").forward(request, response);
             }
 
         } catch (SQLException e) {
