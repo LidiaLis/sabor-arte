@@ -30,6 +30,20 @@
       ? usuario.getTipo_usuario().toString()
       : "PUBLICO";
   String ctx = request.getContextPath();
+  int pageAtual = Math.max(1, intAttr(request, "page"));
+  int totalPages = Math.max(1, intAttr(request, "totalPages"));
+  int totalReceitas = intAttr(request, "total");
+  int size = Math.max(1, intAttr(request, "size"));
+  String busca = request.getAttribute("busca") == null ? "" : String.valueOf(request.getAttribute("busca"));
+  Integer idCategoria = request.getAttribute("idCategoria") instanceof Integer
+      ? (Integer) request.getAttribute("idCategoria") : null;
+  String statusAtividade = request.getAttribute("statusAtividade") == null
+      ? "" : String.valueOf(request.getAttribute("statusAtividade"));
+  String statusReceita = request.getAttribute("statusReceita") == null
+      ? "" : String.valueOf(request.getAttribute("statusReceita"));
+  String csrfToken = request.getAttribute("csrfToken") == null
+      ? "" : String.valueOf(request.getAttribute("csrfToken"));
+  String buscaUrl = java.net.URLEncoder.encode(busca, java.nio.charset.StandardCharsets.UTF_8);
 %>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -353,30 +367,41 @@ a.sidebar-user:active {
     </div>
 
     <!-- ===== TOOLBAR: BUSCA + FILTRO DE CATEGORIA (sem filtro de status) ===== -->
-    <div class="toolbar">
+    <form class="toolbar" method="get" action="<%= ctx %>/ReceitaController">
       <div class="search-bar">
         <span style="font-size:14px;color:var(--text-light)">🔍</span>
-        <input type="text" id="campoBusca" placeholder="Buscar receitas…">
+        <input type="text" name="busca" value="<%= h(busca) %>" placeholder="Buscar receitas…">
       </div>
-      <!--
-        Em produção: SELECT id_categoria, nome_categoria, emoji_categoria FROM categoria
-        (aqui os valores estão fixos, extraídos das categorias já usadas nos cards abaixo)
-      -->
-      <select class="filter-select" id="filterCategoria">
-        <option value="" selected>Todas as categorias</option>
+      <select class="filter-select" name="idCategoria">
+        <option value="">Todas as categorias</option>
         <% for (Categoria categoria : categorias) { %>
-          <option value="<%= h(categoria.getNome_categoria()) %>"><%= h(categoria.getEmoji_categoria()) %> <%= h(categoria.getNome_categoria()) %></option>
+          <option value="<%= categoria.getId_categoria() %>" <%= idCategoria != null && idCategoria == categoria.getId_categoria() ? "selected" : "" %>><%= h(categoria.getEmoji_categoria()) %> <%= h(categoria.getNome_categoria()) %></option>
         <% } %>
       </select>
+      <% if ("ADMIN".equals(tipoUsuario)) { %>
+        <select class="filter-select" name="statusReceita">
+          <option value="">Todos os estados</option>
+          <% for (Receita.StatusReceita estado : Receita.StatusReceita.values()) { %>
+            <option value="<%= estado.name() %>" <%= estado.name().equals(statusReceita) ? "selected" : "" %>><%= h(estado.name().replace('_', ' ')) %></option>
+          <% } %>
+        </select>
+        <select class="filter-select" name="statusAtividade">
+          <option value="">Ativas e inativas</option>
+          <option value="ativo" <%= "ativo".equals(statusAtividade) ? "selected" : "" %>>Ativas</option>
+          <option value="inativo" <%= "inativo".equals(statusAtividade) ? "selected" : "" %>>Inativas</option>
+        </select>
+      <% } %>
+      <input type="hidden" name="size" value="<%= size %>">
+      <button class="footer-btn" type="submit">Aplicar filtros</button>
       <div class="toolbar-spacer"></div>
-    </div>
+    </form>
 
     <!-- GRID -->
     <div class="recipes-grid" id="recipesGrid">
       <% for (Receita receita : receitas) { %>
         <article class="recipe-card" data-name="<%= h(receita.getTitulo_receita()) %>" data-cat="<%= h(receita.getNome_categoria()) %>">
           <div class="recipe-img-wrap">
-            <img src="<%= h(receita.getImagem_receita()) %>" alt="<%= h(receita.getTitulo_receita()) %>">
+            <img loading="lazy" decoding="async" src="<%= receita.getImagem_receita() == null || receita.getImagem_receita().isBlank() ? ctx + "/assets/img/receita-sem-imagem.svg" : h(receita.getImagem_receita()) %>" onerror="this.onerror=null;this.src='<%= ctx %>/assets/img/receita-sem-imagem.svg'" alt="<%= h(receita.getTitulo_receita()) %>">
           </div>
           <div class="recipe-body">
             <div class="recipe-cat"><%= h(receita.getEmoji_categoria()) %> <%= h(receita.getNome_categoria()) %></div>
@@ -387,18 +412,21 @@ a.sidebar-user:active {
             </div>
           </div>
           <div class="recipe-footer">
-            <a class="footer-btn" href="<%= ctx %>/receitas?acao=detalhar&amp;id=<%= receita.getId_receita() %>">👁 Ver</a>
+            <a class="footer-btn" href="<%= ctx %>/ReceitaController?action=detalhar&amp;idReceita=<%= receita.getId_receita() %>">👁 Ver</a>
             <% if (usuarioAutenticado) { %>
               <form method="post" action="<%= ctx %>/FavoritoController">
+                <input type="hidden" name="action" value="toggle">
                 <input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>">
                 <button class="footer-btn" type="submit">☆ Favoritar</button>
               </form>
             <% } %>
             <% if ("ADMIN".equals(tipoUsuario)) { %>
-              <form method="post" action="<%= ctx %>/receitas">
-                <input type="hidden" name="action" value="toggleStatus">
-                <input type="hidden" name="receitaId" value="<%= receita.getId_receita() %>">
-                <button class="footer-btn" type="submit">Ativar/Inativar</button>
+              <form method="post" action="<%= ctx %>/ReceitaController">
+                <input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>">
+                <input type="hidden" name="action" value="alterarAtividade">
+                <input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>">
+                <input type="hidden" name="statusAtividade" value="<%= receita.getStatus_atividade() == Receita.StatusAtividade.ativo ? "inativo" : "ativo" %>">
+                <button class="footer-btn" type="submit"><%= receita.getStatus_atividade() == Receita.StatusAtividade.ativo ? "Inativar" : "Ativar" %></button>
               </form>
             <% } %>
           </div>
@@ -411,39 +439,16 @@ a.sidebar-user:active {
 
     <!-- ===== PAGINAÇÃO ===== -->
     <div class="pagination" id="pagination">
-      <div class="pag-info" id="pagInfo">—</div>
-      <div class="pag-btns" id="pagBtns"></div>
+      <div class="pag-info"><%= totalReceitas %> receita(s) · página <%= pageAtual %> de <%= totalPages %></div>
+      <div class="pag-btns">
+        <% for (int p = 1; p <= totalPages; p++) { %>
+          <a class="pag-btn <%= p == pageAtual ? "active" : "" %>" href="<%= ctx %>/ReceitaController?page=<%= p %>&amp;size=<%= size %>&amp;busca=<%= buscaUrl %><%= idCategoria == null ? "" : "&amp;idCategoria=" + idCategoria %><%= statusReceita.isBlank() ? "" : "&amp;statusReceita=" + statusReceita %><%= statusAtividade.isBlank() ? "" : "&amp;statusAtividade=" + statusAtividade %>"><%= p %></a>
+        <% } %>
+      </div>
     </div>
 
   </div>
 </main>
 
-<script>
-(function () {
-  var cards = Array.from(document.querySelectorAll('#recipesGrid .recipe-card'));
-  var search = document.getElementById('campoBusca');
-  var category = document.getElementById('filterCategoria');
-  var empty = document.getElementById('emptyState');
-
-  function filterCards() {
-    var term = search ? search.value.trim().toLowerCase() : '';
-    var selected = category ? category.value : '';
-    var visible = 0;
-    cards.forEach(function (card) {
-      var matches = (!term || (card.dataset.name || '').toLowerCase().includes(term)) &&
-        (!selected || card.dataset.cat === selected);
-      card.style.display = matches ? '' : 'none';
-      if (matches) visible++;
-    });
-    if (empty) empty.style.display = visible ? 'none' : '';
-    var info = document.getElementById('pagInfo');
-    if (info) info.textContent = visible ? visible + ' receita(s)' : 'Nenhuma receita encontrada';
-  }
-
-  if (search) search.addEventListener('input', filterCards);
-  if (category) category.addEventListener('change', filterCards);
-  filterCards();
-})();
-</script>
 </body>
 </html>

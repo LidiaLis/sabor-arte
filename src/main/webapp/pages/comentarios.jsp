@@ -18,14 +18,14 @@
   String ctx = request.getContextPath();
   String filtro = request.getAttribute("filtro") == null ? "" : String.valueOf(request.getAttribute("filtro"));
   String statusFiltro = request.getAttribute("statusFiltro") == null ? "" : String.valueOf(request.getAttribute("statusFiltro"));
-  String dataFiltro = request.getAttribute("data") == null ? "" : String.valueOf(request.getAttribute("data"));
+  String dataFiltro = request.getAttribute("dataFiltro") == null ? "" : String.valueOf(request.getAttribute("dataFiltro"));
   int pageAtual = Math.max(1, n(request.getAttribute("page")));
   int pageSize = Math.max(1, n(request.getAttribute("size")));
   int total = n(request.getAttribute("total"));
   int totalPages = Math.max(1, (int)Math.ceil(total / (double)pageSize));
   String queryBase = "filtro=" + URLEncoder.encode(filtro, StandardCharsets.UTF_8)
-      + "&status=" + URLEncoder.encode(statusFiltro, StandardCharsets.UTF_8)
-      + "&data=" + URLEncoder.encode(dataFiltro, StandardCharsets.UTF_8)
+      + "&statusFiltro=" + URLEncoder.encode(statusFiltro, StandardCharsets.UTF_8)
+      + "&dataFiltro=" + URLEncoder.encode(dataFiltro, StandardCharsets.UTF_8)
       + "&size=" + pageSize;
 %>
 <!DOCTYPE html>
@@ -299,8 +299,8 @@
       <div class="stat-card red">
         <div class="stat-icon">🗑</div>
         <div class="stat-text">
-          <div class="stat-value"><%= n(request.getAttribute("totalRemovidos")) %></div>
-          <div class="stat-label">Comentários Removidos</div>
+          <div class="stat-value"><%= n(request.getAttribute("totalRejeitados")) %></div>
+          <div class="stat-label">Rejeitados</div>
         </div>
       </div>
       <div class="stat-card gold">
@@ -317,19 +317,20 @@
       <!-- FILTER PANEL (lateral) -->
       <div class="filter-panel">
         <div class="filter-panel-head">🔍 Filtros</div>
-        <form class="filter-bar" method="get" action="<%= ctx %>/comentarios-moderacao">
+        <form class="filter-bar" method="get" action="<%= ctx %>/ComentarioController?view=moderacao">
+          <input type="hidden" name="view" value="moderacao">
           <div class="filter-field"><span class="filter-label">Pesquisar</span><div class="search-wrap"><span>🔍</span><input type="text" name="filtro" value="<%= h(filtro) %>" placeholder="Comentário, usuário ou receita"></div></div>
-          <div class="filter-field"><span class="filter-label">Status</span><select class="filter-select" name="status">
+          <div class="filter-field"><span class="filter-label">Status</span><select class="filter-select" name="statusFiltro">
             <option value="">Todos</option>
             <option value="PENDENTE" <%= "PENDENTE".equals(statusFiltro) ? "selected" : "" %>>Pendente</option>
             <option value="APROVADO" <%= "APROVADO".equals(statusFiltro) ? "selected" : "" %>>Mantido</option>
             <option value="REMOVIDO" <%= "REMOVIDO".equals(statusFiltro) ? "selected" : "" %>>Removido</option>
             <option value="REJEITADO" <%= "REJEITADO".equals(statusFiltro) ? "selected" : "" %>>Rejeitado</option>
           </select></div>
-          <div class="filter-field"><span class="filter-label">Data</span><input type="date" class="filter-input" name="data" value="<%= h(dataFiltro) %>"></div>
+          <div class="filter-field"><span class="filter-label">Data</span><input type="date" class="filter-input" name="dataFiltro" value="<%= h(dataFiltro) %>"></div>
           <input type="hidden" name="size" value="<%= pageSize %>">
           <button class="btn btn-primary" type="submit">Aplicar filtros</button>
-          <a class="btn-clear-filters" href="<%= ctx %>/comentarios-moderacao">✕ Limpar filtros</a>
+          <a class="btn-clear-filters" href="<%= ctx %>/ComentarioController?view=moderacao">✕ Limpar filtros</a>
         </form>
       </div>
 
@@ -357,10 +358,11 @@
                   <td><span class="pill <%= pill %>"><span class="pill-dot"></span><%= h(status) %></span></td>
                   <td><div class="row-actions">
                     <% if ("PENDENTE".equals(status)) { %>
-                    <form method="post" action="<%= ctx %>/comentarios-moderacao"><input type="hidden" name="action" value="manter"><input type="hidden" name="comentarioId" value="<%= comentario.getId_comentario() %>"><button class="row-btn keep" type="submit" title="Manter comentário">✓</button></form>
-                    <form method="post" action="<%= ctx %>/comentarios-moderacao"><input type="hidden" name="action" value="remover"><input type="hidden" name="comentarioId" value="<%= comentario.getId_comentario() %>"><button class="row-btn remove" type="submit" title="Remover comentário">🗑</button></form>
+                    <form method="post" action="<%= ctx %>/ComentarioController?view=moderacao"><input type="hidden" name="action" value="manter"><input type="hidden" name="idComentario" value="<%= comentario.getId_comentario() %>"><button class="row-btn keep" type="submit" title="Manter comentário">✓</button></form>
+                    <form method="post" action="<%= ctx %>/ComentarioController?view=moderacao"><input type="hidden" name="action" value="rejeitar"><input type="hidden" name="idComentario" value="<%= comentario.getId_comentario() %>"><button class="row-btn remove" type="submit" title="Rejeitar comentário">✕</button></form>
+                    <form method="post" action="<%= ctx %>/ComentarioController?view=moderacao"><input type="hidden" name="action" value="remover"><input type="hidden" name="idComentario" value="<%= comentario.getId_comentario() %>"><button class="row-btn remove" type="submit" title="Remover comentário">🗑</button></form>
                     <% } %>
-                    <form method="post" action="<%= ctx %>/comentarios-moderacao" onsubmit="return confirm('Inativar este usuário?')"><input type="hidden" name="action" value="inativarUsuario"><input type="hidden" name="usuarioId" value="<%= comentario.getUsuario() %>"><button class="row-btn block" type="submit" title="Inativar usuário">🚫</button></form>
+                    <form method="post" action="<%= ctx %>/ComentarioController?view=moderacao" onsubmit="return confirm('Inativar este usuário e remover o comentário?')"><input type="hidden" name="action" value="inativarUsuario"><input type="hidden" name="idComentario" value="<%= comentario.getId_comentario() %>"><button class="row-btn block" type="submit" title="Inativar usuário">🚫</button></form>
                   </div></td>
                 </tr>
               <% } %>
@@ -371,9 +373,9 @@
           <div class="table-footer">
             <div class="footer-info">Página <strong><%= pageAtual %></strong> de <strong><%= totalPages %></strong> · <%= total %> registro(s)</div>
             <div class="pagination">
-              <a class="pag-btn" href="<%= ctx %>/comentarios-moderacao?<%= queryBase %>&page=<%= Math.max(1, pageAtual - 1) %>">‹</a>
-              <% for (int p = 1; p <= totalPages; p++) { %><a class="pag-btn <%= p == pageAtual ? "active" : "" %>" href="<%= ctx %>/comentarios-moderacao?<%= queryBase %>&page=<%= p %>"><%= p %></a><% } %>
-              <a class="pag-btn" href="<%= ctx %>/comentarios-moderacao?<%= queryBase %>&page=<%= Math.min(totalPages, pageAtual + 1) %>">›</a>
+              <a class="pag-btn" href="<%= ctx %>/ComentarioController?view=moderacao&amp;<%= queryBase %>&amp;page=<%= Math.max(1, pageAtual - 1) %>">‹</a>
+              <% for (int p = 1; p <= totalPages; p++) { %><a class="pag-btn <%= p == pageAtual ? "active" : "" %>" href="<%= ctx %>/ComentarioController?view=moderacao&amp;<%= queryBase %>&amp;page=<%= p %>"><%= p %></a><% } %>
+              <a class="pag-btn" href="<%= ctx %>/ComentarioController?view=moderacao&amp;<%= queryBase %>&amp;page=<%= Math.min(totalPages, pageAtual + 1) %>">›</a>
             </div>
           </div>
         </div>
@@ -391,5 +393,3 @@ function toggleSidebar(){
 </script>
 </body>
 </html>
-
-

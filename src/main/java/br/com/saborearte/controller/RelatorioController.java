@@ -13,6 +13,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import br.com.saborearte.dao.RelatorioDAO;
+import br.com.saborearte.dao.FluxoDAO;
+import br.com.saborearte.model.Fluxo.StatusFluxo;
 import br.com.saborearte.model.Usuario;
 import br.com.saborearte.model.Usuario.TipoUsuario;
 import br.com.saborearte.utils.Conexao;
@@ -67,16 +69,26 @@ public class RelatorioController extends HttpServlet {
 
     private void gerarAdmin(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String tipo = normalizarTipo(request.getParameter("tipo"), "usuarios", "categorias");
+        String tipo = normalizarTipoAdmin(request.getParameter("tipo"));
         String status = request.getParameter("status");
+        String statusFluxoValor = request.getParameter("statusFluxo");
+        LocalDate inicio = parseData(request.getParameter("dataInicio"));
+        LocalDate fim = parseData(request.getParameter("dataFim"));
         try (Connection conexao = Conexao.getConnection()) {
             RelatorioDAO dao = new RelatorioDAO(conexao);
+            FluxoDAO fluxoDAO = new FluxoDAO(conexao);
             request.setAttribute("tipoRelatorio", tipo);
             request.setAttribute("statusFiltro", status);
+            request.setAttribute("statusFluxoFiltro", statusFluxoValor);
+            request.setAttribute("dataInicio", inicio);
+            request.setAttribute("dataFim", fim);
             request.setAttribute("usuarios",
                     "usuarios".equals(tipo) ? dao.listarUsuarios(status) : Collections.emptyList());
             request.setAttribute("categorias",
                     "categorias".equals(tipo) ? dao.listarCategorias(status) : Collections.emptyList());
+            request.setAttribute("fluxos", "fluxo".equals(tipo)
+                    ? fluxoDAO.listarRelatorio(parseStatusFluxo(statusFluxoValor), inicio, fim)
+                    : Collections.emptyList());
             request.getRequestDispatcher("/pages/relatorio-admin.jsp").forward(request, response);
         } catch (Exception e) {
             encaminharErro(request, response, "/pages/relatorio-admin.jsp", e);
@@ -127,6 +139,18 @@ public class RelatorioController extends HttpServlet {
 
     private String normalizarTipo(String valor, String padrao, String alternativo) {
         return alternativo.equals(valor) ? alternativo : padrao;
+    }
+
+    private String normalizarTipoAdmin(String valor) {
+        return "categorias".equals(valor) || "fluxo".equals(valor) ? valor : "usuarios";
+    }
+
+    private StatusFluxo parseStatusFluxo(String valor) {
+        try {
+            return valor == null || valor.isBlank() ? null : StatusFluxo.valueOf(valor);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private Integer parseInteger(String valor) {

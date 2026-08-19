@@ -1,267 +1,81 @@
 package br.com.saborearte.dao;
 
 import br.com.saborearte.model.Log;
-
+import br.com.saborearte.model.Usuario.TipoUsuario;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO de Log.
- *
- * CORREÇÃO em relação à versão anterior: o SQL usava as colunas
- * usuario_id / acao / detalhes / data_hora, mas o DER e o model Log.java
- * apontam pra usuario / acao_log / data_log / descricao_log. Ajustado
- * abaixo pra bater com o DER.
- *
- * NOVO: coluna entidade_log (ver alter_tables.sql) — necessária pro filtro
- * "Entidade" (Receita/Comentário/Perfil/Sistema) do log-admin.html, que a
- * tabela original não tinha como suportar.
- *
- * Log.java não tem campo pra entidade nem pra nome do autor (usados nos
- * filtros/tabela do log-admin.html) — os métodos abaixo devolvem esses
- * extras junto do objeto Log via campos que você pode adicionar ao model
- * (nome_usuario, entidade_log) seguindo o mesmo padrão de "campos extras
- * não persistidos" que você já usa em Comentario/Receita. Por enquanto,
- * mapeei direto no ResultSet -> setDetalhe_log já concatenado, pra não
- * mexer no seu Log.java sem confirmar com você antes.
- */
+/** Acesso parametrizado à auditoria. As consultas deste DAO nunca alteram logs. */
 public class LogDAO {
-
     private final Connection conexao;
+    public LogDAO(Connection conexao) { this.conexao = conexao; }
 
-    public LogDAO(Connection conexao) {
-        this.conexao = conexao;
-    }
-
-    // =========================================================================
-    // REGISTRAR
-    // =========================================================================
-
-    /**
-     * Registra uma ação de auditoria. data_log é preenchida com NOW() no INSERT
-     * (padrão já usado em ComentarioDAO.cadastrarComentario), então não
-     * dependemos do valor de log.getData_log() no momento da chamada.
-     *
-     * @param entidade valor livre: "Receita", "Comentário", "Perfil", "Sistema"...
-     *                 (null se ainda não tiver rodado o ALTER TABLE de entidade_log)
-     */
     public void registrar(Log log, String entidade) throws SQLException {
+        String sql = "INSERT INTO log (usuario,acao_log,descricao_log,entidade_log,data_log) VALUES (?,?,?,?,NOW())";
+        try (PreparedStatement stmt=conexao.prepareStatement(sql)) {
+            stmt.setInt(1,log.getUsuario()); stmt.setString(2,log.getAcao_log());
+            stmt.setString(3,log.getDetalhe_log()); stmt.setString(4,entidade); stmt.executeUpdate();
+        }
+    }
+    public void registrar(Log log) throws SQLException { registrar(log,log.getEntidade_log()); }
 
-        String sql = """
-                INSERT INTO log (usuario, acao_log, descricao_log, entidade_log, data_log)
-                VALUES (?, ?, ?, ?, NOW())
-                """;
-
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setInt(1, log.getUsuario());
-            stmt.setString(2, log.getAcao_log());
-            stmt.setString(3, log.getDetalhe_log());
-            stmt.setString(4, entidade);
-            stmt.executeUpdate();
+    public int contarComFiltros(String busca,String acaoLog,String entidade,LocalDate inicio,LocalDate fim) throws SQLException {
+        FiltroSql f=montarFiltro(busca,acaoLog,entidade,inicio,fim);
+        try(PreparedStatement s=conexao.prepareStatement("SELECT COUNT(*) "+baseFrom()+f.where)) {
+            aplicarParametros(s,f.params); try(ResultSet r=s.executeQuery()){return r.next()?r.getInt(1):0;}
         }
     }
 
-    /** Sobrecarga sem entidade, pra quem ainda não rodou o ALTER TABLE. */
-    public void registrar(Log log) throws SQLException {
-        registrar(log, null);
+    public List<Log> listarComFiltros(String busca,String acaoLog,String entidade,LocalDate inicio,LocalDate fim,int offset,int limite) throws SQLException {
+        if(offset<0||limite<1) throw new IllegalArgumentException("Paginação inválida.");
+        FiltroSql f=montarFiltro(busca,acaoLog,entidade,inicio,fim);
+        String sql="SELECT l.id_log,l.usuario,l.acao_log,l.descricao_log,l.entidade_log,l.data_log,"+
+                "u.nome_usuario,u.foto_usuario,u.tipo_usuario "+baseFrom()+f.where+
+                " ORDER BY l.data_log DESC, l.id_log DESC LIMIT ? OFFSET ?";
+        List<Log> logs=new ArrayList<>();
+        try(PreparedStatement s=conexao.prepareStatement(sql)) {
+            aplicarParametros(s,f.params); s.setInt(f.params.size()+1,limite); s.setInt(f.params.size()+2,offset);
+            try(ResultSet r=s.executeQuery()){while(r.next())logs.add(mapearComAutor(r));}
+        }
+        return logs;
     }
 
-    // =========================================================================
-    // LISTAR
-    // =========================================================================
-
+    /** Compatibilidade temporária para consumidores antigos. */
+    public ResultadoLogs listarComFiltro(String b,String a,String e,LocalDate i,LocalDate f,int o,int l) throws SQLException {
+        return new ResultadoLogs(listarComFiltros(b,a,e,i,f,o,l),contarComFiltros(b,a,e,i,f));
+    }
     public List<Log> listarTodos() throws SQLException {
-        return listarComFiltro(null, null, null, null, null, 0, Integer.MAX_VALUE).logs;
+        int total=contarComFiltros(null,null,null,null,null);
+        return total==0?new ArrayList<>():listarComFiltros(null,null,null,null,null,0,total);
     }
-
-    /**
-     * Resultado de uma busca paginada: os logs da página + o total de registros
-     * que batem com o filtro (pra montar a paginação sem precisar de uma
-     * segunda query manual no Controller).
-     */
-    public static class ResultadoLogs {
-        public final List<Log> logs;
-        public final int total;
-
-        public ResultadoLogs(List<Log> logs, int total) {
-            this.logs = logs;
-            this.total = total;
-        }
+    public List<Log> listarPorUsuario(int idUsuario,int limite) throws SQLException {
+        String sql="SELECT id_log,usuario,acao_log,descricao_log,entidade_log,data_log FROM log WHERE usuario=? ORDER BY data_log DESC, id_log DESC LIMIT ?";
+        List<Log> logs=new ArrayList<>();
+        try(PreparedStatement s=conexao.prepareStatement(sql)){s.setInt(1,idUsuario);s.setInt(2,limite);try(ResultSet r=s.executeQuery()){while(r.next())logs.add(mapear(r));}}
+        return logs;
     }
+    public int contarLogs() throws SQLException{return contarComFiltros(null,null,null,null,null);}
 
-    /**
-     * Busca com todos os filtros da tela log-admin.html:
-     *
-     * @param busca     termo livre — bate em nome do usuário (JOIN) ou descricao_log
-     * @param acao      valor exato de acao_log (null/"" -> ignora)
-     * @param entidade  valor exato de entidade_log (null/"" -> ignora; requer coluna nova)
-     * @param dataInicio filtro de período (>=), pode ser null
-     * @param dataFim    filtro de período (<=), pode ser null
-     */
-    public ResultadoLogs listarComFiltro(String busca,
-                                          String acao,
-                                          String entidade,
-                                          java.time.LocalDate dataInicio,
-                                          java.time.LocalDate dataFim,
-                                          int offset,
-                                          int limite) throws SQLException {
-
-        StringBuilder where = new StringBuilder(" WHERE 1=1 ");
-        List<Object> params = new ArrayList<>();
-
-        if (busca != null && !busca.isBlank()) {
-            where.append(" AND (u.nome_usuario LIKE ? OR l.descricao_log LIKE ?) ");
-            String termo = "%" + busca.trim() + "%";
-            params.add(termo);
-            params.add(termo);
-        }
-
-        if (acao != null && !acao.isBlank()) {
-            where.append(" AND l.acao_log = ? ");
-            params.add(acao);
-        }
-
-        if (entidade != null && !entidade.isBlank()) {
-            where.append(" AND l.entidade_log = ? ");
-            params.add(entidade);
-        }
-
-        if (dataInicio != null) {
-            where.append(" AND l.data_log >= ? ");
-            params.add(java.sql.Date.valueOf(dataInicio));
-        }
-
-        if (dataFim != null) {
-            where.append(" AND l.data_log < ? ");
-            params.add(java.sql.Date.valueOf(dataFim.plusDays(1)));
-        }
-
-        String sqlBase = """
-                FROM log l
-                JOIN usuario u ON u.id_usuario = l.usuario
-                """ + where;
-
-        List<Log> lista = new ArrayList<>();
-        int total = 0;
-
-        // ===== total (mesmos filtros, sem LIMIT) =====
-        try (PreparedStatement stmt = conexao.prepareStatement("SELECT COUNT(*) AS total " + sqlBase)) {
-            aplicarParametros(stmt, params);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) total = rs.getInt("total");
-            }
-        }
-
-        // ===== página =====
-        String sqlPagina = """
-                SELECT
-                    l.id_log, l.usuario, l.acao_log, l.descricao_log, l.entidade_log, l.data_log,
-                    u.nome_usuario, u.foto_usuario, u.tipo_usuario
-                """ + sqlBase + " ORDER BY l.data_log DESC LIMIT ? OFFSET ? ";
-
-        try (PreparedStatement stmt = conexao.prepareStatement(sqlPagina)) {
-            aplicarParametros(stmt, params);
-            stmt.setInt(params.size() + 1, limite);
-            stmt.setInt(params.size() + 2, offset);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    lista.add(mapearComAutor(rs));
-                }
-            }
-        }
-
-        return new ResultadoLogs(lista, total);
+    private String baseFrom(){return "FROM log l JOIN usuario u ON u.id_usuario=l.usuario ";}
+    private FiltroSql montarFiltro(String busca,String acao,String entidade,LocalDate inicio,LocalDate fim){
+        StringBuilder w=new StringBuilder("WHERE 1=1"); List<Object> p=new ArrayList<>();
+        if(busca!=null&&!busca.isBlank()){w.append(" AND (u.nome_usuario LIKE ? OR l.descricao_log LIKE ?)");String t="%"+busca.trim()+"%";p.add(t);p.add(t);}
+        if(acao!=null&&!acao.isBlank()){w.append(" AND l.acao_log=?");p.add(acao);}
+        if(entidade!=null&&!entidade.isBlank()){w.append(" AND l.entidade_log=?");p.add(entidade);}
+        if(inicio!=null){w.append(" AND l.data_log>=?");p.add(Date.valueOf(inicio));}
+        if(fim!=null){w.append(" AND l.data_log<?");p.add(Date.valueOf(fim.plusDays(1)));}
+        return new FiltroSql(w.toString(),p);
     }
-
-    private void aplicarParametros(PreparedStatement stmt, List<Object> params) throws SQLException {
-        for (int i = 0; i < params.size(); i++) {
-            stmt.setObject(i + 1, params.get(i));
-        }
-    }
-
-    // =========================================================================
-    // LISTAR ÚLTIMAS N AÇÕES DE UM USUÁRIO (card "Log de Atividades" do perfil-admin.html)
-    // =========================================================================
-
-    public List<Log> listarPorUsuario(int idUsuario, int limite) throws SQLException {
-
-        String sql = """
-                SELECT id_log, usuario, acao_log, descricao_log, entidade_log, data_log
-                FROM log
-                WHERE usuario = ?
-                ORDER BY data_log DESC
-                LIMIT ?
-                """;
-
-        List<Log> lista = new ArrayList<>();
-
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            stmt.setInt(1, idUsuario);
-            stmt.setInt(2, limite);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    lista.add(mapear(rs));
-                }
-            }
-        }
-
-        return lista;
-    }
-
-    // =========================================================================
-    // CONTAR
-    // =========================================================================
-
-    public int contarLogs() throws SQLException {
-        String sql = "SELECT COUNT(*) AS total FROM log";
-        try (PreparedStatement stmt = conexao.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            return rs.next() ? rs.getInt("total") : 0;
-        }
-    }
-
-    // =========================================================================
-    // MAPEAMENTO INTERNO
-    // =========================================================================
-
-    private Log mapear(ResultSet rs) throws SQLException {
-        Log log = new Log();
-        log.setId_log(rs.getInt("id_log"));
-        log.setUsuario(rs.getInt("usuario"));
-        log.setAcao_log(rs.getString("acao_log"));
-        log.setDetalhe_log(rs.getString("descricao_log"));
-        log.setEntidade_log(rs.getString("entidade_log"));
-     
-        Timestamp ts = rs.getTimestamp("data_log");
-        log.setData_log(ts != null ? ts.toString() : null);
-     
-        return log;
-    }
-     
-    /**
-     * Mesma coisa de mapear(), mas também preenche nome/foto/papel do autor
-     * (campos extras não persistidos de Log.java), lidos do JOIN com usuario
-     * que listarComFiltro() já faz.
-     */
-    private Log mapearComAutor(ResultSet rs) throws SQLException {
-     
-        Log log = mapear(rs);
-     
-        log.setNome_usuario(rs.getString("nome_usuario"));
-        log.setFoto_usuario(rs.getString("foto_usuario"));
-     
-        String tipo = rs.getString("tipo_usuario");
-        if (tipo != null) {
-            log.setTipo_usuario(br.com.saborearte.model.Usuario.TipoUsuario.valueOf(tipo));
-        }
-     
-        return log;
-    }
+    private void aplicarParametros(PreparedStatement s,List<Object> p)throws SQLException{for(int x=0;x<p.size();x++)s.setObject(x+1,p.get(x));}
+    private Log mapear(ResultSet r)throws SQLException{Log l=new Log();l.setId_log(r.getInt("id_log"));l.setUsuario(r.getInt("usuario"));l.setAcao_log(r.getString("acao_log"));l.setDetalhe_log(r.getString("descricao_log"));l.setEntidade_log(r.getString("entidade_log"));Timestamp t=r.getTimestamp("data_log");l.setData_log(t==null?null:t.toString());return l;}
+    private Log mapearComAutor(ResultSet r)throws SQLException{Log l=mapear(r);l.setNome_usuario(r.getString("nome_usuario"));l.setFoto_usuario(r.getString("foto_usuario"));String t=r.getString("tipo_usuario");if(t!=null)l.setTipo_usuario(TipoUsuario.valueOf(t));return l;}
+    private static final class FiltroSql{final String where;final List<Object> params;FiltroSql(String w,List<Object> p){where=w;params=p;}}
+    public static final class ResultadoLogs{public final List<Log> logs;public final int total;public ResultadoLogs(List<Log> l,int t){logs=l;total=t;}}
 }

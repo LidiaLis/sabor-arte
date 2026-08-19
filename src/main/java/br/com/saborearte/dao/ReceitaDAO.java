@@ -3,6 +3,7 @@ package br.com.saborearte.dao;
 import br.com.saborearte.model.Receita;
 import br.com.saborearte.model.Receita.StatusAtividade;
 import br.com.saborearte.model.Receita.StatusReceita;
+import br.com.saborearte.model.Fluxo.StatusFluxo;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -350,7 +351,6 @@ public class ReceitaDAO {
                 JOIN usuario u ON u.id_usuario = r.usuario
                 LEFT JOIN comentario cm ON cm.receita = r.id_receita
                 WHERE r.id_receita = ?
-                  AND r.status_receita = ?
                 GROUP BY
                     r.id_receita, r.categoria, r.usuario, r.titulo_receita,
                     r.data_criacao_receita, r.data_publicacao_receita, r.tempo_preparo_receita,
@@ -361,7 +361,6 @@ public class ReceitaDAO {
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
 
             stmt.setInt(1, idReceita);
-            stmt.setString(2, StatusReceita.publicada.name());
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -735,5 +734,566 @@ public class ReceitaDAO {
                 return rs.next() ? rs.getInt("total") : 0;
             }
         }
+    }
+
+    // =========================================================================
+    // ===== NOVO — receitas-editor.jsp (fila de revisão editorial) =====
+    // =========================================================================
+    //
+    // CORREÇÃO DO BUG DOCUMENTADO NO CONTRATO: a fila do editor NÃO pode
+    // reaproveitar listarReceitasAdmin (que filtra por status_atividade
+    // ativo/inativo, não por status_receita). Precisa filtrar
+    // especificamente por status_receita = 'aguardando_aprovacao'.
+    // =========================================================================
+
+    /**
+     * Fila de revisão do editor: só receitas com status_receita =
+     * 'aguardando_aprovacao', com busca por título/autor e filtro de
+     * categoria opcionais, mais antigas primeiro (quem está esperando há
+     * mais tempo aparece no topo).
+     */
+    public List<Receita> listarReceitasParaRevisao(String busca,
+                                                     Integer idCategoria,
+                                                     int limite,
+                                                     int offset) throws SQLException {
+
+        List<Receita> lista = new ArrayList<>();
+
+        String sql = """
+                SELECT
+                    r.*,
+                    c.nome_categoria,
+                    c.emoji_categoria,
+                    u.nome_usuario,
+                    u.foto_usuario,
+                    COALESCE(AVG(cm.avaliacao_comentario), 0) AS nota_media
+                FROM receita r
+                JOIN categoria c ON c.id_categoria = r.categoria
+                JOIN usuario u ON u.id_usuario = r.usuario
+                LEFT JOIN comentario cm ON cm.receita = r.id_receita
+                WHERE r.status_receita = ?
+                  AND (? IS NULL OR r.categoria = ?)
+                  AND (? IS NULL OR r.titulo_receita LIKE ? OR u.nome_usuario LIKE ?)
+                GROUP BY
+                    r.id_receita, r.categoria, r.usuario, r.titulo_receita,
+                    r.data_criacao_receita, r.data_publicacao_receita, r.tempo_preparo_receita,
+                    r.rendimento_receita, r.imagem_receita, r.status_receita, r.status_atividade,
+                    r.visualizacoes_receita, c.nome_categoria, c.emoji_categoria, u.nome_usuario, u.foto_usuario
+                ORDER BY r.data_criacao_receita ASC
+                LIMIT ? OFFSET ?
+                """;
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+
+            String termo = (busca == null || busca.isBlank()) ? null : "%" + busca.trim() + "%";
+
+            stmt.setString(1, StatusReceita.aguardando_aprovacao.name());
+
+            if (idCategoria == null) {
+                stmt.setNull(2, java.sql.Types.INTEGER);
+                stmt.setNull(3, java.sql.Types.INTEGER);
+            } else {
+                stmt.setInt(2, idCategoria);
+                stmt.setInt(3, idCategoria);
+            }
+
+            if (termo == null) {
+                stmt.setNull(4, java.sql.Types.VARCHAR);
+                stmt.setNull(5, java.sql.Types.VARCHAR);
+                stmt.setNull(6, java.sql.Types.VARCHAR);
+            } else {
+                stmt.setString(4, termo);
+                stmt.setString(5, termo);
+                stmt.setString(6, termo);
+            }
+
+            stmt.setInt(7, limite);
+            stmt.setInt(8, offset);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapearComExtras(rs));
+                }
+            }
+        }
+
+        return lista;
+    }
+
+    /** Mesmos filtros de listarReceitasParaRevisao, devolvendo o total (paginação + card "Aguardando Revisão"). */
+    public int contarReceitasParaRevisao(String busca, Integer idCategoria) throws SQLException {
+
+        String sql = """
+                SELECT COUNT(*) AS total
+                FROM receita r
+                JOIN usuario u ON u.id_usuario = r.usuario
+                WHERE r.status_receita = ?
+                  AND (? IS NULL OR r.categoria = ?)
+                  AND (? IS NULL OR r.titulo_receita LIKE ? OR u.nome_usuario LIKE ?)
+                """;
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+
+            String termo = (busca == null || busca.isBlank()) ? null : "%" + busca.trim() + "%";
+
+            stmt.setString(1, StatusReceita.aguardando_aprovacao.name());
+
+            if (idCategoria == null) {
+                stmt.setNull(2, java.sql.Types.INTEGER);
+                stmt.setNull(3, java.sql.Types.INTEGER);
+            } else {
+                stmt.setInt(2, idCategoria);
+                stmt.setInt(3, idCategoria);
+            }
+
+            if (termo == null) {
+                stmt.setNull(4, java.sql.Types.VARCHAR);
+                stmt.setNull(5, java.sql.Types.VARCHAR);
+                stmt.setNull(6, java.sql.Types.VARCHAR);
+            } else {
+                stmt.setString(4, termo);
+                stmt.setString(5, termo);
+                stmt.setString(6, termo);
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("total") : 0;
+            }
+        }
+    }
+
+    /** Card "Publicadas Hoje" da fila do editor — receitas cuja data_publicacao_receita caiu hoje. */
+    public int contarPublicadasHoje() throws SQLException {
+
+        String sql = """
+                SELECT COUNT(*) AS total
+                FROM receita
+                WHERE status_receita = ?
+                  AND DATE(data_publicacao_receita) = CURDATE()
+                """;
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setString(1, StatusReceita.publicada.name());
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("total") : 0;
+            }
+        }
+    }
+
+    // =========================================================================
+    // CONTRATO CANÔNICO DO MÓDULO DE RECEITAS
+    // =========================================================================
+
+    public List<Receita> listarPublicadas(String busca, Integer categoriaId, int limite, int offset) throws SQLException {
+        validarPaginacao(limite, offset);
+        String sql = """
+                SELECT r.*, c.nome_categoria, c.emoji_categoria,
+                       u.nome_usuario, u.foto_usuario,
+                       COALESCE(AVG(cm.avaliacao_comentario), 0) AS nota_media
+                  FROM receita r
+                  JOIN categoria c ON c.id_categoria = r.categoria
+                  JOIN usuario u ON u.id_usuario = r.usuario
+             LEFT JOIN comentario cm ON cm.receita = r.id_receita
+                                     AND cm.status_comentario = 'APROVADO'
+                 WHERE r.status_receita = 'publicada'
+                   AND r.status_atividade = 'ativo'
+                   AND (? IS NULL OR r.categoria = ?)
+                   AND (? IS NULL OR r.titulo_receita LIKE ? OR u.nome_usuario LIKE ?)
+              GROUP BY r.id_receita, r.categoria, r.usuario, r.titulo_receita,
+                       r.descricao_receita, r.data_criacao_receita, r.data_publicacao_receita,
+                       r.tempo_preparo_receita, r.rendimento_receita, r.imagem_receita,
+                       r.status_receita, r.status_atividade, r.visualizacoes_receita,
+                       c.nome_categoria, c.emoji_categoria, u.nome_usuario, u.foto_usuario
+              ORDER BY r.data_publicacao_receita DESC, r.id_receita DESC
+                 LIMIT ? OFFSET ?
+                """;
+        List<Receita> receitas = new ArrayList<>();
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            String termo = termoBusca(busca);
+            setNullableInteger(stmt, 1, categoriaId);
+            setNullableInteger(stmt, 2, categoriaId);
+            setNullableString(stmt, 3, termo);
+            setNullableString(stmt, 4, termo);
+            setNullableString(stmt, 5, termo);
+            stmt.setInt(6, limite);
+            stmt.setInt(7, offset);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) receitas.add(mapearComExtras(rs));
+            }
+        }
+        return receitas;
+    }
+
+    public int contarPublicadas(String busca, Integer categoriaId) throws SQLException {
+        String sql = """
+                SELECT COUNT(*) AS total
+                  FROM receita r
+                  JOIN usuario u ON u.id_usuario = r.usuario
+                 WHERE r.status_receita = 'publicada'
+                   AND r.status_atividade = 'ativo'
+                   AND (? IS NULL OR r.categoria = ?)
+                   AND (? IS NULL OR r.titulo_receita LIKE ? OR u.nome_usuario LIKE ?)
+                """;
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            String termo = termoBusca(busca);
+            setNullableInteger(stmt, 1, categoriaId);
+            setNullableInteger(stmt, 2, categoriaId);
+            setNullableString(stmt, 3, termo);
+            setNullableString(stmt, 4, termo);
+            setNullableString(stmt, 5, termo);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("total") : 0;
+            }
+        }
+    }
+
+    public List<Receita> listarPorAutor(int idAutor) throws SQLException {
+        if (idAutor < 1) throw new IllegalArgumentException("Autor inválido.");
+        String sql = """
+                SELECT r.*, c.nome_categoria, c.emoji_categoria,
+                       u.nome_usuario, u.foto_usuario,
+                       COALESCE(AVG(cm.avaliacao_comentario), 0) AS nota_media
+                  FROM receita r
+                  JOIN categoria c ON c.id_categoria = r.categoria
+                  JOIN usuario u ON u.id_usuario = r.usuario
+             LEFT JOIN comentario cm ON cm.receita = r.id_receita
+                                     AND cm.status_comentario = 'APROVADO'
+                 WHERE r.usuario = ?
+              GROUP BY r.id_receita, r.categoria, r.usuario, r.titulo_receita,
+                       r.descricao_receita, r.data_criacao_receita, r.data_publicacao_receita,
+                       r.tempo_preparo_receita, r.rendimento_receita, r.imagem_receita,
+                       r.status_receita, r.status_atividade, r.visualizacoes_receita,
+                       c.nome_categoria, c.emoji_categoria, u.nome_usuario, u.foto_usuario
+              ORDER BY r.data_criacao_receita DESC, r.id_receita DESC
+                """;
+        List<Receita> receitas = new ArrayList<>();
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, idAutor);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) receitas.add(mapearComExtras(rs));
+            }
+        }
+        return receitas;
+    }
+
+    public List<Receita> listarFilaRevisao(String busca, Integer categoriaId, int limite, int offset) throws SQLException {
+        validarPaginacao(limite, offset);
+        String sql = """
+                SELECT r.*, c.nome_categoria, c.emoji_categoria,
+                       u.nome_usuario, u.foto_usuario,
+                       COALESCE(AVG(cm.avaliacao_comentario), 0) AS nota_media
+                  FROM receita r
+                  JOIN categoria c ON c.id_categoria = r.categoria
+                  JOIN usuario u ON u.id_usuario = r.usuario
+             LEFT JOIN comentario cm ON cm.receita = r.id_receita
+                                     AND cm.status_comentario = 'APROVADO'
+                 WHERE r.status_receita = 'aguardando_aprovacao'
+                   AND r.status_atividade = 'ativo'
+                   AND (? IS NULL OR r.categoria = ?)
+                   AND (? IS NULL OR r.titulo_receita LIKE ? OR u.nome_usuario LIKE ?)
+              GROUP BY r.id_receita, r.categoria, r.usuario, r.titulo_receita,
+                       r.descricao_receita, r.data_criacao_receita, r.data_publicacao_receita,
+                       r.tempo_preparo_receita, r.rendimento_receita, r.imagem_receita,
+                       r.status_receita, r.status_atividade, r.visualizacoes_receita,
+                       c.nome_categoria, c.emoji_categoria, u.nome_usuario, u.foto_usuario
+              ORDER BY r.data_criacao_receita ASC, r.id_receita ASC
+                 LIMIT ? OFFSET ?
+                """;
+        List<Receita> receitas = new ArrayList<>();
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            String termo = termoBusca(busca);
+            setNullableInteger(stmt, 1, categoriaId);
+            setNullableInteger(stmt, 2, categoriaId);
+            setNullableString(stmt, 3, termo);
+            setNullableString(stmt, 4, termo);
+            setNullableString(stmt, 5, termo);
+            stmt.setInt(6, limite);
+            stmt.setInt(7, offset);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) receitas.add(mapearComExtras(rs));
+            }
+        }
+        return receitas;
+    }
+
+    public int contarFilaRevisao(String busca, Integer categoriaId) throws SQLException {
+        String sql = """
+                SELECT COUNT(*) AS total
+                  FROM receita r
+                  JOIN usuario u ON u.id_usuario = r.usuario
+                 WHERE r.status_receita = 'aguardando_aprovacao'
+                   AND r.status_atividade = 'ativo'
+                   AND (? IS NULL OR r.categoria = ?)
+                   AND (? IS NULL OR r.titulo_receita LIKE ? OR u.nome_usuario LIKE ?)
+                """;
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            String termo = termoBusca(busca);
+            setNullableInteger(stmt, 1, categoriaId);
+            setNullableInteger(stmt, 2, categoriaId);
+            setNullableString(stmt, 3, termo);
+            setNullableString(stmt, 4, termo);
+            setNullableString(stmt, 5, termo);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("total") : 0;
+            }
+        }
+    }
+
+    public List<Receita> listarAdministracao(String busca, StatusAtividade status, Integer categoriaId, int limite, int offset) throws SQLException {
+        return listarAdministracao(busca, status, categoriaId, null, limite, offset);
+    }
+
+    public List<Receita> listarAdministracao(String busca, StatusAtividade status, Integer categoriaId,
+            String statusReceita, int limite, int offset) throws SQLException {
+        validarPaginacao(limite, offset);
+        String sql = """
+                SELECT r.*, c.nome_categoria, c.emoji_categoria,
+                       u.nome_usuario, u.foto_usuario,
+                       COALESCE(AVG(cm.avaliacao_comentario), 0) AS nota_media
+                  FROM receita r
+                  JOIN categoria c ON c.id_categoria = r.categoria
+                  JOIN usuario u ON u.id_usuario = r.usuario
+             LEFT JOIN comentario cm ON cm.receita = r.id_receita
+                                     AND cm.status_comentario = 'APROVADO'
+                 WHERE (? IS NULL OR r.status_atividade = ?)
+                   AND (? IS NULL OR r.categoria = ?)
+                   AND (? IS NULL OR r.status_receita = ?)
+                   AND (? IS NULL OR r.titulo_receita LIKE ? OR u.nome_usuario LIKE ?)
+              GROUP BY r.id_receita, r.categoria, r.usuario, r.titulo_receita,
+                       r.descricao_receita, r.data_criacao_receita, r.data_publicacao_receita,
+                       r.tempo_preparo_receita, r.rendimento_receita, r.imagem_receita,
+                       r.status_receita, r.status_atividade, r.visualizacoes_receita,
+                       c.nome_categoria, c.emoji_categoria, u.nome_usuario, u.foto_usuario
+              ORDER BY r.data_criacao_receita DESC, r.id_receita DESC
+                 LIMIT ? OFFSET ?
+                """;
+        List<Receita> receitas = new ArrayList<>();
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            String statusValue = status == null ? null : status.name();
+            String termo = termoBusca(busca);
+            setNullableString(stmt, 1, statusValue);
+            setNullableString(stmt, 2, statusValue);
+            setNullableInteger(stmt, 3, categoriaId);
+            setNullableInteger(stmt, 4, categoriaId);
+            setNullableString(stmt, 5, statusReceita);
+            setNullableString(stmt, 6, statusReceita);
+            setNullableString(stmt, 7, termo);
+            setNullableString(stmt, 8, termo);
+            setNullableString(stmt, 9, termo);
+            stmt.setInt(10, limite);
+            stmt.setInt(11, offset);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) receitas.add(mapearComExtras(rs));
+            }
+        }
+        return receitas;
+    }
+
+    public int contarAdministracao(String busca, StatusAtividade status, Integer categoriaId) throws SQLException {
+        return contarAdministracao(busca, status, categoriaId, null);
+    }
+
+    public int contarAdministracao(String busca, StatusAtividade status, Integer categoriaId,
+            String statusReceita) throws SQLException {
+        String sql = """
+                SELECT COUNT(*) AS total
+                  FROM receita r
+                  JOIN usuario u ON u.id_usuario = r.usuario
+                 WHERE (? IS NULL OR r.status_atividade = ?)
+                   AND (? IS NULL OR r.categoria = ?)
+                   AND (? IS NULL OR r.status_receita = ?)
+                   AND (? IS NULL OR r.titulo_receita LIKE ? OR u.nome_usuario LIKE ?)
+                """;
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            String statusValue = status == null ? null : status.name();
+            String termo = termoBusca(busca);
+            setNullableString(stmt, 1, statusValue);
+            setNullableString(stmt, 2, statusValue);
+            setNullableInteger(stmt, 3, categoriaId);
+            setNullableInteger(stmt, 4, categoriaId);
+            setNullableString(stmt, 5, statusReceita);
+            setNullableString(stmt, 6, statusReceita);
+            setNullableString(stmt, 7, termo);
+            setNullableString(stmt, 8, termo);
+            setNullableString(stmt, 9, termo);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("total") : 0;
+            }
+        }
+    }
+
+    public Receita buscarPorIdGerenciado(int idReceita) throws SQLException {
+        return buscarPorId(idReceita, false);
+    }
+
+    public Receita buscarPublicadaAtivaPorId(int idReceita) throws SQLException {
+        return buscarPorId(idReceita, true);
+    }
+
+    private Receita buscarPorId(int idReceita, boolean somentePublicadaAtiva) throws SQLException {
+        if (idReceita < 1) throw new IllegalArgumentException("Receita inválida.");
+        String sql = """
+                SELECT r.*, c.nome_categoria, c.emoji_categoria,
+                       u.nome_usuario, u.foto_usuario,
+                       COALESCE(AVG(cm.avaliacao_comentario), 0) AS nota_media
+                  FROM receita r
+                  JOIN categoria c ON c.id_categoria = r.categoria
+                  JOIN usuario u ON u.id_usuario = r.usuario
+             LEFT JOIN comentario cm ON cm.receita = r.id_receita
+                                     AND cm.status_comentario = 'APROVADO'
+                 WHERE r.id_receita = ?
+                   AND (? = 0 OR (r.status_receita = 'publicada' AND r.status_atividade = 'ativo'))
+              GROUP BY r.id_receita, r.categoria, r.usuario, r.titulo_receita,
+                       r.descricao_receita, r.data_criacao_receita, r.data_publicacao_receita,
+                       r.tempo_preparo_receita, r.rendimento_receita, r.imagem_receita,
+                       r.status_receita, r.status_atividade, r.visualizacoes_receita,
+                       c.nome_categoria, c.emoji_categoria, u.nome_usuario, u.foto_usuario
+                """;
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, idReceita);
+            stmt.setInt(2, somentePublicadaAtiva ? 1 : 0);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? mapearComExtras(rs) : null;
+            }
+        }
+    }
+
+    public void atualizarReceitaEditavel(Receita receita) throws SQLException {
+        String sql = """
+                UPDATE receita
+                   SET categoria = ?, titulo_receita = ?, descricao_receita = ?,
+                       tempo_preparo_receita = ?, rendimento_receita = ?, imagem_receita = ?
+                 WHERE id_receita = ? AND usuario = ?
+                   AND status_receita IN ('rascunho','rejeitada')
+                """;
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, receita.getCategoria());
+            stmt.setString(2, receita.getTitulo_receita());
+            stmt.setString(3, receita.getDescricao_receita());
+            stmt.setInt(4, receita.getTempo_preparo_receita());
+            stmt.setString(5, receita.getRendimento_receita());
+            stmt.setString(6, receita.getImagem_receita());
+            stmt.setInt(7, receita.getId_receita());
+            stmt.setInt(8, receita.getUsuario());
+            if (stmt.executeUpdate() != 1) {
+                throw new SQLException("Receita não encontrada, não pertence ao autor ou não está editável.");
+            }
+        }
+    }
+
+    public void registrarFluxo(int idReceita, int idUsuario, StatusFluxo status, String observacao) throws SQLException {
+        String sql = "INSERT INTO fluxo (receita, usuario, status_fluxo, observacao_fluxo, data_fluxo) VALUES (?, ?, ?, ?, NOW())";
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, idReceita);
+            stmt.setInt(2, idUsuario);
+            stmt.setString(3, status.name());
+            stmt.setString(4, observacao);
+            stmt.executeUpdate();
+        }
+    }
+
+    public void enviarParaRevisao(int idReceita, int idAutor) throws SQLException {
+        String sql = """
+                UPDATE receita
+                   SET status_receita = 'aguardando_aprovacao'
+                 WHERE id_receita = ? AND usuario = ?
+                   AND status_receita IN ('rascunho','rejeitada')
+                """;
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, idReceita);
+            stmt.setInt(2, idAutor);
+            if (stmt.executeUpdate() != 1) {
+                throw new SQLException("Receita não encontrada, não pertence ao autor ou não pode ser enviada.");
+            }
+        }
+    }
+
+    public void atualizarStatusComFluxo(int idReceita, int idUsuario, StatusReceita statusReceita,
+            StatusFluxo statusFluxo, String observacao) throws SQLException {
+        boolean gerenciarTransacao = conexao.getAutoCommit();
+        if (gerenciarTransacao) conexao.setAutoCommit(false);
+        try {
+            String bloquearFluxo = """
+                    SELECT status_fluxo
+                      FROM fluxo
+                     WHERE receita = ?
+                  ORDER BY data_fluxo DESC, id_fluxo DESC
+                     LIMIT 1
+                    FOR UPDATE
+                    """;
+            try (PreparedStatement stmt = conexao.prepareStatement(bloquearFluxo)) {
+                stmt.setInt(1, idReceita);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (!rs.next()) throw new SQLException("A receita não possui fluxo editorial.");
+                    String atual = rs.getString("status_fluxo");
+                    if (!StatusFluxo.PENDENTE.name().equals(atual)
+                            && !StatusFluxo.EM_REVISAO.name().equals(atual)) {
+                        throw new SQLException("O fluxo editorial não está pendente ou em revisão.");
+                    }
+                }
+            }
+            String update = """
+                    UPDATE receita
+                       SET status_receita = ?,
+                           data_publicacao_receita = CASE WHEN ? = 'publicada' THEN NOW() ELSE data_publicacao_receita END
+                     WHERE id_receita = ?
+                       AND status_receita = 'aguardando_aprovacao'
+                    """;
+            try (PreparedStatement stmt = conexao.prepareStatement(update)) {
+                stmt.setString(1, statusReceita.name());
+                stmt.setString(2, statusReceita.name());
+                stmt.setInt(3, idReceita);
+                if (stmt.executeUpdate() != 1) {
+                    throw new SQLException("A receita não está aguardando aprovação.");
+                }
+            }
+            String insert = "INSERT INTO fluxo (receita, usuario, status_fluxo, observacao_fluxo, data_fluxo) VALUES (?, ?, ?, ?, NOW())";
+            try (PreparedStatement stmt = conexao.prepareStatement(insert)) {
+                stmt.setInt(1, idReceita);
+                stmt.setInt(2, idUsuario);
+                stmt.setString(3, statusFluxo.name());
+                stmt.setString(4, observacao);
+                stmt.executeUpdate();
+            }
+            if (gerenciarTransacao) conexao.commit();
+        } catch (SQLException e) {
+            if (gerenciarTransacao) conexao.rollback();
+            throw e;
+        } finally {
+            if (gerenciarTransacao) conexao.setAutoCommit(true);
+        }
+    }
+
+    public void alterarAtividade(int idReceita, StatusAtividade status, Integer idAutorObrigatorio) throws SQLException {
+        String sql = "UPDATE receita SET status_atividade = ? WHERE id_receita = ?"
+                + (idAutorObrigatorio == null ? "" : " AND usuario = ?");
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setString(1, status.name());
+            stmt.setInt(2, idReceita);
+            if (idAutorObrigatorio != null) stmt.setInt(3, idAutorObrigatorio);
+            if (stmt.executeUpdate() != 1) {
+                throw new SQLException("Receita não encontrada ou sem permissão para alterar atividade.");
+            }
+        }
+    }
+
+    private void validarPaginacao(int limite, int offset) {
+        if (limite < 1 || limite > 100 || offset < 0) {
+            throw new IllegalArgumentException("Paginação inválida.");
+        }
+    }
+
+    private String termoBusca(String busca) {
+        return busca == null || busca.isBlank() ? null : "%" + busca.trim() + "%";
+    }
+
+    private void setNullableInteger(PreparedStatement stmt, int indice, Integer valor) throws SQLException {
+        if (valor == null) stmt.setNull(indice, java.sql.Types.INTEGER);
+        else stmt.setInt(indice, valor);
+    }
+
+    private void setNullableString(PreparedStatement stmt, int indice, String valor) throws SQLException {
+        if (valor == null) stmt.setNull(indice, java.sql.Types.VARCHAR);
+        else stmt.setString(indice, valor);
     }
 }

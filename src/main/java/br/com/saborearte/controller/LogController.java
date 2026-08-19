@@ -1,9 +1,17 @@
 package br.com.saborearte.controller;
 
+import br.com.saborearte.dao.LogDAO;
+import br.com.saborearte.model.Log;
+import br.com.saborearte.model.Usuario;
+import br.com.saborearte.model.Usuario.TipoUsuario;
+import br.com.saborearte.utils.Conexao;
 import java.io.IOException;
 import java.sql.Connection;
 import java.time.LocalDate;
-
+import java.time.format.DateTimeParseException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -11,122 +19,59 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import br.com.saborearte.dao.LogDAO;
-import br.com.saborearte.dao.LogDAO.ResultadoLogs;
-import br.com.saborearte.model.Usuario;
-import br.com.saborearte.model.Usuario.TipoUsuario;
-import br.com.saborearte.utils.Conexao;
-
-/**
- * Controller da tela log-admin.html — acesso restrito a ADMIN.
- *
- * Aplica filtros e paginação no servidor. A lista completa que corresponde
- * aos filtros é fornecida separadamente para as exportações em PDF, Excel e
- * impressão, sem alterar a página exibida ao administrador.
- */
+/** Controller exclusivo da consulta administrativa de auditoria. */
 @WebServlet("/LogController")
 public class LogController extends HttpServlet {
+    private static final long serialVersionUID=1L;
+    private static final int TAMANHO_PADRAO=20,TAMANHO_MAXIMO=100;
+    private static final Set<String> ACOES=Set.of("CRIAR_RASCUNHO","ENVIAR_REVISAO","APROVAR_RECEITA","REJEITAR_RECEITA","ALTERAR_ATIVIDADE","COMENTAR","RESPONDER_COMENTARIO","MODERAR_COMENTARIO","LOGIN");
+    private static final Set<String> ENTIDADES=Set.of("RECEITA","COMENTARIO","USUARIO","RELATORIO","SESSAO");
+    private static final Set<String> EXPORTACOES=Set.of("pdf","excel","print");
 
-    private static final long serialVersionUID = 1L;
-
-    private Connection conexao;
-    private LogDAO logDAO;
-
-    @Override
-    public void init() {
-        try {
-            conexao = Conexao.getConnection();
-            logDAO = new LogDAO(conexao);
-            System.out.println("LogController iniciado com sucesso");
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao iniciar LogController", e);
-        }
-    }
-
-    // =========================================================================
-    // GET
-    // =========================================================================
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        HttpSession session = request.getSession(false);
-
-        if (!isAdmin(session)) {
-            response.sendRedirect(request.getContextPath() + "/LoginController");
-            return;
-        }
-
-        String busca    = request.getParameter("busca");
-        String acao     = request.getParameter("acao");
-        String entidade = request.getParameter("entidade");
-        String periodo  = request.getParameter("periodo");
-        int page = parseIntOrDefault(request.getParameter("page"), 1);
-        int size = parseIntOrDefault(request.getParameter("size"), 20);
-        page = Math.max(1, page);
-        size = Math.max(1, Math.min(100, size));
-
-        LocalDate dataInicio = null;
-        LocalDate dataFim    = null;
-
-        if (periodo != null && !periodo.isBlank()) {
-            LocalDate hoje = LocalDate.now();
-            switch (periodo) {
-                case "hoje"  -> { dataInicio = hoje; dataFim = hoje; }
-                case "7dias" -> { dataInicio = hoje.minusDays(6); dataFim = hoje; }
-                case "mes"   -> { dataInicio = hoje.minusMonths(1).plusDays(1); dataFim = hoje; }
-                default      -> { /* período desconhecido -> ignora o filtro */ }
+    @Override protected void doGet(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        request.setCharacterEncoding("UTF-8");response.setCharacterEncoding("UTF-8");
+        HttpSession session=request.getSession(false);
+        if(session==null||session.getAttribute("usuarioLogado")==null){response.sendRedirect(request.getContextPath()+"/login.jsp");return;}
+        Usuario usuario=(Usuario)session.getAttribute("usuarioLogado");
+        if(usuario.getTipo_usuario()!=TipoUsuario.ADMIN){response.sendError(HttpServletResponse.SC_FORBIDDEN);return;}
+        try{
+            Filtros f=lerFiltros(request);
+            request.setAttribute("logs",Collections.emptyList());request.setAttribute("totalLogs",Integer.valueOf(0));
+            request.setAttribute("page",Integer.valueOf(f.page));request.setAttribute("size",Integer.valueOf(f.size));request.setAttribute("totalPages",Integer.valueOf(1));
+            request.setAttribute("busca",f.busca);request.setAttribute("acaoLog",f.acaoLog);request.setAttribute("entidade",f.entidade);request.setAttribute("periodo",f.periodo);
+            request.setAttribute("dataInicio",f.inicio==null?"":f.inicio.toString());request.setAttribute("dataFim",f.fim==null?"":f.fim.toString());request.setAttribute("exportTipo",f.exportTipo);
+            try(Connection conexao=Conexao.getConnection()){
+                LogDAO dao=new LogDAO(conexao);
+                int total=dao.contarComFiltros(f.busca,f.acaoLog,f.entidade,f.inicio,f.fim);
+                int totalPages=Math.max(1,(int)Math.ceil(total/(double)f.size));
+                int page=Math.min(f.page,totalPages);
+                List<Log> logs=dao.listarComFiltros(f.busca,f.acaoLog,f.entidade,f.inicio,f.fim,(page-1)*f.size,f.size);
+                request.setAttribute("logs",logs);request.setAttribute("totalLogs",Integer.valueOf(total));
+                request.setAttribute("page",Integer.valueOf(page));request.setAttribute("totalPages",Integer.valueOf(totalPages));
+                if(f.exportTipo!=null){List<Log> logsExportacao=total==0?Collections.emptyList():dao.listarComFiltros(f.busca,f.acaoLog,f.entidade,f.inicio,f.fim,0,total);request.setAttribute("logsExportacao",logsExportacao);}
             }
-        }
-
-        try {
-            ResultadoLogs contagem = logDAO.listarComFiltro(
-                    busca, acao, entidade, dataInicio, dataFim, 0, 1);
-            int totalPages = Math.max(1, (int) Math.ceil(contagem.total / (double) size));
-            page = Math.min(page, totalPages);
-            ResultadoLogs resultado = logDAO.listarComFiltro(
-                    busca, acao, entidade, dataInicio, dataFim, (page - 1) * size, size);
-            ResultadoLogs exportacao = logDAO.listarComFiltro(
-                    busca, acao, entidade, dataInicio, dataFim, 0, Math.max(1, contagem.total));
-
-            request.setAttribute("logs", resultado.logs);
-            request.setAttribute("totalLogs", resultado.total);
-            request.setAttribute("logsExportacao", exportacao.logs);
-            request.setAttribute("page", page);
-            request.setAttribute("size", size);
-            request.setAttribute("totalPages", totalPages);
-
-            // ===== Devolve os filtros aplicados, pra JSP marcar os <select>/<input> certos =====
-            request.setAttribute("filtroBusca", busca);
-            request.setAttribute("filtroAcao", acao);
-            request.setAttribute("filtroEntidade", entidade);
-            request.setAttribute("filtroPeriodo", periodo);
-
-            request.getRequestDispatcher("/pages/log-admin.jsp").forward(request, response);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("erro", "Erro ao carregar logs de auditoria: " + e.getMessage());
-            request.getRequestDispatcher("/pages/log-admin.jsp").forward(request, response);
-        }
+            request.getRequestDispatcher("/pages/log-admin.jsp").forward(request,response);
+        }catch(IllegalArgumentException e){response.sendError(HttpServletResponse.SC_BAD_REQUEST,e.getMessage());}
+        catch(Exception e){getServletContext().log("Falha ao consultar auditoria",e);request.setAttribute("erro","Não foi possível carregar a auditoria.");request.getRequestDispatcher("/pages/log-admin.jsp").forward(request,response);}
     }
 
-    // =========================================================================
-    // UTILITÁRIOS
-    // =========================================================================
+    @Override protected void doPost(HttpServletRequest request,HttpServletResponse response)throws IOException{response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);}
 
-    private boolean isAdmin(HttpSession session) {
-        if (session == null) return false;
-        Usuario u = (Usuario) session.getAttribute("usuarioLogado");
-        return u != null && u.getTipo_usuario() == TipoUsuario.ADMIN;
+    private Filtros lerFiltros(HttpServletRequest r){
+        String busca=texto(r.getParameter("busca"),100),acao=texto(r.getParameter("acaoLog"),50),entidade=texto(r.getParameter("entidade"),30),periodo=texto(r.getParameter("periodo"),20),exportar=texto(r.getParameter("export"),10);
+        if(acao!=null&&!ACOES.contains(acao))throw new IllegalArgumentException("Ação de auditoria inválida.");
+        if(entidade!=null&&!ENTIDADES.contains(entidade))throw new IllegalArgumentException("Entidade de auditoria inválida.");
+        if(exportar!=null&&!EXPORTACOES.contains(exportar))throw new IllegalArgumentException("Formato de exportação inválido.");
+        int page=inteiro(r.getParameter("page"),1,1,Integer.MAX_VALUE),size=inteiro(r.getParameter("size"),TAMANHO_PADRAO,1,TAMANHO_MAXIMO);
+        LocalDate inicio=null,fim=null,hoje=LocalDate.now();
+        if(periodo!=null)switch(periodo){case "hoje"->{inicio=hoje;fim=hoje;}case "7dias"->{inicio=hoje.minusDays(6);fim=hoje;}case "30dias"->{inicio=hoje.minusDays(29);fim=hoje;}case "personalizado"->{inicio=data(r.getParameter("dataInicio"),"dataInicio");fim=data(r.getParameter("dataFim"),"dataFim");}default->throw new IllegalArgumentException("Período inválido.");}
+        else if(r.getParameter("dataInicio")!=null||r.getParameter("dataFim")!=null){inicio=dataOpcional(r.getParameter("dataInicio"),"dataInicio");fim=dataOpcional(r.getParameter("dataFim"),"dataFim");}
+        if(inicio!=null&&fim!=null&&inicio.isAfter(fim))throw new IllegalArgumentException("Data inicial posterior à final.");
+        return new Filtros(busca,acao,entidade,periodo,inicio,fim,page,size,exportar);
     }
-
-    private int parseIntOrDefault(String valor, int padrao) {
-        try {
-            return Integer.parseInt(valor);
-        } catch (Exception e) {
-            return padrao;
-        }
-    }
+    private String texto(String v,int max){if(v==null||v.trim().isEmpty())return null;String t=v.trim();if(t.length()>max)throw new IllegalArgumentException("Filtro excede o tamanho permitido.");return t;}
+    private int inteiro(String v,int padrao,int min,int max){if(v==null||v.isBlank())return padrao;try{int n=Integer.parseInt(v);if(n<min||n>max)throw new NumberFormatException();return n;}catch(NumberFormatException e){throw new IllegalArgumentException("Paginação inválida.");}}
+    private LocalDate data(String v,String nome){if(v==null||v.isBlank())throw new IllegalArgumentException(nome+" é obrigatória.");return dataOpcional(v,nome);}
+    private LocalDate dataOpcional(String v,String nome){if(v==null||v.isBlank())return null;try{return LocalDate.parse(v);}catch(DateTimeParseException e){throw new IllegalArgumentException(nome+" inválida.");}}
+    private static final class Filtros{final String busca,acaoLog,entidade,periodo,exportTipo;final LocalDate inicio,fim;final int page,size;Filtros(String b,String a,String e,String p,LocalDate i,LocalDate f,int pg,int s,String x){busca=b;acaoLog=a;entidade=e;periodo=p;inicio=i;fim=f;page=pg;size=s;exportTipo=x;}}
 }

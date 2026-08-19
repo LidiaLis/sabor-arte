@@ -55,15 +55,16 @@ double avaliacaoMedia = request.getAttribute("avaliacaoMedia") instanceof Number
   </section>
 
   <div class="toolbar">
-    <form class="search" method="get" action="<%= contextPath %>/mensagens-autor">
+    <form class="search" method="get" action="<%= contextPath %>/ComentarioController?view=mensagens">
+      <input type="hidden" name="view" value="mensagens">
       <input type="hidden" name="statusResposta" value="<%= h(statusResposta) %>">
       <input type="search" name="busca" value="<%= h(busca) %>" placeholder="Buscar por receita, usuário ou comentário…">
       <button type="submit">Buscar</button>
     </form>
     <nav class="filters" aria-label="Filtrar mensagens">
-      <a class="pill <%= "todos".equals(statusResposta) ? "active" : "" %>" href="<%= contextPath %>/mensagens-autor?statusResposta=todos&amp;busca=<%= java.net.URLEncoder.encode(busca, "UTF-8") %>">Todos</a>
-      <a class="pill <%= "pendente".equals(statusResposta) ? "active" : "" %>" href="<%= contextPath %>/mensagens-autor?statusResposta=pendente&amp;busca=<%= java.net.URLEncoder.encode(busca, "UTF-8") %>">Não respondidos</a>
-      <a class="pill <%= "respondido".equals(statusResposta) ? "active" : "" %>" href="<%= contextPath %>/mensagens-autor?statusResposta=respondido&amp;busca=<%= java.net.URLEncoder.encode(busca, "UTF-8") %>">Respondidos</a>
+      <a class="pill <%= "todos".equals(statusResposta) ? "active" : "" %>" href="<%= contextPath %>/ComentarioController?view=mensagens&amp;statusResposta=todos&amp;busca=<%= java.net.URLEncoder.encode(busca, "UTF-8") %>">Todos</a>
+      <a class="pill <%= "pendente".equals(statusResposta) ? "active" : "" %>" href="<%= contextPath %>/ComentarioController?view=mensagens&amp;statusResposta=pendente&amp;busca=<%= java.net.URLEncoder.encode(busca, "UTF-8") %>">Não respondidos</a>
+      <a class="pill <%= "respondido".equals(statusResposta) ? "active" : "" %>" href="<%= contextPath %>/ComentarioController?view=mensagens&amp;statusResposta=respondido&amp;busca=<%= java.net.URLEncoder.encode(busca, "UTF-8") %>">Respondidos</a>
     </nav>
   </div>
 
@@ -95,25 +96,25 @@ double avaliacaoMedia = request.getAttribute("avaliacaoMedia") instanceof Number
   </section>
 
   <% if (totalPages > 1) { %><nav class="pagination" aria-label="Paginação">
-    <% if (pageAtual > 1) { %><a href="<%= contextPath %>/mensagens-autor?page=<%= pageAtual-1 %>&amp;statusResposta=<%= h(statusResposta) %>&amp;busca=<%= java.net.URLEncoder.encode(busca,"UTF-8") %>">←</a><% } %>
-    <% for (int p=1;p<=totalPages;p++) { if (p==pageAtual) { %><span class="active"><%= p %></span><% } else { %><a href="<%= contextPath %>/mensagens-autor?page=<%= p %>&amp;statusResposta=<%= h(statusResposta) %>&amp;busca=<%= java.net.URLEncoder.encode(busca,"UTF-8") %>"><%= p %></a><% }} %>
-    <% if (pageAtual < totalPages) { %><a href="<%= contextPath %>/mensagens-autor?page=<%= pageAtual+1 %>&amp;statusResposta=<%= h(statusResposta) %>&amp;busca=<%= java.net.URLEncoder.encode(busca,"UTF-8") %>">→</a><% } %>
+    <% if (pageAtual > 1) { %><a href="<%= contextPath %>/ComentarioController?view=mensagens&amp;page=<%= pageAtual-1 %>&amp;statusResposta=<%= h(statusResposta) %>&amp;busca=<%= java.net.URLEncoder.encode(busca,"UTF-8") %>">←</a><% } %>
+    <% for (int p=1;p<=totalPages;p++) { if (p==pageAtual) { %><span class="active"><%= p %></span><% } else { %><a href="<%= contextPath %>/ComentarioController?view=mensagens&amp;page=<%= p %>&amp;statusResposta=<%= h(statusResposta) %>&amp;busca=<%= java.net.URLEncoder.encode(busca,"UTF-8") %>"><%= p %></a><% }} %>
+    <% if (pageAtual < totalPages) { %><a href="<%= contextPath %>/ComentarioController?view=mensagens&amp;page=<%= pageAtual+1 %>&amp;statusResposta=<%= h(statusResposta) %>&amp;busca=<%= java.net.URLEncoder.encode(busca,"UTF-8") %>">→</a><% } %>
   </nav><% } %>
 </div></main>
 
 <div class="modal" id="replyModal" aria-hidden="true"><div class="modal-box">
   <div class="modal-head"><div class="modal-title">Responder comentário</div><button type="button" class="close js-close">×</button></div>
-  <form method="post" action="<%= contextPath %>/mensagens-autor">
-    <input type="hidden" name="action" value="responder"><input type="hidden" name="comentarioId" id="replyId">
-    <div class="modal-body"><div class="context-comment" id="replyContext"></div><label for="replyText">Sua resposta será exibida publicamente</label><textarea id="replyText" name="texto" required maxlength="2000"></textarea></div>
+  <form method="post" action="<%= contextPath %>/ComentarioController?view=mensagens">
+    <input type="hidden" name="action" value="responder"><input type="hidden" name="idComentario" id="replyId">
+    <div class="modal-body"><div class="context-comment" id="replyContext"></div><label for="replyText">Sua resposta será exibida publicamente</label><textarea id="replyText" name="resposta" required maxlength="2000"></textarea></div>
     <div class="modal-foot"><button type="button" class="button js-close">Cancelar</button><button type="submit" class="button primary">Publicar resposta</button></div>
   </form>
 </div></div>
 
 <div class="modal" id="reportModal" aria-hidden="true"><div class="modal-box">
   <div class="modal-head"><div class="modal-title">🚩 Denunciar comentário</div><button type="button" class="close js-close">×</button></div>
-  <form method="post" action="<%= contextPath %>/mensagens-autor">
-    <input type="hidden" name="action" value="denunciar"><input type="hidden" name="comentarioId" id="reportId">
+  <form method="post" action="<%= contextPath %>/ComentarioController?view=mensagens">
+    <input type="hidden" name="action" value="denunciar"><input type="hidden" name="idComentario" id="reportId">
     <div class="modal-body">Enviar o comentário de <strong id="reportUser"></strong> para análise da moderação?</div>
     <div class="modal-foot"><button type="button" class="button js-close">Cancelar</button><button type="submit" class="button danger">Confirmar denúncia</button></div>
   </form>
@@ -131,5 +132,4 @@ double avaliacaoMedia = request.getAttribute("avaliacaoMedia") instanceof Number
 })();
 </script>
 </body></html>
-
 

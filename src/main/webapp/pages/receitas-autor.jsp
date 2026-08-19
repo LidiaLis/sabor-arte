@@ -2,6 +2,8 @@
 <%@ page import="br.com.saborearte.model.Receita" %>
 <%@ page import="br.com.saborearte.model.Categoria" %>
 <%@ page import="br.com.saborearte.model.Usuario" %>
+<%@ page import="br.com.saborearte.model.ReceitaIngrediente" %>
+<%@ page import="br.com.saborearte.model.Passo" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Collections" %>
 <%!
@@ -24,11 +26,26 @@
   if (receitas == null) receitas = Collections.emptyList();
   List<Categoria> categorias = (List<Categoria>) request.getAttribute("categorias");
   if (categorias == null) categorias = Collections.emptyList();
+  Receita receitaEdicao = (Receita) request.getAttribute("receitaEdicao");
+  boolean modoEdicao = receitaEdicao != null;
+  List<ReceitaIngrediente> ingredientesEdicao = (List<ReceitaIngrediente>) request.getAttribute("ingredientesEdicao");
+  if (ingredientesEdicao == null) ingredientesEdicao = Collections.emptyList();
+  List<Passo> passosEdicao = (List<Passo>) request.getAttribute("passosEdicao");
+  if (passosEdicao == null) passosEdicao = Collections.emptyList();
+  boolean abrirFormularioReceita = Boolean.TRUE.equals(request.getAttribute("abrirFormularioReceita"));
+  String csrfToken = request.getAttribute("csrfToken") == null ? "" : String.valueOf(request.getAttribute("csrfToken"));
   Usuario usuario = (Usuario) session.getAttribute("usuarioLogado");
   boolean usuarioAutenticado = usuario != null;
   String ctx = request.getContextPath();
   String mensagemErro = request.getAttribute("erro") == null ? null : String.valueOf(request.getAttribute("erro"));
   String mensagemSucesso = request.getAttribute("sucesso") == null ? null : String.valueOf(request.getAttribute("sucesso"));
+  int totalReceitas = receitas.size();
+  int totalPublicadas = 0;
+  int totalRascunhos = 0;
+  for (Receita item : receitas) {
+    if (item.getStatus_receita() == Receita.StatusReceita.publicada) totalPublicadas++;
+    if (item.getStatus_receita() == Receita.StatusReceita.rascunho) totalRascunhos++;
+  }
 %>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -666,9 +683,9 @@
       </div>
       <span class="filter-label">Filtrar:</span>
       <div class="filter-chips">
-        <button class="chip active" data-filter="todos" onclick="setFilter(this)">🍴 Todas <span class="chip-count"><%= intAttr(request, "totalReceitas") %></span></button>
-        <button class="chip publicado" data-filter="publicada" onclick="setFilter(this)">✅ Publicadas <span class="chip-count"><%= intAttr(request, "totalPublicadas") %></span></button>
-        <button class="chip rascunho" data-filter="rascunho" onclick="setFilter(this)">📝 Rascunhos <span class="chip-count"><%= intAttr(request, "totalRascunhos") %></span></button>
+        <button class="chip active" data-filter="todos" onclick="setFilter(this)">🍴 Todas <span class="chip-count"><%= totalReceitas %></span></button>
+        <button class="chip publicado" data-filter="publicada" onclick="setFilter(this)">✅ Publicadas <span class="chip-count"><%= totalPublicadas %></span></button>
+        <button class="chip rascunho" data-filter="rascunho" onclick="setFilter(this)">📝 Rascunhos <span class="chip-count"><%= totalRascunhos %></span></button>
       </div>
       <div class="filter-right">
         <select class="sort-select" onchange="applyFilters()">
@@ -684,13 +701,15 @@
 
     <div class="recipes-grid" id="recipesGrid">
       <% for (Receita receita : receitas) { %>
+        <% boolean editavel = receita.getStatus_receita() == Receita.StatusReceita.rascunho
+            || receita.getStatus_receita() == Receita.StatusReceita.rejeitada; %>
         <article class="recipe-card" data-id="<%= receita.getId_receita() %>" data-status="<%= h(receita.getStatus_receita()).toLowerCase() %>" data-name="<%= h(receita.getTitulo_receita()) %>">
-          <div class="recipe-img-wrap"><img loading="lazy" decoding="async" src="<%= h(receita.getImagem_receita()) %>" alt="<%= h(receita.getTitulo_receita()) %>"></div>
+          <div class="recipe-img-wrap"><img loading="lazy" decoding="async" src="<%= receita.getImagem_receita() == null || receita.getImagem_receita().isBlank() ? ctx + "/assets/img/receita-sem-imagem.svg" : h(receita.getImagem_receita()) %>" onerror="this.onerror=null;this.src='<%= ctx %>/assets/img/receita-sem-imagem.svg'" alt="<%= h(receita.getTitulo_receita()) %>"></div>
           <div class="recipe-body"><div class="recipe-cat"><%= h(receita.getEmoji_categoria()) %> <%= h(receita.getNome_categoria()) %></div><div class="recipe-name"><%= h(receita.getTitulo_receita()) %></div></div>
           <div class="recipe-footer">
-            <a class="footer-btn" href="<%= ctx %>/receitas?acao=detalhar&id=<%= receita.getId_receita() %>">👁 Ver</a>
-            <a class="footer-btn" href="<%= ctx %>/receitas?acao=editar&id=<%= receita.getId_receita() %>">✏️ Editar</a>
-            <form method="post" action="<%= ctx %>/receitas"><input type="hidden" name="action" value="enviarRevisao"><input type="hidden" name="receitaId" value="<%= receita.getId_receita() %>"><button class="footer-btn submit" type="submit">📤 Enviar</button></form>
+            <a class="footer-btn" href="<%= ctx %>/ReceitaController?action=detalhar&amp;idReceita=<%= receita.getId_receita() %>">👁 Ver</a>
+            <% if (editavel) { %><a class="footer-btn" href="<%= ctx %>/ReceitaController?action=editar&amp;idReceita=<%= receita.getId_receita() %>">✏️ Editar</a>
+            <form method="post" action="<%= ctx %>/ReceitaController"><input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>"><input type="hidden" name="action" value="enviarRevisao"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button class="footer-btn submit" type="submit">📤 Enviar</button></form><% } %>
           </div>
         </article>
       <% } %>
@@ -708,12 +727,14 @@
 <!-- ===================== MODAL NOVA RECEITA ===================== -->
 <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
   <div class="modal" id="modal">
-    <form id="receitaForm" method="post" action="<%= ctx %>/receitas" style="display:contents">
+    <form id="receitaForm" method="post" action="<%= ctx %>/ReceitaController" style="display:contents">
+    <input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>">
     <input type="hidden" name="action" id="formAction" value="salvarRascunho">
+    <% if (modoEdicao) { %><input type="hidden" name="idReceita" value="<%= receitaEdicao.getId_receita() %>"><% } %>
     <div class="modal-header">
       <div class="modal-header-left">
-        <div class="modal-header-label">✚ Criação de Receita</div>
-        <div class="modal-header-title">Nova Receita</div>
+        <div class="modal-header-label"><%= modoEdicao ? "✏️ Edição de Receita" : "✚ Criação de Receita" %></div>
+        <div class="modal-header-title"><%= modoEdicao ? "Editar Receita" : "Nova Receita" %></div>
       </div>
       <button class="modal-close" type="button" onclick="closeModal()">✕</button>
     </div>
@@ -745,29 +766,29 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Título da Receita <span>*</span></label>
-            <input class="form-input" type="text" placeholder="Título da receita" id="f-titulo" name="titulo" required>
+            <input class="form-input" type="text" placeholder="Título da receita" id="f-titulo" name="titulo" value="<%= modoEdicao ? h(receitaEdicao.getTitulo_receita()) : "" %>" required>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Descrição</label>
-            <textarea class="form-textarea" id="f-descricao" name="descricao" placeholder="Apresente brevemente a receita"></textarea>
+            <textarea class="form-textarea" id="f-descricao" name="descricao" placeholder="Apresente brevemente a receita"><%= modoEdicao ? h(receitaEdicao.getDescricao_receita()) : "" %></textarea>
           </div>
         </div>
         <div class="form-row cols-2">
           <div class="form-group">
             <label class="form-label">Categoria <span>*</span></label>
-            <select class="form-select" id="f-categoria" name="categoriaId" required><option value="">Selecionar categoria…</option><% for (Categoria categoria : categorias) { %><option value="<%= categoria.getId_categoria() %>"><%= h(categoria.getNome_categoria()) %></option><% } %></select>
+            <select class="form-select" id="f-categoria" name="idCategoria" required><option value="">Selecionar categoria…</option><% for (Categoria categoria : categorias) { %><option value="<%= categoria.getId_categoria() %>" <%= modoEdicao && receitaEdicao.getCategoria() == categoria.getId_categoria() ? "selected" : "" %>><%= h(categoria.getNome_categoria()) %></option><% } %></select>
           </div>
           <div class="form-group">
             <label class="form-label">Tempo de Preparo (minutos) <span>*</span></label>
-            <input class="form-input" type="number" placeholder="Ex: 45" min="1" id="f-tempo" name="tempoPreparo" required>
+            <input class="form-input" type="number" placeholder="Ex: 45" min="1" id="f-tempo" name="tempoPreparo" value="<%= modoEdicao ? receitaEdicao.getTempo_preparo_receita() : "" %>" required>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Rendimento (porções) <span>*</span></label>
-            <input class="form-input" type="number" placeholder="Ex: 8" min="1" id="f-rendimento" name="rendimento" required>
+            <input class="form-input" type="text" placeholder="Ex: 8 porções" maxlength="50" id="f-rendimento" name="rendimento" value="<%= modoEdicao ? h(receitaEdicao.getRendimento_receita()) : "" %>" required>
           </div>
         </div>
         <div class="form-row">
@@ -790,14 +811,39 @@
           <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-light)">Unidade</span>
           <span></span>
         </div>
-        <div class="ing-list" id="ingList"></div>
+        <div class="ing-list" id="ingList">
+          <% for (ReceitaIngrediente item : ingredientesEdicao) { %>
+          <div class="ing-row">
+            <input class="form-input" name="ingredienteNome" placeholder="Ingrediente" value="<%= h(item.getNome_ingrediente()) %>" required>
+            <input class="form-input" type="number" min="0.01" step="0.01" name="ingredienteQuantidade" placeholder="Quantidade" value="<%= item.getQuantidade_receita_ingrediente() %>" required>
+            <select class="form-select" name="ingredienteUnidade" required>
+              <option value="">Unidade</option>
+              <% String[] unidadesEdicao = {"g","kg","ml","l","unidade","xícara","colher de sopa","colher de chá","pitada","a gosto"};
+                 for (String unidade : unidadesEdicao) { %>
+              <option value="<%= h(unidade) %>" <%= unidade.equals(item.getUnidade_medida_receita_ingrediente()) ? "selected" : "" %>><%= h(unidade) %></option>
+              <% } %>
+            </select>
+            <button type="button" class="ing-remove" onclick="this.parentElement.remove()">✕</button>
+          </div>
+          <% } %>
+        </div>
         <button class="btn-add-row" type="button" onclick="addIngrediente()">＋ Adicionar Ingrediente</button>
       </div>
 
       <!-- PANEL 3: Passos -->
       <div class="form-panel" id="panel-3">
         <div class="form-section-title">👨‍🍳 Modo de Preparo</div>
-        <div class="steps-list" id="stepsList"></div>
+        <div class="steps-list" id="stepsList">
+          <% for (Passo passo : passosEdicao) { %>
+          <div class="passo-block open">
+            <div class="passo-header"><span class="passo-num-badge"><%= passo.getOrdem_passo() %></span>
+              <input class="passo-title-input" name="passoTitulo" placeholder="Título do passo (opcional)" value="<%= h(passo.getTitulo_passo()) %>">
+              <button type="button" class="passo-remove-btn" onclick="removerPasso(this)">Remover</button>
+            </div>
+            <div class="passo-body"><textarea class="form-textarea" name="passoDescricao" placeholder="Descreva o passo" required><%= h(passo.getDescricao_passo()) %></textarea></div>
+          </div>
+          <% } %>
+        </div>
         <button class="btn-add-row" id="btnAddPasso" type="button" onclick="addPasso()">＋ Adicionar Passo</button>
       </div>
 
@@ -807,14 +853,14 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">URL da Imagem</label>
-            <input class="form-input" type="url" placeholder="https://…" id="f-imagem" name="imagemUrl" oninput="schedulePreviewImagemUrl()">
+            <input class="form-input" type="url" placeholder="https://…" id="f-imagem" name="imagemUrl" value="<%= modoEdicao ? h(receitaEdicao.getImagem_receita()) : "" %>" oninput="schedulePreviewImagemUrl()">
             <span class="form-hint">Cole o link que será salvo com a receita ou escolha um arquivo para pré-visualizar.</span>
           </div>
         </div>
         <input type="file" id="imagemArquivo" accept="image/jpeg,image/png,image/webp" hidden onchange="previewImagemArquivo(event)">
         <label class="upload-zone" for="imagemArquivo">
-          <img id="imagemPreview" alt="Pré-visualização da capa" style="display:none;max-width:100%;max-height:220px;margin:0 auto 12px;border-radius:6px;object-fit:contain">
-          <div class="upload-icon" id="uploadIcon">📸</div>
+          <img id="imagemPreview" src="<%= modoEdicao && receitaEdicao.getImagem_receita() != null && !receitaEdicao.getImagem_receita().isBlank() ? h(receitaEdicao.getImagem_receita()) : ctx + "/assets/img/receita-sem-imagem.svg" %>" onerror="this.onerror=null;this.src='<%= ctx %>/assets/img/receita-sem-imagem.svg'" alt="Pré-visualização da capa" style="<%= modoEdicao ? "display:block;" : "display:none;" %>max-width:100%;max-height:220px;margin:0 auto 12px;border-radius:6px;object-fit:contain">
+          <div class="upload-icon" id="uploadIcon" style="<%= modoEdicao ? "display:none" : "" %>">📸</div>
           <div class="upload-text">Clique para escolher uma imagem</div>
           <div class="upload-sub">Pré-visualização local — somente a URL informada acima será salva</div>
         </label>
@@ -838,52 +884,6 @@
   </div>
 </div>
 
-<!-- ===================== MODAL VISUALIZAR RECEITA ===================== -->
-<div class="modal-overlay" id="viewModalOverlay" onclick="handleViewOverlayClick(event)">
-  <div class="modal" style="max-width:640px;">
-    <div class="modal-header">
-      <div class="modal-header-left">
-        <div class="modal-header-label">👁 Pré-visualização</div>
-        <div class="modal-header-title" id="viewTitle">Título da Receita</div>
-      </div>
-      <button class="modal-close" onclick="closeViewModal()">✕</button>
-    </div>
-
-    <div class="modal-body">
-      <div style="position:relative;border-radius:8px;overflow:hidden;margin-bottom:20px;">
-        <img id="viewImg" src="" alt="" style="width:100%;height:240px;object-fit:cover;display:block;">
-        <span id="viewStatusBadge" class="img-badge" style="position:absolute;top:12px;left:12px;"></span>
-        <span id="viewTimeBadge" class="img-time" style="position:absolute;bottom:10px;right:10px;"></span>
-      </div>
-
-      <div style="display:flex;flex-wrap:wrap;gap:18px;margin-bottom:14px;font-size:13px;color:var(--text-mid);">
-        <div><b style="color:var(--text-dark)">Categoria:</b> <span id="viewCategoria"></span></div>
-        <div><b style="color:var(--text-dark)">Rendimento:</b> <span id="viewRendimento"></span></div>
-        <div><b style="color:var(--text-dark)">Avaliação:</b> <span id="viewEstrelas" style="color:var(--gold)"></span></div>
-      </div>
-
-      <div class="recipe-tags" id="viewTags" style="margin-bottom:20px;"></div>
-
-      <div id="viewDescricaoWrap" class="form-section-title" style="display:none;">📝 Descrição</div>
-      <p id="viewDescricao" style="display:none;font-size:13px;color:var(--text-mid);line-height:1.7;margin-bottom:20px;"></p>
-
-      <div class="form-section-title">🥕 Ingredientes</div>
-      <ul id="viewIngredientes" style="margin:10px 0 22px;padding-left:20px;font-size:13px;color:var(--text-mid);line-height:1.9;"></ul>
-
-      <div class="form-section-title">👨‍🍳 Modo de Preparo</div>
-      <ol id="viewPassos" style="margin:10px 0 0;padding-left:20px;font-size:13px;color:var(--text-mid);line-height:1.9;"></ol>
-    </div>
-
-    <div class="modal-footer">
-      <div></div>
-      <div class="modal-footer-right">
-        <button class="btn-secondary" onclick="closeViewModal()">Fechar</button>
-        <button class="btn-submit-review" id="viewEditBtn">✏️ Editar Receita</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -894,6 +894,8 @@ let currentFilter = 'todos';
 let filterTimer = null;
 let previewTimer = null;
 let imagemPreviewObjectUrl = null;
+const modoEdicao = <%= modoEdicao %>;
+const imagemPadrao = '<%= ctx %>/assets/img/receita-sem-imagem.svg';
 
 function openModal() {
   document.getElementById('modalOverlay').classList.add('open');
@@ -906,11 +908,6 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 function handleOverlayClick(event) { if (event.target.id === 'modalOverlay') closeModal(); }
-function closeViewModal() {
-  document.getElementById('viewModalOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-function handleViewOverlayClick(event) { if (event.target.id === 'viewModalOverlay') closeViewModal(); }
 function applyFilters() {
   const term = (document.getElementById('searchInput')?.value || '').toLowerCase();
   const cards = document.querySelectorAll('#recipesGrid .recipe-card');
@@ -978,7 +975,7 @@ function handleNext() {
   }
   if (!validarFormulario()) return;
   const formAction = document.getElementById('formAction');
-  formAction.value = 'enviarRevisao';
+  formAction.value = modoEdicao ? "atualizarEnviarRevisao" : "enviarRevisao";
   setSubmitting(true, 'Enviando…');
   document.getElementById('receitaForm').requestSubmit();
 }
@@ -986,7 +983,7 @@ function addIngrediente() {
   const row = document.createElement('div');
   row.className = 'ing-row';
   row.innerHTML = '<input class="form-input" name="ingredienteNome" placeholder="Ingrediente" required>' +
-    '<input class="form-input" type="number" min="1" name="ingredienteQuantidade" placeholder="Quantidade" required>' +
+    '<input class="form-input" type="number" min="0.01" step="0.01" name="ingredienteQuantidade" placeholder="Quantidade" required>' +
     '<select class="form-select" name="ingredienteUnidade" required><option value="">Unidade</option>' +
     '<option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option>' +
     '<option value="l">l</option><option value="unidade">unidade</option><option value="xícara">xícara</option>' +
@@ -1025,6 +1022,7 @@ function previewImagemArquivo(event) {
   if (imagemPreviewObjectUrl) URL.revokeObjectURL(imagemPreviewObjectUrl);
   imagemPreviewObjectUrl = URL.createObjectURL(arquivo);
   const preview = document.getElementById('imagemPreview');
+  preview.onerror = null;
   preview.src = imagemPreviewObjectUrl;
   preview.style.display = 'block';
   document.getElementById('uploadIcon').style.display = 'none';
@@ -1040,6 +1038,10 @@ function previewImagemUrl() {
     }
     return;
   }
+  preview.onerror = () => {
+    preview.onerror = null;
+    preview.src = imagemPadrao;
+  };
   preview.src = url;
   preview.style.display = 'block';
   document.getElementById('uploadIcon').style.display = 'none';
@@ -1075,7 +1077,7 @@ function updateReviewSummary() {
 function saveAction(status) {
   if (!validarFormulario()) return;
   const formAction = document.getElementById('formAction');
-  formAction.value = 'salvarRascunho';
+  formAction.value = modoEdicao ? "atualizarRascunho" : "salvarRascunho";
   setSubmitting(true, 'Salvando…');
   document.getElementById('receitaForm').requestSubmit();
 }
@@ -1094,9 +1096,10 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove('show'), 2800);
 }
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape') { closeModal(); closeViewModal(); }
+  if (event.key === 'Escape') closeModal();
 });
 applyFilters();
+<% if (abrirFormularioReceita) { %>openModal();<% } %>
 </script>
 </body>
 </html>

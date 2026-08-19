@@ -14,10 +14,8 @@
     request.setAttribute("comentarios", comentarios);     // List<Comentario>
     request.setAttribute("favorita", favorita);           // Boolean, quando houver usuário logado
 
-  O ReceitaController atual envia apenas "receita" e "historicoFluxo" no detalhe.
-  Os demais atributos ainda precisam ser carregados pelo Controller. A ação
-  action=comentar também precisa ser implementada antes de habilitar persistência
-  de novos comentários; esta JSP não simula inserção no JavaScript.
+  O ReceitaController também valida a visibilidade pelo perfil e pelo estado
+  antes de encaminhar para esta JSP.
 --%>
 <%!
   private String h(Object value) {
@@ -40,11 +38,13 @@
   if (comentarios == null) comentarios = Collections.emptyList();
   Usuario usuario = (Usuario) session.getAttribute("usuarioLogado");
   boolean usuarioAutenticado = usuario != null;
-  String tipoUsuario = usuarioAutenticado && usuario.getTipo_usuario() != null
-      ? usuario.getTipo_usuario().toString()
-      : "PUBLICO";
   boolean favorita = Boolean.TRUE.equals(request.getAttribute("favorita"));
   String ctx = request.getContextPath();
+  boolean podeEditar = Boolean.TRUE.equals(request.getAttribute("podeEditar"));
+  boolean podeModerar = Boolean.TRUE.equals(request.getAttribute("podeModerar"));
+  boolean podeAlterarAtividade = Boolean.TRUE.equals(request.getAttribute("podeAlterarAtividade"));
+  boolean podeComentar = Boolean.TRUE.equals(request.getAttribute("podeComentar"));
+  String csrfToken = request.getAttribute("csrfToken") == null ? "" : String.valueOf(request.getAttribute("csrfToken"));
 %>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -683,19 +683,17 @@ a.sidebar-user:active {
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="page-crumb">
-      <a href="#">Receitas</a>
+      <a href="<%= ctx %>/ReceitaController">Receitas</a>
       <span style="color:var(--cream-dark)">/</span>
-      <!-- categoria.nome_categoria -->
-      <a href="#">Categoria</a>
+      <span><%= receita == null ? "Categoria" : h(receita.getNome_categoria()) %></span>
       <span style="color:var(--cream-dark)">/</span>
-      <!-- receita.titulo_receita -->
-      <span class="current">Receita não carregada</span>
+      <span class="current"><%= receita == null ? "Receita" : h(receita.getTitulo_receita()) %></span>
     </div>
   </div>
 
   <!-- HERO -->
   <div class="recipe-hero">
-    <% if (receita != null) { %><img src="<%= h(receita.getImagem_receita()) %>" alt="<%= h(receita.getTitulo_receita()) %>"><% } %>
+    <% if (receita != null) { %><img src="<%= receita.getImagem_receita() == null || receita.getImagem_receita().isBlank() ? ctx + "/assets/img/receita-sem-imagem.svg" : h(receita.getImagem_receita()) %>" onerror="this.onerror=null;this.src='<%= ctx %>/assets/img/receita-sem-imagem.svg'" alt="<%= h(receita.getTitulo_receita()) %>"><% } %>
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <div class="hero-cat"><%= receita == null ? "" : h(receita.getEmoji_categoria()) + " " + h(receita.getNome_categoria()) %></div>
@@ -751,12 +749,16 @@ a.sidebar-user:active {
 
     <!-- RIGHT COL -->
     <div class="right-col">
-      <% boolean podeModerar = "ADMIN".equals(tipoUsuario) || "EDITOR".equals(tipoUsuario); %>
       <% if (usuarioAutenticado && !podeModerar && receita != null) { %><form method="post" action="<%= ctx %>/FavoritoController"><input type="hidden" name="action" value="toggle"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button type="submit" class="btn-fav" id="favBtn"><%= favorita ? "❤️ Favoritada" : "🤍 Favoritar" %></button></form><% } %>
-      <% if (podeModerar && receita != null) { %>
-      <form method="post" action="<%= ctx %>/receitas"><input type="hidden" name="action" value="aprovar"><input type="hidden" name="receitaId" value="<%= receita.getId_receita() %>"><button type="submit" class="btn-comment">✓ Aprovar</button></form>
-      <form method="post" action="<%= ctx %>/receitas"><input type="hidden" name="action" value="rejeitar"><input type="hidden" name="receitaId" value="<%= receita.getId_receita() %>"><textarea name="motivo" placeholder="Motivo da rejeição" required></textarea><button type="submit" class="btn-comment">✕ Rejeitar</button></form>
-      <form method="post" action="<%= ctx %>/receitas"><input type="hidden" name="action" value="toggleStatus"><input type="hidden" name="receitaId" value="<%= receita.getId_receita() %>"><button type="submit" class="btn-comment">Ativar/Inativar</button></form>
+      <% if (podeEditar) { %>
+      <form method="get" action="<%= ctx %>/ReceitaController"><input type="hidden" name="action" value="editar"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button type="submit" class="btn-comment">✏ Editar receita</button></form>
+      <% } %>
+      <% if (podeModerar) { %>
+      <form method="post" action="<%= ctx %>/ReceitaController"><input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>"><input type="hidden" name="action" value="aprovar"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button type="submit" class="btn-comment">✓ Aprovar</button></form>
+      <form method="post" action="<%= ctx %>/ReceitaController"><input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>"><input type="hidden" name="action" value="rejeitar"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><textarea name="motivo" placeholder="Motivo da rejeição" required></textarea><button type="submit" class="btn-comment">✕ Rejeitar</button></form>
+      <% } %>
+      <% if (podeAlterarAtividade) { %>
+      <form method="post" action="<%= ctx %>/ReceitaController"><input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>"><input type="hidden" name="action" value="alterarAtividade"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><input type="hidden" name="statusAtividade" value="<%= receita.getStatus_atividade() == Receita.StatusAtividade.ativo ? "inativo" : "ativo" %>"><button type="submit" class="btn-comment"><%= receita.getStatus_atividade() == Receita.StatusAtividade.ativo ? "Inativar" : "Ativar" %> receita</button></form>
       <% } %>
     </div><!-- /right-col -->
 
@@ -776,7 +778,7 @@ a.sidebar-user:active {
     </div><!-- /commentsList -->
 
     <!-- Formulário -->
-    <% if (usuarioAutenticado && receita != null) { %><form class="comment-form" method="post" action="<%= ctx %>/ComentarioController">
+    <% if (podeComentar) { %><form class="comment-form" method="post" action="<%= ctx %>/ComentarioController">
       <div class="form-title">✍️ Deixe seu comentário</div>
       <div id="commentErr" style="display:none;font-size:12px;color:var(--gold);background:#fdf3e3;border-left:3px solid var(--gold);padding:8px 12px;margin-bottom:14px;border-radius:0 4px 4px 0;"></div>
       <div class="form-row">
@@ -793,7 +795,7 @@ a.sidebar-user:active {
       </div>
       <div class="form-group" style="margin-bottom:16px">
         <label>Comentário</label>
-        <input type="hidden" name="action" value="comentar"><input type="hidden" name="receitaId" value="<%= receita == null ? 0 : receita.getId_receita() %>"><input type="hidden" id="avaliacaoComentario" name="avaliacao" value="0"><textarea id="commentText" name="texto" rows="4" placeholder="Conte como ficou, dicas que deu certo, variações…"></textarea>
+        <input type="hidden" name="action" value="comentar"><input type="hidden" name="idReceita" value="<%= receita == null ? 0 : receita.getId_receita() %>"><input type="hidden" id="avaliacaoComentario" name="avaliacao" value="1"><textarea id="commentText" name="conteudo" rows="4" placeholder="Conte como ficou, dicas que deram certo, variações…" required></textarea>
       </div>
       <button type="submit" class="btn-comment" id="btnPublicarComentario">💬 Publicar comentário</button></form><% } %>
   </div>

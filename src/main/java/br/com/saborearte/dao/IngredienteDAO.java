@@ -1,5 +1,6 @@
 package br.com.saborearte.dao;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -60,7 +61,7 @@ public class IngredienteDAO {
                     ReceitaIngrediente ri = new ReceitaIngrediente();
                     ri.setId_receita(rs.getInt("id_receita"));
                     ri.setId_ingrediente(rs.getInt("id_ingrediente"));
-                    ri.setQuantidade_receita_ingrediente(rs.getInt("quantidade_receita_ingrediente"));
+                    ri.setQuantidade_receita_ingrediente(rs.getBigDecimal("quantidade_receita_ingrediente"));
                     ri.setUnidade_medida_receita_ingrediente(rs.getString("unidade_medida_receita_ingrediente"));
 
                     // ===== Campo extra (não persistido) =====
@@ -89,8 +90,28 @@ public class IngredienteDAO {
         try (PreparedStatement ps = conexao.prepareStatement(sql)) {
             ps.setInt(1, ri.getId_receita());
             ps.setInt(2, ri.getId_ingrediente());
-            ps.setInt(3, ri.getQuantidade_receita_ingrediente());
+            ps.setBigDecimal(3, ri.getQuantidade_receita_ingrediente());
             ps.setString(4, ri.getUnidade_medida_receita_ingrediente());
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Persiste a quantidade com a precisão decimal definida pelo schema, sem
+     * depender do campo inteiro mantido no modelo legado ReceitaIngrediente.
+     */
+    public void adicionarIngredienteNaReceita(int idReceita, int idIngrediente,
+            BigDecimal quantidade, String unidade) throws SQLException {
+        String sql = """
+                INSERT INTO receita_ingrediente
+                    (id_receita, id_ingrediente, quantidade_receita_ingrediente, unidade_medida_receita_ingrediente)
+                VALUES (?, ?, ?, ?)
+                """;
+        try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+            ps.setInt(1, idReceita);
+            ps.setInt(2, idIngrediente);
+            ps.setBigDecimal(3, quantidade);
+            ps.setString(4, unidade);
             ps.executeUpdate();
         }
     }

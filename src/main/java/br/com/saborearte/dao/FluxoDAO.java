@@ -222,4 +222,21 @@ public class FluxoDAO {
  
         return resultado;
     }
+
+    /** Card "Revisadas Hoje" da fila do editor — qualquer decisão (aprovado ou rejeitado) tomada hoje. */
+    public int contarRevisadosHoje() throws SQLException {
+        String sql = """
+                SELECT COUNT(*) AS total
+                FROM fluxo
+                WHERE status_fluxo IN (?, ?)
+                  AND DATE(data_fluxo) = CURDATE()
+                """;
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setString(1, StatusFluxo.APROVADO.name());
+            stmt.setString(2, StatusFluxo.REJEITADO.name());
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("total") : 0;
+            }
+        }
+    }
 }
