@@ -387,7 +387,7 @@ a.sidebar-user:active {
             </div>
           </div>
           <div class="recipe-footer">
-            <a class="footer-btn" href="<%= ctx %>/ReceitaController?action=detalhar&id=<%= receita.getId_receita() %>">👁 Ver</a>
+            <a class="footer-btn" href="<%= ctx %>/receitas?acao=detalhar&amp;id=<%= receita.getId_receita() %>">👁 Ver</a>
             <% if (usuarioAutenticado) { %>
               <form method="post" action="<%= ctx %>/FavoritoController">
                 <input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>">

@@ -27,6 +27,8 @@
   Usuario usuario = (Usuario) session.getAttribute("usuarioLogado");
   boolean usuarioAutenticado = usuario != null;
   String ctx = request.getContextPath();
+  String mensagemErro = request.getAttribute("erro") == null ? null : String.valueOf(request.getAttribute("erro"));
+  String mensagemSucesso = request.getAttribute("sucesso") == null ? null : String.valueOf(request.getAttribute("sucesso"));
 %>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -277,7 +279,6 @@
     padding: 4px 10px; border-radius: 20px;
     font-size: 10px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.5px;
-    backdrop-filter: blur(6px);
   }
   .img-badge.publicado { background: rgba(58,122,74,0.92);  color: #fff; }
   .img-badge.rascunho  { background: rgba(80,90,100,0.88);  color: #fff; }
@@ -346,7 +347,7 @@
   /* ===================== MODAL OVERLAY ===================== */
   .modal-overlay {
     display: none; position: fixed; inset: 0; z-index: 200;
-    background: rgba(30,39,24,0.55); backdrop-filter: blur(4px);
+    background: rgba(30,39,24,0.55);
     align-items: flex-start; justify-content: center;
     overflow-y: auto; padding: 32px 20px;
   }
@@ -468,6 +469,7 @@
 
   /* image upload */
   .upload-zone {
+    display: block; width: 100%; box-sizing: border-box;
     border: 2px dashed var(--cream-dark);
     border-radius: 6px; padding: 28px;
     text-align: center; cursor: pointer;
@@ -619,73 +621,20 @@
     transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
   }
   .toast.show { transform: none; opacity: 1; }
+  .feedback {
+    margin-bottom: 18px; padding: 12px 16px; border-radius: 4px;
+    font-size: 13px; line-height: 1.45;
+  }
+  .feedback.error { color: #8d3535; background: #fff0f0; border: 1px solid #e8b0b0; }
+  .feedback.success { color: #315f3b; background: #edf7ef; border: 1px solid #b9d9c0; }
 </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
-<aside class="sidebar" id="sidebar">
-
-    <div class="sidebar-brand">
-        <div class="brand-row">
-            <div class="brand-badge">🌿</div>
-            <div>
-                <span class="brand-title">Sabor &amp; Arte</span>
-                <span class="brand-sub">Blog editorial</span>
-            </div>
-        </div>
-    </div>
-
-    <a href="perfil-autor.html" class="sidebar-user" title="Meu perfil">
-        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);"></div>
-        <div class="user-info">
-            <div class="user-name"><%= usuarioAutenticado ? h(usuario.getNome_usuario()) : "Autor" %></div>
-            <div class="user-role-badge">✍️ Autor</div>
-        </div>
-    </a>
-
-    <nav class="sidebar-nav">
-        <div class="nav-section-label">Visão Geral</div>
-
-        <a href="dashboard-autor.html" class="nav-item ">
-            <span class="nav-icon">📊</span>
-            <span class="nav-label">Dashboard</span>
-        </a>
-
-        <div class="nav-section-label">Conteúdo</div>
-
-       <a href="<%= request.getContextPath() %>/receitas" class="nav-item active">
-            <span class="nav-icon">📖</span>
-            <span class="nav-label">Minhas Receitas</span>
-        </a>
-        <a href="mensagens-autor.html" class="nav-item">     
-            <span class="nav-icon">💬</span>
-            <span class="nav-label">Mensagens</span>
-        </a>
-
-          <div class="nav-section-label">Análise</div>
-
-        <a href="relatorio-autor.html" class="nav-item">
-          <span class="nav-icon">📈</span>
-          <span class="nav-label">Relatórios</span>
-        </a>
-
-        <div class="nav-section-label">Conta</div>
-        <a href="/saborearte/ConfiguracaoController" class="nav-item">
-            <span class="nav-icon">⚙️</span>
-            <span class="nav-label">Configurações</span>
-        </a>
-
-    </nav>
-
-    <div class="sidebar-bottom">
-	    <a href="/saborearte/LogoutController" class="btn-logout">
-	        <span class="nav-icon">🚪</span>
-	        <span>Sair</span>
-	    </a>
-    </div>
-
-</aside>
+<%
+  request.setAttribute("currentPage", "receitas");
+%>
+<jsp:include page="/pages/includes/sidebar.jsp" />
 
 
 <!-- MAIN -->
@@ -699,6 +648,8 @@
   </div>
 
   <div class="content">
+    <% if (mensagemErro != null) { %><div class="feedback error" role="alert"><%= h(mensagemErro) %></div><% } %>
+    <% if (mensagemSucesso != null) { %><div class="feedback success" role="status"><%= h(mensagemSucesso) %></div><% } %>
     <div class="section-header">
       <div>
         <div class="section-title">Minhas <em>Receitas</em> 📖</div>
@@ -711,12 +662,12 @@
     <div class="filter-bar">
       <div class="topbar-search" style="width:220px">
         <span style="font-size:14px;color:var(--text-light)">🔍</span>
-        <input type="text" placeholder="Buscar receitas…" id="searchInput" oninput="applyFilters()">
+        <input type="text" placeholder="Buscar receitas…" id="searchInput" oninput="scheduleFilters()">
       </div>
       <span class="filter-label">Filtrar:</span>
       <div class="filter-chips">
         <button class="chip active" data-filter="todos" onclick="setFilter(this)">🍴 Todas <span class="chip-count"><%= intAttr(request, "totalReceitas") %></span></button>
-        <button class="chip publicado" data-filter="publicado" onclick="setFilter(this)">✅ Publicadas <span class="chip-count"><%= intAttr(request, "totalPublicadas") %></span></button>
+        <button class="chip publicado" data-filter="publicada" onclick="setFilter(this)">✅ Publicadas <span class="chip-count"><%= intAttr(request, "totalPublicadas") %></span></button>
         <button class="chip rascunho" data-filter="rascunho" onclick="setFilter(this)">📝 Rascunhos <span class="chip-count"><%= intAttr(request, "totalRascunhos") %></span></button>
       </div>
       <div class="filter-right">
@@ -734,7 +685,7 @@
     <div class="recipes-grid" id="recipesGrid">
       <% for (Receita receita : receitas) { %>
         <article class="recipe-card" data-id="<%= receita.getId_receita() %>" data-status="<%= h(receita.getStatus_receita()).toLowerCase() %>" data-name="<%= h(receita.getTitulo_receita()) %>">
-          <div class="recipe-img-wrap"><img src="<%= h(receita.getImagem_receita()) %>" alt="<%= h(receita.getTitulo_receita()) %>"></div>
+          <div class="recipe-img-wrap"><img loading="lazy" decoding="async" src="<%= h(receita.getImagem_receita()) %>" alt="<%= h(receita.getTitulo_receita()) %>"></div>
           <div class="recipe-body"><div class="recipe-cat"><%= h(receita.getEmoji_categoria()) %> <%= h(receita.getNome_categoria()) %></div><div class="recipe-name"><%= h(receita.getTitulo_receita()) %></div></div>
           <div class="recipe-footer">
             <a class="footer-btn" href="<%= ctx %>/receitas?acao=detalhar&id=<%= receita.getId_receita() %>">👁 Ver</a>
@@ -744,10 +695,6 @@
         </article>
       <% } %>
       <% if (receitas.isEmpty()) { %><div class="empty-state show" id="emptyState"><div class="empty-icon">🍽️</div><h3>Nenhuma receita encontrada</h3></div><% } %>
-    </div>
-        <h3>Nenhuma receita carregada</h3>
-        <p>Os dados serão fornecidos pela aplicação Java.</p>
-      </div>
     </div>
 
     <div class="pagination">
@@ -817,17 +764,10 @@
             <input class="form-input" type="number" placeholder="Ex: 45" min="1" id="f-tempo" name="tempoPreparo" required>
           </div>
         </div>
-        <div class="form-row cols-2">
+        <div class="form-row">
           <div class="form-group">
             <label class="form-label">Rendimento (porções) <span>*</span></label>
             <input class="form-input" type="number" placeholder="Ex: 8" min="1" id="f-rendimento" name="rendimento" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Status inicial</label>
-            <select class="form-select" id="f-status">
-              <option value="rascunho">📝 Salvar como Rascunho</option>
-              <option value="aguardando_aprovacao">📤 Enviar para Revisão</option>
-            </select>
           </div>
         </div>
         <div class="form-row">
@@ -867,7 +807,7 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">URL da Imagem</label>
-            <input class="form-input" type="url" placeholder="https://…" id="f-imagem" name="imagemUrl" oninput="previewImagemUrl()">
+            <input class="form-input" type="url" placeholder="https://…" id="f-imagem" name="imagemUrl" oninput="schedulePreviewImagemUrl()">
             <span class="form-hint">Cole o link que será salvo com a receita ou escolha um arquivo para pré-visualizar.</span>
           </div>
         </div>
@@ -876,7 +816,7 @@
           <img id="imagemPreview" alt="Pré-visualização da capa" style="display:none;max-width:100%;max-height:220px;margin:0 auto 12px;border-radius:6px;object-fit:contain">
           <div class="upload-icon" id="uploadIcon">📸</div>
           <div class="upload-text">Clique para escolher uma imagem</div>
-          <div class="upload-sub">Pré-visualização local · para salvar, informe também a URL acima</div>
+          <div class="upload-sub">Pré-visualização local — somente a URL informada acima será salva</div>
         </label>
         <div class="form-section-title" style="margin-top:24px">✅ Resumo da Receita</div>
         <div id="reviewSummary" style="background:var(--cream);border-radius:6px;padding:16px;font-size:13px;color:var(--text-mid);line-height:1.8;">
@@ -950,10 +890,16 @@
 <script>
 let currentPanel = 1;
 const totalPanels = 4;
+let currentFilter = 'todos';
+let filterTimer = null;
+let previewTimer = null;
+let imagemPreviewObjectUrl = null;
 
 function openModal() {
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+  if (!document.querySelector('#ingList .ing-row')) addIngrediente();
+  if (!document.querySelector('#stepsList .passo-block')) addPasso();
 }
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('open');
@@ -970,47 +916,78 @@ function applyFilters() {
   const cards = document.querySelectorAll('#recipesGrid .recipe-card');
   let visible = 0;
   cards.forEach(card => {
-    const show = (card.dataset.name || '').toLowerCase().includes(term);
+    const matchesText = (card.dataset.name || '').toLowerCase().includes(term);
+    const matchesStatus = currentFilter === 'todos' || card.dataset.status === currentFilter;
+    const show = matchesText && matchesStatus;
     card.style.display = show ? '' : 'none';
     if (show) visible++;
   });
   const info = document.getElementById('resultsInfo');
   if (info) info.textContent = visible + ' receita(s)';
 }
-function changePanel(direction) {
-  const next = currentPanel + direction;
-  if (next < 1 || next > totalPanels) return;
+function scheduleFilters() {
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(applyFilters, 180);
+}
+function setFilter(button) {
+  currentFilter = button.dataset.filter || 'todos';
+  document.querySelectorAll('.filter-chips .chip').forEach(chip => chip.classList.remove('active'));
+  button.classList.add('active');
+  applyFilters();
+}
+function showPanel(panelNumber) {
+  if (panelNumber < 1 || panelNumber > totalPanels) return;
   document.getElementById('panel-' + currentPanel)?.classList.remove('active');
-  currentPanel = next;
+  currentPanel = panelNumber;
   document.getElementById('panel-' + currentPanel)?.classList.add('active');
   document.getElementById('btnBack').style.display = currentPanel > 1 ? 'flex' : 'none';
   document.getElementById('stepCounter').textContent = 'Etapa ' + currentPanel + ' de ' + totalPanels;
   document.querySelectorAll('.form-steps .step-item').forEach((item, index) => {
     item.classList.toggle('active', index + 1 === currentPanel);
+    item.classList.toggle('done', index + 1 < currentPanel);
   });
   const btnNext = document.getElementById('btnNext');
-  if (currentPanel === totalPanels) {
-    btnNext.textContent = 'Enviar para revisão';
-  } else {
-    btnNext.textContent = 'Próximo →';
-  }
+  btnNext.textContent = currentPanel === totalPanels ? 'Enviar para revisão' : 'Próximo →';
   if (currentPanel === totalPanels) updateReviewSummary();
+}
+function changePanel(direction) {
+  const next = currentPanel + direction;
+  if (next < 1 || next > totalPanels) return;
+  showPanel(next);
+}
+function validarFormulario() {
+  const form = document.getElementById('receitaForm');
+  if (form.checkValidity()) return true;
+  const invalid = form.querySelector(':invalid');
+  const panel = invalid?.closest('.form-panel');
+  if (panel) showPanel(Number(panel.id.replace('panel-', '')));
+  invalid?.reportValidity();
+  showToast('Revise os campos obrigatórios antes de continuar.');
+  return false;
 }
 function handleNext() {
   if (currentPanel < totalPanels) {
+    const panel = document.getElementById('panel-' + currentPanel);
+    const invalid = panel?.querySelector(':invalid');
+    if (invalid) {
+      invalid.reportValidity();
+      return;
+    }
     changePanel(1);
     return;
   }
+  if (!validarFormulario()) return;
   const formAction = document.getElementById('formAction');
   formAction.value = 'enviarRevisao';
+  setSubmitting(true, 'Enviando…');
   document.getElementById('receitaForm').requestSubmit();
 }
 function addIngrediente() {
   const row = document.createElement('div');
   row.className = 'ing-row';
-  row.innerHTML = '<input class="form-input" name="ingredienteNome" placeholder="Ingrediente">' +
-    '<input class="form-input" type="number" min="1" name="ingredienteQuantidade" placeholder="Quantidade">' +
-    '<select class="form-select" name="ingredienteUnidade"><option value="">Unidade</option>' +
+  row.innerHTML = '<input class="form-input" name="ingredienteNome" placeholder="Ingrediente" required>' +
+    '<input class="form-input" type="number" min="1" name="ingredienteQuantidade" placeholder="Quantidade" required>' +
+    '<select class="form-select" name="ingredienteUnidade" required><option value="">Unidade</option>' +
     '<option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option>' +
     '<option value="l">l</option><option value="unidade">unidade</option><option value="xícara">xícara</option>' +
     '<option value="colher de sopa">colher de sopa</option><option value="colher de chá">colher de chá</option>' +
@@ -1024,7 +1001,7 @@ function addPasso() {
   row.innerHTML = '<div class="passo-header"><span class="passo-num-badge"></span>' +
     '<input class="passo-title-input" name="passoTitulo" placeholder="Título do passo (opcional)">' +
     '<button type="button" class="passo-remove-btn" onclick="removerPasso(this)">Remover</button></div>' +
-    '<div class="passo-body"><textarea class="form-textarea" name="passoDescricao" placeholder="Descreva o passo"></textarea></div>';
+    '<div class="passo-body"><textarea class="form-textarea" name="passoDescricao" placeholder="Descreva o passo" required></textarea></div>';
   document.getElementById('stepsList')?.appendChild(row);
   renumerarPassos();
 }
@@ -1040,18 +1017,36 @@ function renumerarPassos() {
 function previewImagemArquivo(event) {
   const arquivo = event.target.files?.[0];
   if (!arquivo) return;
+  if (arquivo.size && arquivo.size > 5 * 1024 * 1024) {
+    event.target.value = '';
+    showToast('Escolha uma imagem de até 5 MB para a pré-visualização.');
+    return;
+  }
+  if (imagemPreviewObjectUrl) URL.revokeObjectURL(imagemPreviewObjectUrl);
+  imagemPreviewObjectUrl = URL.createObjectURL(arquivo);
   const preview = document.getElementById('imagemPreview');
-  preview.src = URL.createObjectURL(arquivo);
+  preview.src = imagemPreviewObjectUrl;
   preview.style.display = 'block';
   document.getElementById('uploadIcon').style.display = 'none';
 }
 function previewImagemUrl() {
   const url = document.getElementById('f-imagem').value.trim();
-  if (!url) return;
   const preview = document.getElementById('imagemPreview');
+  if (!url) {
+    if (!imagemPreviewObjectUrl) {
+      preview.removeAttribute('src');
+      preview.style.display = 'none';
+      document.getElementById('uploadIcon').style.display = '';
+    }
+    return;
+  }
   preview.src = url;
   preview.style.display = 'block';
   document.getElementById('uploadIcon').style.display = 'none';
+}
+function schedulePreviewImagemUrl() {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(previewImagemUrl, 350);
 }
 function handleTagInput(event) {
   if (event.key !== 'Enter' && event.key !== ',') return;
@@ -1078,9 +1073,25 @@ function updateReviewSummary() {
   ].join(' · ');
 }
 function saveAction(status) {
+  if (!validarFormulario()) return;
   const formAction = document.getElementById('formAction');
   formAction.value = 'salvarRascunho';
+  setSubmitting(true, 'Salvando…');
   document.getElementById('receitaForm').requestSubmit();
+}
+function setSubmitting(submitting, label) {
+  document.querySelectorAll('#receitaForm button').forEach(button => {
+    button.disabled = submitting;
+  });
+  const btnNext = document.getElementById('btnNext');
+  if (submitting && btnNext) btnNext.textContent = label;
+}
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2800);
 }
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') { closeModal(); closeViewModal(); }

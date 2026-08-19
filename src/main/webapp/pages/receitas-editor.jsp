@@ -290,61 +290,10 @@
 </head>
 <body>
 
-<!-- ===== SIDEBAR EDITOR (estático) ===== -->
-<aside class="sidebar" id="sidebar" data-role="editor">
-    <div class="sidebar-brand">
-        <div class="brand-row">
-            <div class="brand-badge">🌿</div>
-            <div>
-                <span class="brand-title">Sabor &amp; Arte</span>
-                <span class="brand-sub">Blog Editorial</span>
-            </div>
-        </div>
-    </div>
-    <a href="perfil-editor.html" class="sidebar-user" title="Meu perfil">
-        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);"></div>
-        <div class="user-info">
-            <div class="user-name"><%= usuarioAutenticado ? h(usuario.getNome_usuario()) : "Editor" %></div>
-            <div class="user-role-badge">🔑Editor/Moderador</div>
-        </div>
-    </a>
-    <nav class="sidebar-nav">
-        <!-- ===== SEÇÃO VISÃO GERAL ===== -->
-        <div class="nav-section-label">Visão Geral</div>
-        <a href="dashboard-editor.html" class="nav-item ">
-            <span class="nav-icon">📊</span>
-            <span class="nav-label">Dashboard</span>
-        </a>
-        <!-- ===== SEÇÃO GESTÃO ===== -->
-        <div class="nav-section-label">Gestão</div>
-        <a href="receitas-editor.html" class="nav-item active">
-            <span class="nav-icon">📝</span>
-            <span class="nav-label">Receitas</span>
-        </a>
-        <a href="comentario-editor.html" class="nav-item">
-            <span class="nav-icon">💬</span>
-            <span class="nav-label"> Comentários</span>
-        </a>
-        <!-- ===== SEÇÃO ANÁLISE ===== -->
-        <div class="nav-section-label">Análise</div>
-        <a href="relatorio-editor.html" class="nav-item">
-            <span class="nav-icon">📈</span>
-            <span class="nav-label">Relatórios</span>
-        </a>
-        <!-- ===== SEÇÃO CONTA ===== -->
-        <div class="nav-section-label">Conta</div>
-        <a href="/saborearte/ConfiguracaoController" class="nav-item">
-            <span class="nav-icon">⚙️</span>
-            <span class="nav-label">Configurações</span>
-        </a>
-    </nav>
-    <div class="sidebar-bottom">
-	    <a href="/saborearte/LogoutController" class="btn-logout">
-	        <span class="nav-icon">🚪</span>
-	        <span>Sair</span>
-	    </a>
-    </div>
-</aside>
+<%
+  request.setAttribute("currentPage", "receitas");
+%>
+<jsp:include page="/pages/includes/sidebar.jsp" />
 
 <!-- OVERLAY MOBILE -->
 <div id="overlay" onclick="closeSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99"></div>
@@ -491,9 +440,9 @@
                   <td><%= h(request.getAttribute("tempoAguardando_" + receita.getId_receita())) %></td>
                   <td><%= h(receita.getStatus_receita()) %></td>
                   <td class="actions-cell">
-                    <a class="action-btn" href="<%= ctx %>/ReceitaController?action=detalhar&id=<%= receita.getId_receita() %>">👁 Ver</a>
-                    <form method="post" action="<%= ctx %>/ReceitaController"><input type="hidden" name="action" value="aprovar"><input type="hidden" name="id" value="<%= receita.getId_receita() %>"><button class="action-btn" type="submit">✓ Aprovar</button></form>
-                    <form method="post" action="<%= ctx %>/ReceitaController"><input type="hidden" name="action" value="rejeitar"><input type="hidden" name="id" value="<%= receita.getId_receita() %>"><button class="action-btn" type="submit">✕ Rejeitar</button></form>
+                    <a class="action-btn" href="<%= ctx %>/receitas?acao=detalhar&amp;id=<%= receita.getId_receita() %>">👁 Ver</a>
+                    <form method="post" action="<%= ctx %>/receitas"><input type="hidden" name="action" value="aprovar"><input type="hidden" name="receitaId" value="<%= receita.getId_receita() %>"><button class="action-btn" type="submit">✓ Aprovar</button></form>
+                    <form method="post" action="<%= ctx %>/receitas"><input type="hidden" name="action" value="rejeitar"><input type="hidden" name="receitaId" value="<%= receita.getId_receita() %>"><button class="action-btn" type="submit">✕ Rejeitar</button></form>
                   </td>
                 </tr>
               <% } %>

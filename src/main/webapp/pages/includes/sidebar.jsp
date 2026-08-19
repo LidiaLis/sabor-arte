@@ -190,12 +190,9 @@
 
       <div class="nav-section-label">Principal</div>
       <a href="<%= _ctx %>/HomeController" class="<%= navClass("home", currentPage) %>"><span class="nav-icon">🏠</span><span class="nav-label">Início</span></a>
-      <a href="<%= _ctx %>/ReceitaController" class="<%= navClass("receitas", currentPage) %>"><span class="nav-icon">📝</span><span class="nav-label">Receitas</span></a>
+      <a href="<%= _ctx %>/receitas" class="<%= navClass("receitas", currentPage) %>"><span class="nav-icon">📝</span><span class="nav-label">Receitas</span></a>
       <a href="<%= _ctx %>/AutorController" class="<%= navClass("autores", currentPage) %>"><span class="nav-icon">👩‍🍳</span><span class="nav-label">Autores</span></a>
 
-      <div class="nav-section-label">Sobre</div>
-        <a href="/saborearte/pages/html/publico/sobre.html" class="<%= navClass("sobre", currentPage) %>"><span class="nav-icon">ℹ️</span><span class="nav-label">Sobre o Sabor &amp; Arte</span></a>
-        
     <% } else if ("ADMIN".equals(tipo)) { %>
 
       <div class="nav-section-label">Principal</div>
@@ -204,7 +201,7 @@
       <div class="nav-section-label">Gestão</div>
       <a href="<%= _ctx %>/UsuarioController" class="<%= navClass("usuarios", currentPage) %>"><span class="nav-icon">👥</span><span class="nav-label">Usuários</span></a>
       <a href="<%= _ctx %>/CategoriaController" class="<%= navClass("categorias", currentPage) %>"><span class="nav-icon">🏷️</span><span class="nav-label">Categorias</span></a>
-      <a href="<%= _ctx %>/ReceitaController" class="<%= navClass("receitas", currentPage) %>"><span class="nav-icon">📝</span><span class="nav-label">Receitas</span></a>
+      <a href="<%= _ctx %>/receitas" class="<%= navClass("receitas", currentPage) %>"><span class="nav-icon">📝</span><span class="nav-label">Receitas</span></a>
 
       <div class="nav-section-label">Análise</div>
       <a href="<%= _ctx %>/RelatorioController" class="<%= navClass("relatorios", currentPage) %>"><span class="nav-icon">📈</span><span class="nav-label">Relatórios</span></a>
@@ -219,8 +216,8 @@
       <a href="<%= _ctx %>/DashboardController" class="<%= navClass("dashboard", currentPage) %>"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></a>
 
       <div class="nav-section-label">Gestão</div>
-      <a href="<%= _ctx %>/ReceitaController" class="<%= navClass("receitas", currentPage) %>"><span class="nav-icon">📝</span><span class="nav-label">Receitas</span></a>
-      <a href="<%= _ctx %>/ComentarioController" class="<%= navClass("comentarios", currentPage) %>"><span class="nav-icon">💬</span><span class="nav-label">Comentários</span></a>
+      <a href="<%= _ctx %>/receitas" class="<%= navClass("receitas", currentPage) %>"><span class="nav-icon">📝</span><span class="nav-label">Receitas</span></a>
+      <a href="<%= _ctx %>/comentarios-moderacao" class="<%= navClass("comentarios", currentPage) %>"><span class="nav-icon">💬</span><span class="nav-label">Comentários</span></a>
 
       <div class="nav-section-label">Análise</div>
       <a href="<%= _ctx %>/RelatorioController" class="<%= navClass("relatorios", currentPage) %>"><span class="nav-icon">📈</span><span class="nav-label">Relatórios</span></a>
@@ -234,8 +231,8 @@
       <a href="<%= _ctx %>/DashboardController" class="<%= navClass("dashboard", currentPage) %>"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></a>
 
       <div class="nav-section-label">Conteúdo</div>
-      <a href="<%= _ctx %>/ReceitaController" class="<%= navClass("receitas", currentPage) %>"><span class="nav-icon">📖</span><span class="nav-label">Minhas Receitas</span></a>
-      <a href="<%= _ctx %>/MensagemController" class="<%= navClass("mensagens", currentPage) %>"><span class="nav-icon">💬</span><span class="nav-label">Mensagens</span></a>
+      <a href="<%= _ctx %>/receitas" class="<%= navClass("receitas", currentPage) %>"><span class="nav-icon">📖</span><span class="nav-label">Minhas Receitas</span></a>
+      <a href="<%= _ctx %>/mensagens-autor" class="<%= navClass("mensagens", currentPage) %>"><span class="nav-icon">💬</span><span class="nav-label">Mensagens</span></a>
 
       <div class="nav-section-label">Análise</div>
       <a href="<%= _ctx %>/RelatorioController" class="<%= navClass("relatorios", currentPage) %>"><span class="nav-icon">📈</span><span class="nav-label">Relatórios</span></a>
@@ -248,7 +245,7 @@
 
       <div class="nav-section-label">Explorar</div>
       <a href="<%= _ctx %>/HomeController" class="<%= navClass("home", currentPage) %>"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></a>
-      <a href="<%= _ctx %>/ReceitaController" class="<%= navClass("receitas", currentPage) %>"><span class="nav-icon">📝</span><span class="nav-label">Receitas</span></a>
+      <a href="<%= _ctx %>/receitas" class="<%= navClass("receitas", currentPage) %>"><span class="nav-icon">📝</span><span class="nav-label">Receitas</span></a>
       <a href="<%= _ctx %>/AutorController" class="<%= navClass("autores", currentPage) %>"><span class="nav-icon">✍️</span><span class="nav-label">Autores</span></a>
       <a href="<%= _ctx %>/FavoritoController" class="<%= navClass("favoritas", currentPage) %>"><span class="nav-icon">⭐</span><span class="nav-label">Favoritas</span></a>
 

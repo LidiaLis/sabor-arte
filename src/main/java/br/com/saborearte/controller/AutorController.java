@@ -42,10 +42,8 @@ import br.com.saborearte.utils.Conexao;
  *     Atributos: autor, especialidades, receitas, totalSeguidores,
  *                mostrarBotaoSeguir, seguindo, souEuMesmo
  *
- *  3) ?idAutor=<id_usuario>        -> detalhe rápido pro modal (AJAX, a partir
- *     da listagem). Forward -> /pages/fragments/autor-modal.jsp
- *     Atributos: autor, especialidades, ultimasReceitas, totalSeguidores,
- *                mostrarBotaoSeguir=false, seguindo=null, souEuMesmo=false
+ *  3) ?idAutor=<id_usuario>        -> compatibilidade com links antigos;
+ *     redireciona para a página completa ?id=<id_usuario>.
  *
  * Regra do botão de Seguir (mostrarBotaoSeguir): só é true quando TODAS as
  * condições valem — (a) é a página de detalhe completa, nunca o modal;
@@ -97,7 +95,7 @@ public class AutorController extends HttpServlet {
 
         try {
             if (idAutorParam != null) {
-                carregarDetalheModal(request, response, idAutorParam);
+                redirecionarDetalheLegado(request, response, idAutorParam);
             } else if (idParam != null && !idParam.trim().isEmpty()) {
                 carregarDetalheCompleto(request, response, idParam);
             } else {
@@ -177,11 +175,11 @@ public class AutorController extends HttpServlet {
     }
 
     // =========================================================================
-    // DETALHE RÁPIDO (modal via AJAX) — SEM botão de Seguir
+    // COMPATIBILIDADE COM A ROTA ANTIGA DE DETALHE
     // =========================================================================
 
-    private void carregarDetalheModal(HttpServletRequest request, HttpServletResponse response, String idAutorParam)
-            throws Exception {
+    private void redirecionarDetalheLegado(HttpServletRequest request,
+            HttpServletResponse response, String idAutorParam) throws IOException {
 
         int idAutor;
         try {
@@ -191,8 +189,7 @@ public class AutorController extends HttpServlet {
             return;
         }
 
-        carregarDetalheAutor(request, response, idAutor, LIMITE_RECEITAS_MODAL,
-                /* mostrarBotaoSeguir */ false, "ultimasReceitas", "/pages/fragments/autor-modal.jsp");
+        response.sendRedirect(request.getContextPath() + "/AutorController?id=" + idAutor);
     }
 
     // =========================================================================
