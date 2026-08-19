@@ -33,6 +33,11 @@
     String  nomeLogado = (logado != null) ? logado.getNome_usuario() : "Admin";
     String  iniLogado  = nomeLogado.substring(0, 1).toUpperCase();
 
+    // Marca o item "Usuários" como ativo no sidebar. Setado aqui direto
+    // (nao depende mais do UsuarioController fazer isso), senao o sidebar
+    // fica sem nenhum item .active quando currentPage nao chega setado.
+    request.setAttribute("currentPage", "usuarios");
+
     /* ── Mensagem de feedback vinda do servlet após POST ── */
     String msgSucesso = (String) request.getAttribute("msgSucesso");
     String msgErro    = (String) request.getAttribute("msgErro");

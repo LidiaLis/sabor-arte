@@ -4,6 +4,20 @@
 <%@ page import="java.util.LinkedHashMap" %>
 <%@ page import="java.util.Map" %>
 
+<%!
+    // Escapa caracteres HTML-sensíveis para evitar XSS refletido/armazenado,
+    // já que título, descrição e nome de autor vêm de conteúdo gerado por
+    // usuários (receitas/perfis) e são impressos direto no HTML abaixo.
+    private String esc(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+%>
+
 <%--
     SERVLET RESPONSÁVEL: FavoritoController  (GET /FavoritoController, sem parâmetros)
     O servlet faz:
@@ -32,6 +46,7 @@
     // Paleta cíclica pra bolinha do autor quando quisermos cor fixa por posição
     String[] coresAutor = { "#4a5e3a,#6b7f59", "#c46042,#e08060", "#a05a3a,#c07a5a", "#6a9a5a,#8aba7a", "#8a6a46,#b0896a", "#4a6a7a,#6a8a9a" };
 %>
+<% request.setAttribute("currentPage", "favoritas"); %>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -139,8 +154,8 @@
     </div>
     <div class="section-sub">As receitas que você salvou para acessar mais rápido</div>
 
-    <% if (sucesso != null) { %><div class="alert alert-sucesso"><%= sucesso %></div><% } %>
-    <% if (erro != null) { %><div class="alert alert-erro"><%= erro %></div><% } %>
+    <% if (sucesso != null) { %><div class="alert alert-sucesso"><%= esc(sucesso) %></div><% } %>
+    <% if (erro != null) { %><div class="alert alert-erro"><%= esc(erro) %></div><% } %>
 
     <div class="toolbar">
       <div class="search-bar">
@@ -150,7 +165,7 @@
       <select class="filter-select" id="filterCategoria">
         <option value="" selected>Todas as categorias</option>
         <% for (String catNome : categorias.keySet()) { %>
-          <option value="<%= catNome %>"><%= categorias.get(catNome) != null ? categorias.get(catNome) + " " : "" %><%= catNome %></option>
+          <option value="<%= esc(catNome) %>"><%= categorias.get(catNome) != null ? esc(categorias.get(catNome)) + " " : "" %><%= esc(catNome) %></option>
         <% } %>
       </select>
       <div class="toolbar-spacer"></div>
@@ -179,24 +194,24 @@
              String corAutor = coresAutor[i % coresAutor.length];
       %>
         <div class="recipe-card" data-id="<%= r.getId_receita() %>"
-             data-name="<%= r.getTitulo_receita() != null ? r.getTitulo_receita().toLowerCase() : "" %>"
-             data-cat="<%= catNome %>">
+             data-name="<%= esc(r.getTitulo_receita() != null ? r.getTitulo_receita().toLowerCase() : "") %>"
+             data-cat="<%= esc(catNome) %>">
           <div class="recipe-img-wrap">
-            <img src="<%= imgSrc %>" alt="<%= r.getTitulo_receita() %>">
+            <img src="<%= esc(imgSrc) %>" alt="<%= esc(r.getTitulo_receita()) %>">
             <span class="fav-badge">★</span>
           </div>
           <div class="recipe-body">
-            <div class="recipe-cat"><%= catEmoji %> <%= catNome %></div>
-            <div class="recipe-name"><%= r.getTitulo_receita() %></div>
+            <div class="recipe-cat"><%= esc(catEmoji) %> <%= esc(catNome) %></div>
+            <div class="recipe-name"><%= esc(r.getTitulo_receita()) %></div>
             <div class="recipe-author">
               <div class="author-dot" style="background:linear-gradient(135deg,<%= corAutor %>)">
                 <% if (autorFoto != null && !autorFoto.trim().isEmpty()) { %>
-                  <img src="<%= _ctx %><%= autorFoto %>" alt="<%= autorNome %>">
+                  <img src="<%= esc(_ctx + autorFoto) %>" alt="<%= esc(autorNome) %>">
                 <% } else { %>
-                  <%= iniciais %>
+                  <%= esc(iniciais) %>
                 <% } %>
               </div>
-              <span class="author-name"><%= autorNome %></span>
+              <span class="author-name"><%= esc(autorNome) %></span>
             </div>
           </div>
           <div class="recipe-footer">
@@ -312,6 +327,8 @@
 
   // ── Desfavoritar: AJAX de verdade pro FavoritoController ──
   window.desfavoritar = function(btn, idReceita) {
+    btn.disabled = true;
+
     fetch(CONTEXT_PATH + '/FavoritoController', {
       method: 'POST',
       headers: {
@@ -325,6 +342,14 @@
         window.location.href = CONTEXT_PATH + '/LoginController';
         throw new Error('não logado');
       }
+      // fetch só rejeita em falha de rede — status 4xx/5xx precisa ser checado
+      // manualmente, senão o card seria removido da tela mesmo se o servidor
+      // não tiver conseguido desfavoritar de fato.
+      if (!res.ok) {
+        return res.text().then(function(msg) {
+          throw new Error(msg || ('Erro ao desfavoritar (HTTP ' + res.status + ')'));
+        });
+      }
       return res.text();
     })
     .then(function() {
@@ -333,7 +358,11 @@
       card.dataset.removido = 'true';
       setTimeout(renderPagina, 220);
     })
-    .catch(function(err) { console.error(err); });
+    .catch(function(err) {
+      console.error(err);
+      btn.disabled = false;
+      alert(err.message || 'Não foi possível desfavoritar. Tente novamente.');
+    });
   };
 
   renderPagina();

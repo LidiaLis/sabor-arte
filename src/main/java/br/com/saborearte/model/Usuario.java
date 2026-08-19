@@ -22,6 +22,7 @@ public class Usuario {
     private String instagram_usuario;
     private String youtube_usuario;
     private String pinterest_usuario;
+    
 
     private LocalDateTime data_criacao_usuario;
 	
