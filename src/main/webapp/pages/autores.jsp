@@ -6,6 +6,7 @@
 <%@ page import="java.time.format.DateTimeFormatter" %>
 <%@ page import="br.com.saborearte.model.Usuario" %>
 <%@ page import="br.com.saborearte.model.Usuario.TipoUsuario" %>
+<%@ page import="br.com.saborearte.model.Categoria" %>
 <%!
     // Deixa "janeiro de 2024" com a primeira letra maiúscula -> "Janeiro de 2024"
     private String capitalizar(String s) {
@@ -37,8 +38,23 @@
     Map<Integer, List<String>> especialidadesPorAutor =
             (Map<Integer, List<String>>) request.getAttribute("especialidadesPorAutor");
 
+    @SuppressWarnings("unchecked")
+    Map<Integer, Boolean> seguindoPorAutor =
+            (Map<Integer, Boolean>) request.getAttribute("seguindoPorAutor");
+    if (seguindoPorAutor == null) seguindoPorAutor = new java.util.HashMap<Integer, Boolean>();
+
+    // Categorias que têm ao menos 1 autor especialista (AutorController via
+    // EspecialidadeDAO.listarCategoriasComEspecialistas()) — usadas pra montar
+    // o <select> de filtro dinamicamente, em vez de uma lista fixa no HTML.
+    @SuppressWarnings("unchecked")
+    List<Categoria> especialidadesFiltro =
+            (List<Categoria>) request.getAttribute("especialidadesFiltro");
+    if (especialidadesFiltro == null) especialidadesFiltro = new ArrayList<Categoria>();
+
     Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
     boolean logado = (usuarioLogado != null); // true = tela do visitante / false = tela pública
+
+    String _ctx = request.getContextPath();
 
     String[] bannerClasses = {"banner-1","banner-2","banner-3","banner-4","banner-5","banner-6","banner-7","banner-8"};
     String[] avatarClasses = {"avatar-gold","avatar-moss","avatar-sage","avatar-terra","avatar-blue"};
@@ -151,6 +167,7 @@
     font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500;
     color: var(--text-mid); cursor: pointer; transition: all 0.15s;
     display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;
+    text-decoration: none;
   }
   .footer-btn:hover { border-color: var(--moss); color: var(--moss); background: rgba(74,94,58,0.05); }
 
@@ -255,14 +272,19 @@
         <span style="font-size:14px;color:var(--text-light)">🔍</span>
         <input type="text" id="campoBuscaAutor" placeholder="Buscar autores…">
       </div>
-      <%-- TODO: gerar as options dinamicamente a partir do EspecialidadeDAO quando estiver pronto --%>
       <select class="filter-select" id="filterEspecialidade">
         <option value="todos" selected>Todas as especialidades</option>
-        <option value="confeitaria">🎂 Confeitaria</option>
-        <option value="massas">🍝 Massas</option>
-        <option value="vegano">🌿 Vegano</option>
-        <option value="sopas">🥣 Sopas</option>
-        <option value="internacional">🌍 Internacional</option>
+<%
+        for (Categoria cat : especialidadesFiltro) {
+            String nomeCat = cat.getNome_categoria() != null ? cat.getNome_categoria() : "";
+            if (nomeCat.trim().isEmpty()) continue; // sem nome, nao da pra filtrar por ela
+            String valorOpcao = nomeCat.toLowerCase();
+            String emoji = cat.getEmoji_categoria() != null ? cat.getEmoji_categoria() + " " : "";
+%>
+        <option value="<%= valorOpcao %>"><%= emoji %><%= nomeCat %></option>
+<%
+        }
+%>
       </select>
       <div class="toolbar-spacer"></div>
     </div>
@@ -304,6 +326,11 @@
         </div>
         <div class="card-footer">
           <button class="footer-btn" onclick="openModal(<%= autor.getId_usuario() %>)">👁 Ver</button>
+          <%-- ASSUNÇÃO: rota provável seguindo o padrão do projeto
+               (Controller?param=valor). Ajusta o href se o nome real
+               do controller/parâmetro que serve autor-detalhe.jsp for
+               diferente. --%>
+          <a class="footer-btn" href="<%= _ctx %>/AutorController?id=<%= autor.getId_usuario() %>">📄 Perfil completo</a>
         </div>
       </div>
 <%
@@ -347,7 +374,7 @@
         <div>
           <div class="modal-author-name"><%= autor.getNome_usuario() %></div>
           <div class="modal-author-role"><%= autor.getTitulo_usuario() != null ? autor.getTitulo_usuario() : "" %></div>
-          <div class="modal-author-email">@<%= autor.getUsername_usuario() %><%= autor.getLocalizacao_usuario() != null && !autor.getLocalizacao_usuario().isEmpty() ? " · " + autor.getLocalizacao_usuario() : "" %></div>
+          <div class="modal-author-email"><%= autor.getUsername_usuario() %><%= autor.getLocalizacao_usuario() != null && !autor.getLocalizacao_usuario().isEmpty() ? " · " + autor.getLocalizacao_usuario() : "" %></div>
         </div>
       </div>
       <div class="modal-stats-row">
@@ -358,8 +385,14 @@
         </div>
 <%
         if (logado) {
+            boolean jaSegueEsteAutor = Boolean.TRUE.equals(seguindoPorAutor.get(autor.getId_usuario()));
 %>
-        <button class="modal-follow-btn" id="followBtn_<%= autor.getId_usuario() %>" onclick="toggleFollow(<%= autor.getId_usuario() %>, this)"><span class="follow-icon">+</span><span class="follow-label">Seguir</span></button>
+        <button class="modal-follow-btn<%= jaSegueEsteAutor ? " following" : "" %>"
+                id="followBtn_<%= autor.getId_usuario() %>"
+                onclick="toggleFollow(<%= autor.getId_usuario() %>, this)">
+          <span class="follow-icon"><%= jaSegueEsteAutor ? "✓" : "+" %></span>
+          <span class="follow-label"><%= jaSegueEsteAutor ? "Seguindo" : "Seguir" %></span>
+        </button>
 <%
         }
 %>
@@ -402,7 +435,7 @@
 <%
             if (autor.getInstagram_usuario() != null && !autor.getInstagram_usuario().isEmpty()) {
 %>
-          <a class="social-btn" href="https://instagram.com/<%= autor.getInstagram_usuario() %>" target="_blank">📷 @<%= autor.getInstagram_usuario() %></a>
+          <a class="social-btn" href="https://instagram.com/<%= autor.getInstagram_usuario() %>" target="_blank">📷 <%= autor.getInstagram_usuario() %></a>
 <%
             }
             if (autor.getYoutube_usuario() != null && !autor.getYoutube_usuario().isEmpty()) {
@@ -450,23 +483,46 @@
   }
 
   // ================= SEGUIR AUTOR (só existe pro visitante logado) =================
-  var seguindo = {};
-
+  // Manda action=toggle pro SeguidorController via POST/AJAX (header
+  // X-Requested-With), que responde texto puro "seguindo" ou "naoSegue".
+  // O botão só muda de fato depois da resposta do servidor confirmar —
+  // assim a tela nunca fica "seguindo" na UI sem estar seguindo no banco.
   function toggleFollow(id, btn) {
-    seguindo[id] = !seguindo[id];
-    var icon = btn.querySelector('.follow-icon');
-    var label = btn.querySelector('.follow-label');
-    if (seguindo[id]) {
-      btn.classList.add('following');
-      icon.textContent = '✓';
-      label.textContent = 'Seguindo';
-      // TODO: chamar SeguidorController (POST) pra persistir o follow
-    } else {
-      btn.classList.remove('following');
-      icon.textContent = '+';
-      label.textContent = 'Seguir';
-      // TODO: chamar SeguidorController (DELETE) pra remover o follow
-    }
+    if (btn.disabled) return;
+    btn.disabled = true;
+
+    var params = new URLSearchParams();
+    params.set('action', 'toggle');
+    params.set('idSeguido', id);
+
+    fetch('<%= _ctx %>/SeguidorController', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: params.toString()
+    })
+      .then(function(resp) {
+        if (!resp.ok) throw new Error('Falha ao seguir/deixar de seguir.');
+        return resp.text();
+      })
+      .then(function(estado) {
+        var icon = btn.querySelector('.follow-icon');
+        var label = btn.querySelector('.follow-label');
+        var seguindoAgora = (estado === 'seguindo');
+
+        btn.classList.toggle('following', seguindoAgora);
+        icon.textContent = seguindoAgora ? '✓' : '+';
+        label.textContent = seguindoAgora ? 'Seguindo' : 'Seguir';
+      })
+      .catch(function(err) {
+        console.error(err);
+        alert('Não foi possível atualizar o "seguir" agora. Tente de novo em instantes.');
+      })
+      .finally(function() {
+        btn.disabled = false;
+      });
   }
 
   // ================= FILTRO + BUSCA + PAGINAÇÃO =================

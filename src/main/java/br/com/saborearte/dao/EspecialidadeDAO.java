@@ -69,6 +69,45 @@ public class EspecialidadeDAO {
         return lista;
     }
 
+    /**
+     * Mesma listagem de listarEspecialidadesPorUsuario, mas em formato "cru"
+     * (Especialidade, nao Categoria) — usada na tela de perfil, onde
+     * precisamos do tempo_especialidade de cada vinculo pra exibir/editar
+     * nas tags. Ordenado pelo nome da categoria (via join) so pra manter a
+     * mesma ordem alfabetica do metodo acima.
+     */
+    public List<Especialidade> listarEspecialidadesComTempoPorUsuario(int idUsuario) throws SQLException {
+
+        String sql = """
+                SELECT
+                    e.id_usuario,
+                    e.id_categoria,
+                    e.tempo_especialidade
+                FROM especialidade e
+                JOIN categoria c ON c.id_categoria = e.id_categoria
+                WHERE e.id_usuario = ?
+                ORDER BY c.nome_categoria ASC
+                """;
+
+        List<Especialidade> lista = new ArrayList<>();
+
+        try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+            ps.setInt(1, idUsuario);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(new Especialidade(
+                            rs.getInt("id_usuario"),
+                            rs.getInt("id_categoria"),
+                            rs.getInt("tempo_especialidade")
+                    ));
+                }
+            }
+        }
+
+        return lista;
+    }
+
     // =========================================================================
     // ESPECIALIDADES DISPONÍVEIS PARA FILTRO (só categorias com pelo menos 1 autor)
     // =========================================================================
@@ -93,6 +132,42 @@ public class EspecialidadeDAO {
                 JOIN especialidade e ON e.id_categoria = c.id_categoria
                 WHERE c.status_categoria = ?
                 ORDER BY c.nome_categoria ASC
+                """;
+
+        List<Categoria> lista = new ArrayList<>();
+
+        try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+            ps.setString(1, StatusCategoria.ATIVA.name());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapearCategoria(rs));
+                }
+            }
+        }
+
+        return lista;
+    }
+
+    // =========================================================================
+    // TODAS AS CATEGORIAS ATIVAS (para o <select> "Adicionar especialidade"
+    // na tela de perfil — precisa listar TODAS, mesmo as que ainda nao tem
+    // nenhum autor associado, diferente de listarCategoriasComEspecialistas())
+    // =========================================================================
+
+    public List<Categoria> listarTodasCategoriasAtivas() throws SQLException {
+
+        String sql = """
+                SELECT
+                    id_categoria,
+                    nome_categoria,
+                    descricao_categoria,
+                    emoji_categoria,
+                    cor_categoria,
+                    status_categoria
+                FROM categoria
+                WHERE status_categoria = ?
+                ORDER BY nome_categoria ASC
                 """;
 
         List<Categoria> lista = new ArrayList<>();
@@ -138,11 +213,28 @@ public class EspecialidadeDAO {
             return; // evita duplicidade na chave composta (id_usuario, id_categoria)
         }
 
-        String sql = "INSERT INTO especialidade (id_usuario, id_categoria) VALUES (?, ?)";
+        String sql = "INSERT INTO especialidade (id_usuario, id_categoria, tempo_especialidade) VALUES (?, ?, ?)";
 
         try (PreparedStatement ps = conexao.prepareStatement(sql)) {
             ps.setInt(1, especialidade.getId_usuario());
             ps.setInt(2, especialidade.getId_categoria());
+            ps.setInt(3, especialidade.getTempo_especialidade());
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Atualiza so o tempo_especialidade de um vinculo ja existente
+     * (id_usuario, id_categoria e a chave composta, nao mudam aqui).
+     */
+    public void atualizarTempoEspecialidade(int idUsuario, int idCategoria, int tempoEspecialidade) throws SQLException {
+
+        String sql = "UPDATE especialidade SET tempo_especialidade = ? WHERE id_usuario = ? AND id_categoria = ?";
+
+        try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+            ps.setInt(1, tempoEspecialidade);
+            ps.setInt(2, idUsuario);
+            ps.setInt(3, idCategoria);
             ps.executeUpdate();
         }
     }

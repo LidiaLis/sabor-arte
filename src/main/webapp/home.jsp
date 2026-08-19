@@ -38,7 +38,9 @@
       return path;
     }
     String p = path.startsWith("/") ? path : "/" + path;
-    return ctx + p;
+    // cache-busting (?v=timestamp) igual ao usado em usuarios.jsp, pra evitar
+    // que o navegador sirva do cache uma imagem antiga/quebrada
+    return ctx + p + "?v=" + System.currentTimeMillis();
   }
 %>
 <%

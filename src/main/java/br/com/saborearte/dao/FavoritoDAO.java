@@ -15,16 +15,12 @@ import br.com.saborearte.model.Receita.StatusReceita;
 /**
  * DAO de Favorito.
  *
- * Tabela conforme o DER: favorito (id_usuario, id_receita, data_favorito),
+ * Tabela no banco: receita_favorita (id_usuario, id_receita, data_favorito),
  * chave primária composta (id_usuario, id_receita).
- *
- * OBS: o comentário de CREATE TABLE em Favorito.java está como
- * "receita_favorita" — se o banco real usar esse nome em vez de "favorito",
- * é só trocar a constante TABELA abaixo.
  */
 public class FavoritoDAO {
 
-    private static final String TABELA = "favorito";
+    private static final String TABELA = "receita_favorita";
 
     private final Connection conexao;
 
@@ -38,18 +34,19 @@ public class FavoritoDAO {
 
     /**
      * Marca uma receita como favorita para o usuário. Não faz nada (silenciosamente)
-     * se já existir o par (id_usuario, id_receita) — evita duplicidade sem precisar
-     * de try/catch de chave duplicada no Controller.
+     * se já existir o par (id_usuario, id_receita).
+     *
+     * Usa INSERT ... ON DUPLICATE KEY UPDATE (no-op) em vez de SELECT + INSERT
+     * separados: assim a operação é atômica no banco e não há janela de corrida
+     * entre a verificação e a inserção (ex.: dois cliques/requisições quase
+     * simultâneas não geram exceção de chave duplicada).
      */
     public void favoritar(int idUsuario, int idReceita) throws SQLException {
-
-        if (isFavorito(idUsuario, idReceita)) {
-            return;
-        }
 
         String sql = """
                 INSERT INTO %s (id_usuario, id_receita, data_favorito)
                 VALUES (?, ?, NOW())
+                ON DUPLICATE KEY UPDATE id_usuario = id_usuario
                 """.formatted(TABELA);
 
         try (PreparedStatement ps = conexao.prepareStatement(sql)) {

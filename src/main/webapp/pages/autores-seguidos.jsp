@@ -157,7 +157,7 @@
       <div class="empty-icon">♡</div>
       <div class="empty-title">Você ainda não segue ninguém</div>
       <div class="empty-text">Explore os autores do blog e clique em "Seguir" para acompanhá-los por aqui.</div>
-      <a class="empty-cta" href="<%= _ctx %>/pages/autores-visitante.jsp">Explorar autores →</a>
+      <a class="empty-cta" href="<%= _ctx %>/pages/autores.jsp">Explorar autores →</a>
     </div>
 
   </div>

@@ -5,6 +5,7 @@
 <%@ page import="br.com.saborearte.model.CategoriaEmoji" %>
 <%@ page import="br.com.saborearte.model.CategoriaCor" %>
 <%!
+
     // Escapa texto para uso seguro dentro de HTML (texto e atributos)
     private String esc(Object val) {
         if (val == null) return "";
@@ -27,6 +28,7 @@
                 .replace("\r", "");
     }
     %>
+<% request.setAttribute("currentPage", "categorias"); %>
 
   <%
     List<Categoria> categorias = (List<Categoria>) request.getAttribute("categorias");
@@ -49,6 +51,8 @@
     String msgSucesso = (String) request.getAttribute("sucesso");
     String msgErro = (String) request.getAttribute("erro");
     String ctx = request.getContextPath();
+    
+    
     %>
 <!DOCTYPE html>
 <html lang="pt-BR">

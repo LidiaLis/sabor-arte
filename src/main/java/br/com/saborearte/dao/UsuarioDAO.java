@@ -60,6 +60,7 @@ public class UsuarioDAO {
         u.setLocalizacao_usuario(rs.getString("localizacao_usuario"));
         u.setFoto_usuario(rs.getString("foto_usuario"));
         u.setTitulo_usuario(rs.getString("titulo_usuario"));
+        u.setBio_usuario(rs.getString("bio_usuario"));
 
         u.setInstagram_usuario(rs.getString("instagram_usuario"));
         u.setYoutube_usuario(rs.getString("youtube_usuario"));
@@ -207,6 +208,7 @@ public class UsuarioDAO {
                     localizacao_usuario = ?,
                     foto_usuario = ?,
                     titulo_usuario = ?,
+                    bio_usuario = ?,
                     instagram_usuario = ?,
                     youtube_usuario = ?,
                     pinterest_usuario = ?
@@ -228,12 +230,13 @@ public class UsuarioDAO {
             stmt.setString(9, usuario.getLocalizacao_usuario());
             stmt.setString(10, usuario.getFoto_usuario());
             stmt.setString(11, usuario.getTitulo_usuario());
+            stmt.setString(12, usuario.getBio_usuario());
 
-            stmt.setString(12, usuario.getInstagram_usuario());
-            stmt.setString(13, usuario.getYoutube_usuario());
-            stmt.setString(14, usuario.getPinterest_usuario());
+            stmt.setString(13, usuario.getInstagram_usuario());
+            stmt.setString(14, usuario.getYoutube_usuario());
+            stmt.setString(15, usuario.getPinterest_usuario());
 
-            stmt.setInt(15, usuario.getId_usuario());
+            stmt.setInt(16, usuario.getId_usuario());
 
             stmt.executeUpdate();
 
@@ -367,10 +370,11 @@ public class UsuarioDAO {
     }
     
     /**
-     * Lista os autores públicos (tipo AUTOR, EDITOR ou ADMIN — todos que podem
-     * assinar receitas), já com as estatísticas usadas nos cards e no modal da
-     * tela autores-publico.html: total de receitas publicadas, total de
-     * comentários recebidos (nas receitas dele) e soma das visualizações.
+     * Lista os autores públicos (tipo AUTOR — quem de fato assina receitas
+     * como autor da tela), já com as estatísticas usadas nos cards e no
+     * modal da tela autores-publico.html: total de receitas publicadas,
+     * total de comentários recebidos (nas receitas dele) e soma das
+     * visualizações.
      *
      * Usa subqueries correlacionadas em vez de JOIN + GROUP BY para evitar
      * duplicação de contagem quando um autor tem várias receitas e comentários
@@ -400,7 +404,7 @@ public class UsuarioDAO {
                       WHERE r3.usuario = u.id_usuario
                         AND r3.status_receita = 'publicada')           AS total_visualizacoes
                 FROM usuario u
-                WHERE u.tipo_usuario IN ('AUTOR', 'EDITOR', 'ADMIN')
+                WHERE u.tipo_usuario = 'AUTOR'
                   AND u.status_usuario = 'ATIVO'
                 ORDER BY u.nome_usuario ASC
                 """;
@@ -451,7 +455,7 @@ public class UsuarioDAO {
                         AND r3.status_receita = 'publicada')           AS total_visualizacoes
                 FROM usuario u
                 WHERE u.id_usuario = ?
-                  AND u.tipo_usuario IN ('AUTOR', 'EDITOR', 'ADMIN')
+                  AND u.tipo_usuario = 'AUTOR'
                   AND u.status_usuario = 'ATIVO'
                 """;
      

@@ -265,7 +265,7 @@
       <div class="divider-line"></div>
     </div>
 
-    <a class="btn-register" href="<%= request.getContextPath() %>/cadastro.jsp">
+    <a class="btn-register" href="<%= request.getContextPath() %>/pages/cadastro.jsp">
       ✦ Criar minha conta
     </a>
 

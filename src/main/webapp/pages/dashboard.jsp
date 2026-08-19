@@ -23,8 +23,10 @@
 %>
 <%
     // ===== Dashboard unificado — ADMIN / AUTOR / EDITOR =====
-    // paginaAtual usado pelo sidebar.jsp para destacar o item de menu ativo
-    request.setAttribute("paginaAtual", "dashboard");
+    // currentPage usado pelo sidebar.jsp pra destacar o item de menu ativo
+    // (era "paginaAtual" antes - nao batia com o que sidebar.jsp le, entao
+    // o item "Dashboard" nunca ficava marcado como ativo)
+    request.setAttribute("currentPage", "dashboard");
 
     Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
     if (usuarioLogado == null) {
