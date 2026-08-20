@@ -1,3 +1,53 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="br.com.saborearte.model.Receita" %>
+<%@ page import="br.com.saborearte.model.Categoria" %>
+<%@ page import="br.com.saborearte.model.Usuario" %>
+<%@ page import="br.com.saborearte.model.ReceitaIngrediente" %>
+<%@ page import="br.com.saborearte.model.Passo" %>
+<%@ page import="br.com.saborearte.utils.ImagemUrlUtil" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.Collections" %>
+<%!
+  private String h(Object value) {
+    if (value == null) return "";
+    return String.valueOf(value)
+      .replace("&", "&amp;")
+      .replace("<", "&lt;")
+      .replace(">", "&gt;")
+      .replace("\"", "&quot;")
+      .replace("'", "&#39;");
+  }
+  private int intAttr(javax.servlet.http.HttpServletRequest req, String name) {
+    Object value = req.getAttribute(name);
+    return value instanceof Number ? ((Number) value).intValue() : 0;
+  }
+%>
+<%
+  List<Receita> receitas = (List<Receita>) request.getAttribute("receitas");
+  if (receitas == null) receitas = Collections.emptyList();
+  List<Categoria> categorias = (List<Categoria>) request.getAttribute("categorias");
+  if (categorias == null) categorias = Collections.emptyList();
+  Receita receitaEdicao = (Receita) request.getAttribute("receitaEdicao");
+  boolean modoEdicao = receitaEdicao != null;
+  List<ReceitaIngrediente> ingredientesEdicao = (List<ReceitaIngrediente>) request.getAttribute("ingredientesEdicao");
+  if (ingredientesEdicao == null) ingredientesEdicao = Collections.emptyList();
+  List<Passo> passosEdicao = (List<Passo>) request.getAttribute("passosEdicao");
+  if (passosEdicao == null) passosEdicao = Collections.emptyList();
+  boolean abrirFormularioReceita = Boolean.TRUE.equals(request.getAttribute("abrirFormularioReceita"));
+  String csrfToken = request.getAttribute("csrfToken") == null ? "" : String.valueOf(request.getAttribute("csrfToken"));
+  Usuario usuario = (Usuario) session.getAttribute("usuarioLogado");
+  boolean usuarioAutenticado = usuario != null;
+  String ctx = request.getContextPath();
+  String mensagemErro = request.getAttribute("erro") == null ? null : String.valueOf(request.getAttribute("erro"));
+  String mensagemSucesso = request.getAttribute("sucesso") == null ? null : String.valueOf(request.getAttribute("sucesso"));
+  int totalReceitas = receitas.size();
+  int totalPublicadas = 0;
+  int totalRascunhos = 0;
+  for (Receita item : receitas) {
+    if (item.getStatus_receita() == Receita.StatusReceita.publicada) totalPublicadas++;
+    if (item.getStatus_receita() == Receita.StatusReceita.rascunho) totalRascunhos++;
+  }
+%>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -247,7 +297,6 @@
     padding: 4px 10px; border-radius: 20px;
     font-size: 10px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.5px;
-    backdrop-filter: blur(6px);
   }
   .img-badge.publicado { background: rgba(58,122,74,0.92);  color: #fff; }
   .img-badge.rascunho  { background: rgba(80,90,100,0.88);  color: #fff; }
@@ -316,7 +365,7 @@
   /* ===================== MODAL OVERLAY ===================== */
   .modal-overlay {
     display: none; position: fixed; inset: 0; z-index: 200;
-    background: rgba(30,39,24,0.55); backdrop-filter: blur(4px);
+    background: rgba(30,39,24,0.55);
     align-items: flex-start; justify-content: center;
     overflow-y: auto; padding: 32px 20px;
   }
@@ -438,6 +487,7 @@
 
   /* image upload */
   .upload-zone {
+    display: block; width: 100%; box-sizing: border-box;
     border: 2px dashed var(--cream-dark);
     border-radius: 6px; padding: 28px;
     text-align: center; cursor: pointer;
@@ -516,6 +566,12 @@
     flex-shrink: 0;
   }
   .passo-title-text { font-size: 13px; font-weight: 600; color: var(--text-dark); flex: 1; }
+  .passo-title-input {
+    flex: 1; min-width: 0; border: 0; border-bottom: 1px solid var(--cream-dark);
+    background: transparent; padding: 6px 4px; color: var(--text-dark);
+    font: 600 13px 'Nunito', sans-serif; outline: none;
+  }
+  .passo-title-input:focus { border-bottom-color: var(--moss); }
   .passo-status-text { font-size: 11px; color: var(--text-light); }
   .passo-chevron {
     font-size: 12px; color: var(--text-light);
@@ -583,73 +639,21 @@
     transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
   }
   .toast.show { transform: none; opacity: 1; }
+  .feedback {
+    margin-bottom: 18px; padding: 12px 16px; border-radius: 4px;
+    font-size: 13px; line-height: 1.45;
+  }
+  .feedback.error { color: #8d3535; background: #fff0f0; border: 1px solid #e8b0b0; }
+  .feedback.success { color: #315f3b; background: #edf7ef; border: 1px solid #b9d9c0; }
 </style>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/conteudo-design-system.css">
 </head>
 <body>
 
-<!-- SIDEBAR -->
-<aside class="sidebar" id="sidebar">
-
-    <div class="sidebar-brand">
-        <div class="brand-row">
-            <div class="brand-badge">🌿</div>
-            <div>
-                <span class="brand-title">Sabor &amp; Arte</span>
-                <span class="brand-sub">Blog editorial</span>
-            </div>
-        </div>
-    </div>
-
-    <a href="perfil-autor.html" class="sidebar-user" title="Meu perfil">
-        <div class="user-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b);"></div>
-        <div class="user-info">
-            <div class="user-name">Nome do autor</div>
-            <div class="user-role-badge">✍️ Autor</div>
-        </div>
-    </a>
-
-    <nav class="sidebar-nav">
-        <div class="nav-section-label">Visão Geral</div>
-
-        <a href="dashboard-autor.html" class="nav-item ">
-            <span class="nav-icon">📊</span>
-            <span class="nav-label">Dashboard</span>
-        </a>
-
-        <div class="nav-section-label">Conteúdo</div>
-
-        <a href="receitas-autor.html" class="nav-item active">
-            <span class="nav-icon">📖</span>
-            <span class="nav-label">Minhas Receitas</span>
-        </a>
-        <a href="mensagens-autor.html" class="nav-item">     
-            <span class="nav-icon">💬</span>
-            <span class="nav-label">Mensagens</span>
-        </a>
-
-          <div class="nav-section-label">Análise</div>
-
-        <a href="relatorio-autor.html" class="nav-item">
-          <span class="nav-icon">📈</span>
-          <span class="nav-label">Relatórios</span>
-        </a>
-
-        <div class="nav-section-label">Conta</div>
-        <a href="/saborearte/ConfiguracaoController" class="nav-item">
-            <span class="nav-icon">⚙️</span>
-            <span class="nav-label">Configurações</span>
-        </a>
-
-    </nav>
-
-    <div class="sidebar-bottom">
-	    <a href="/saborearte/LogoutController" class="btn-logout">
-	        <span class="nav-icon">🚪</span>
-	        <span>Sair</span>
-	    </a>
-    </div>
-
-</aside>
+<%
+  request.setAttribute("currentPage", "receitas");
+%>
+<jsp:include page="/pages/includes/sidebar.jsp" />
 
 
 <!-- MAIN -->
@@ -663,6 +667,8 @@
   </div>
 
   <div class="content">
+    <% if (mensagemErro != null) { %><div class="feedback error" role="alert"><%= h(mensagemErro) %></div><% } %>
+    <% if (mensagemSucesso != null) { %><div class="feedback success" role="status"><%= h(mensagemSucesso) %></div><% } %>
     <div class="section-header">
       <div>
         <div class="section-title">Minhas <em>Receitas</em> 📖</div>
@@ -675,13 +681,13 @@
     <div class="filter-bar">
       <div class="topbar-search" style="width:220px">
         <span style="font-size:14px;color:var(--text-light)">🔍</span>
-        <input type="text" placeholder="Buscar receitas…" id="searchInput" oninput="applyFilters()">
+        <input type="text" placeholder="Buscar receitas…" id="searchInput" oninput="scheduleFilters()">
       </div>
       <span class="filter-label">Filtrar:</span>
       <div class="filter-chips">
-        <button class="chip active" data-filter="todos" onclick="setFilter(this)">🍴 Todas <span class="chip-count">0</span></button>
-        <button class="chip publicado" data-filter="publicado" onclick="setFilter(this)">✅ Publicadas <span class="chip-count">0</span></button>
-        <button class="chip rascunho" data-filter="rascunho" onclick="setFilter(this)">📝 Rascunhos <span class="chip-count">0</span></button>
+        <button class="chip active" data-filter="todos" onclick="setFilter(this)">🍴 Todas <span class="chip-count"><%= totalReceitas %></span></button>
+        <button class="chip publicado" data-filter="publicada" onclick="setFilter(this)">✅ Publicadas <span class="chip-count"><%= totalPublicadas %></span></button>
+        <button class="chip rascunho" data-filter="rascunho" onclick="setFilter(this)">📝 Rascunhos <span class="chip-count"><%= totalRascunhos %></span></button>
       </div>
       <div class="filter-right">
         <select class="sort-select" onchange="applyFilters()">
@@ -696,13 +702,20 @@
     <div class="results-info" id="resultsInfo">Nenhuma receita carregada</div>
 
     <div class="recipes-grid" id="recipesGrid">
-      <!-- Conteúdo intencionalmente vazio no protótipo HTML.
-           A versão JSP renderiza os dados recebidos pelo Controller. -->
-      <div class="empty-state" id="emptyState">
-        <div class="empty-icon">🍽️</div>
-        <h3>Nenhuma receita carregada</h3>
-        <p>Os dados serão fornecidos pela aplicação Java.</p>
-      </div>
+      <% for (Receita receita : receitas) { %>
+        <% boolean editavel = receita.getStatus_receita() == Receita.StatusReceita.rascunho
+            || receita.getStatus_receita() == Receita.StatusReceita.rejeitada; %>
+      <article class="recipe-card sa-content-card" data-id="<%= receita.getId_receita() %>" data-status="<%= h(receita.getStatus_receita()).toLowerCase() %>" data-name="<%= h(receita.getTitulo_receita()) %>">
+          <div class="recipe-img-wrap"><img loading="lazy" decoding="async" src="<%= receita.getImagem_receita() == null || receita.getImagem_receita().isBlank() ? ctx + "/assets/img/receita-sem-imagem.svg" : h(ImagemUrlUtil.resolver(ctx, receita.getImagem_receita())) %>" onerror="this.onerror=null;this.src='<%= ctx %>/assets/img/receita-sem-imagem.svg'" alt="<%= h(receita.getTitulo_receita()) %>"></div>
+          <div class="recipe-body"><div class="recipe-cat"><%= h(receita.getEmoji_categoria()) %> <%= h(receita.getNome_categoria()) %></div><div class="recipe-name"><%= h(receita.getTitulo_receita()) %></div></div>
+          <div class="recipe-footer">
+            <a class="footer-btn" href="<%= ctx %>/ReceitaController?action=detalhar&amp;idReceita=<%= receita.getId_receita() %>">👁 Ver</a>
+            <% if (editavel) { %><a class="footer-btn" href="<%= ctx %>/ReceitaController?action=editar&amp;idReceita=<%= receita.getId_receita() %>">✏️ Editar</a>
+            <form method="post" action="<%= ctx %>/ReceitaController"><input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>"><input type="hidden" name="action" value="enviarRevisao"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button class="footer-btn submit" type="submit">📤 Enviar</button></form><% } %>
+          </div>
+        </article>
+      <% } %>
+      <% if (receitas.isEmpty()) { %><div class="empty-state show" id="emptyState"><div class="empty-icon">🍽️</div><h3>Nenhuma receita encontrada</h3></div><% } %>
     </div>
 
     <div class="pagination">
@@ -716,12 +729,16 @@
 <!-- ===================== MODAL NOVA RECEITA ===================== -->
 <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
   <div class="modal" id="modal">
+    <form id="receitaForm" method="post" enctype="multipart/form-data" action="<%= ctx %>/ReceitaController" style="display:contents">
+    <input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>">
+    <input type="hidden" name="action" id="formAction" value="salvarRascunho">
+    <% if (modoEdicao) { %><input type="hidden" name="idReceita" value="<%= receitaEdicao.getId_receita() %>"><% } %>
     <div class="modal-header">
       <div class="modal-header-left">
-        <div class="modal-header-label">✚ Criação de Receita</div>
-        <div class="modal-header-title">Nova Receita</div>
+        <div class="modal-header-label"><%= modoEdicao ? "✏️ Edição de Receita" : "✚ Criação de Receita" %></div>
+        <div class="modal-header-title"><%= modoEdicao ? "Editar Receita" : "Nova Receita" %></div>
       </div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <button class="modal-close" type="button" onclick="closeModal()">✕</button>
     </div>
 
     <div class="modal-body">
@@ -751,30 +768,29 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Título da Receita <span>*</span></label>
-            <input class="form-input" type="text" placeholder="Título da receita" id="f-titulo">
+            <input class="form-input" type="text" placeholder="Título da receita" id="f-titulo" name="titulo" value="<%= modoEdicao ? h(receitaEdicao.getTitulo_receita()) : "" %>" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Descrição</label>
+            <textarea class="form-textarea" id="f-descricao" name="descricao" placeholder="Apresente brevemente a receita"><%= modoEdicao ? h(receitaEdicao.getDescricao_receita()) : "" %></textarea>
           </div>
         </div>
         <div class="form-row cols-2">
           <div class="form-group">
             <label class="form-label">Categoria <span>*</span></label>
-            <select class="form-select" id="f-categoria"><option value="">Selecionar categoria…</option></select>
+            <select class="form-select" id="f-categoria" name="idCategoria" required><option value="">Selecionar categoria…</option><% for (Categoria categoria : categorias) { %><option value="<%= categoria.getId_categoria() %>" <%= modoEdicao && receitaEdicao.getCategoria() == categoria.getId_categoria() ? "selected" : "" %>><%= h(categoria.getNome_categoria()) %></option><% } %></select>
           </div>
           <div class="form-group">
             <label class="form-label">Tempo de Preparo (minutos) <span>*</span></label>
-            <input class="form-input" type="number" placeholder="Ex: 45" min="1" id="f-tempo">
+            <input class="form-input" type="number" placeholder="Ex: 45" min="1" id="f-tempo" name="tempoPreparo" value="<%= modoEdicao ? receitaEdicao.getTempo_preparo_receita() : "" %>" required>
           </div>
         </div>
-        <div class="form-row cols-2">
+        <div class="form-row">
           <div class="form-group">
             <label class="form-label">Rendimento (porções) <span>*</span></label>
-            <input class="form-input" type="number" placeholder="Ex: 8" min="1" id="f-rendimento">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Status inicial</label>
-            <select class="form-select" id="f-status">
-              <option value="rascunho">📝 Salvar como Rascunho</option>
-              <option value="publicado">🚀 Publicar Agora</option>
-            </select>
+            <input class="form-input" type="text" placeholder="Ex: 8 porções" maxlength="50" id="f-rendimento" name="rendimento" value="<%= modoEdicao ? h(receitaEdicao.getRendimento_receita()) : "" %>" required>
           </div>
         </div>
         <div class="form-row">
@@ -797,15 +813,40 @@
           <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-light)">Unidade</span>
           <span></span>
         </div>
-        <div class="ing-list" id="ingList"></div>
-        <button class="btn-add-row" onclick="addIngrediente()">＋ Adicionar Ingrediente</button>
+        <div class="ing-list" id="ingList">
+          <% for (ReceitaIngrediente item : ingredientesEdicao) { %>
+          <div class="ing-row">
+            <input class="form-input" name="ingredienteNome" placeholder="Ingrediente" value="<%= h(item.getNome_ingrediente()) %>" required>
+            <input class="form-input" type="number" min="0.01" step="0.01" name="ingredienteQuantidade" placeholder="Quantidade" value="<%= item.getQuantidade_receita_ingrediente() %>" required>
+            <select class="form-select" name="ingredienteUnidade" required>
+              <option value="">Unidade</option>
+              <% String[] unidadesEdicao = {"g","kg","ml","l","unidade","xícara","colher de sopa","colher de chá","pitada","a gosto"};
+                 for (String unidade : unidadesEdicao) { %>
+              <option value="<%= h(unidade) %>" <%= unidade.equals(item.getUnidade_medida_receita_ingrediente()) ? "selected" : "" %>><%= h(unidade) %></option>
+              <% } %>
+            </select>
+            <button type="button" class="ing-remove" onclick="this.parentElement.remove()">✕</button>
+          </div>
+          <% } %>
+        </div>
+        <button class="btn-add-row" type="button" onclick="addIngrediente()">＋ Adicionar Ingrediente</button>
       </div>
 
       <!-- PANEL 3: Passos -->
       <div class="form-panel" id="panel-3">
         <div class="form-section-title">👨‍🍳 Modo de Preparo</div>
-        <div class="steps-list" id="stepsList"></div>
-        <button class="btn-add-row" id="btnAddPasso" onclick="addPasso()">＋ Adicionar Passo</button>
+        <div class="steps-list" id="stepsList">
+          <% for (Passo passo : passosEdicao) { %>
+          <div class="passo-block open">
+            <div class="passo-header"><span class="passo-num-badge"><%= passo.getOrdem_passo() %></span>
+              <input class="passo-title-input" name="passoTitulo" placeholder="Título do passo (opcional)" value="<%= h(passo.getTitulo_passo()) %>">
+              <button type="button" class="passo-remove-btn" onclick="removerPasso(this)">Remover</button>
+            </div>
+            <div class="passo-body"><textarea class="form-textarea" name="passoDescricao" placeholder="Descreva o passo" required><%= h(passo.getDescricao_passo()) %></textarea></div>
+          </div>
+          <% } %>
+        </div>
+        <button class="btn-add-row" id="btnAddPasso" type="button" onclick="addPasso()">＋ Adicionar Passo</button>
       </div>
 
       <!-- PANEL 4: Imagem & Revisão -->
@@ -814,16 +855,17 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">URL da Imagem</label>
-            <input class="form-input" type="text" placeholder="https://…" id="f-imagem">
-            <span class="form-hint">Cole o link de uma imagem ou use o upload abaixo</span>
+            <input class="form-input" type="text" inputmode="url" placeholder="https://…" id="f-imagem" name="imagemUrl" value="<%= modoEdicao ? h(receitaEdicao.getImagem_receita()) : "" %>" oninput="schedulePreviewImagemUrl()">
+            <span class="form-hint">Opcional: cole um link ou escolha abaixo uma imagem do computador. O arquivo escolhido tem prioridade.</span>
           </div>
         </div>
-        <div class="upload-zone" onclick="showToast('📎 Selecione uma imagem do seu computador')">
-          <div class="upload-icon">📸</div>
-          <div class="upload-text">Clique para fazer upload</div>
-          <div class="upload-sub">JPG, PNG ou WEBP · máx. 5 MB</div>
-        </div>
-
+        <input type="file" id="imagemArquivo" name="imagemArquivo" accept="image/jpeg,image/png,image/webp" hidden onchange="previewImagemArquivo(event)">
+        <label class="upload-zone" for="imagemArquivo">
+          <img id="imagemPreview" src="<%= modoEdicao && receitaEdicao.getImagem_receita() != null && !receitaEdicao.getImagem_receita().isBlank() ? h(ImagemUrlUtil.resolver(ctx, receitaEdicao.getImagem_receita())) : ctx + "/assets/img/receita-sem-imagem.svg" %>" onerror="this.onerror=null;this.src='<%= ctx %>/assets/img/receita-sem-imagem.svg'" alt="Pré-visualização da capa" style="<%= modoEdicao ? "display:block;" : "display:none;" %>max-width:100%;max-height:220px;margin:0 auto 12px;border-radius:6px;object-fit:contain">
+          <div class="upload-icon" id="uploadIcon" style="<%= modoEdicao ? "display:none" : "" %>">📸</div>
+          <div class="upload-text">Clique para escolher uma imagem</div>
+          <div class="upload-sub">JPG, PNG ou WebP, até 5 MB e 25 megapixels — a imagem será salva com a receita</div>
+        </label>
         <div class="form-section-title" style="margin-top:24px">✅ Resumo da Receita</div>
         <div id="reviewSummary" style="background:var(--cream);border-radius:6px;padding:16px;font-size:13px;color:var(--text-mid);line-height:1.8;">
           Preencha os campos anteriores para ver o resumo aqui.
@@ -833,59 +875,14 @@
     </div><!-- end modal-body -->
 
     <div class="modal-footer">
-      <button class="btn-secondary" id="btnBack" onclick="changePanel(-1)" style="display:none">← Voltar</button>
+      <button class="btn-secondary" type="button" id="btnBack" onclick="changePanel(-1)" style="display:none">← Voltar</button>
       <div style="font-size:12px;color:var(--text-light)" id="stepCounter">Etapa 1 de 4</div>
       <div class="modal-footer-right">
-        <button class="btn-save-draft" onclick="saveAction('rascunho')">💾 Salvar Rascunho</button>
-        <button class="btn-submit-review" id="btnNext" onclick="changePanel(1)">Próximo →</button>
+        <button class="btn-save-draft" type="button" onclick="saveAction('rascunho')">💾 Salvar Rascunho</button>
+        <button class="btn-submit-review" type="button" id="btnNext" onclick="handleNext()">Próximo →</button>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- ===================== MODAL VISUALIZAR RECEITA ===================== -->
-<div class="modal-overlay" id="viewModalOverlay" onclick="handleViewOverlayClick(event)">
-  <div class="modal" style="max-width:640px;">
-    <div class="modal-header">
-      <div class="modal-header-left">
-        <div class="modal-header-label">👁 Pré-visualização</div>
-        <div class="modal-header-title" id="viewTitle">Título da Receita</div>
-      </div>
-      <button class="modal-close" onclick="closeViewModal()">✕</button>
-    </div>
-
-    <div class="modal-body">
-      <div style="position:relative;border-radius:8px;overflow:hidden;margin-bottom:20px;">
-        <img id="viewImg" src="" alt="" style="width:100%;height:240px;object-fit:cover;display:block;">
-        <span id="viewStatusBadge" class="img-badge" style="position:absolute;top:12px;left:12px;"></span>
-        <span id="viewTimeBadge" class="img-time" style="position:absolute;bottom:10px;right:10px;"></span>
-      </div>
-
-      <div style="display:flex;flex-wrap:wrap;gap:18px;margin-bottom:14px;font-size:13px;color:var(--text-mid);">
-        <div><b style="color:var(--text-dark)">Categoria:</b> <span id="viewCategoria"></span></div>
-        <div><b style="color:var(--text-dark)">Rendimento:</b> <span id="viewRendimento"></span></div>
-        <div><b style="color:var(--text-dark)">Avaliação:</b> <span id="viewEstrelas" style="color:var(--gold)"></span></div>
-      </div>
-
-      <div class="recipe-tags" id="viewTags" style="margin-bottom:20px;"></div>
-
-      <div id="viewDescricaoWrap" class="form-section-title" style="display:none;">📝 Descrição</div>
-      <p id="viewDescricao" style="display:none;font-size:13px;color:var(--text-mid);line-height:1.7;margin-bottom:20px;"></p>
-
-      <div class="form-section-title">🥕 Ingredientes</div>
-      <ul id="viewIngredientes" style="margin:10px 0 22px;padding-left:20px;font-size:13px;color:var(--text-mid);line-height:1.9;"></ul>
-
-      <div class="form-section-title">👨‍🍳 Modo de Preparo</div>
-      <ol id="viewPassos" style="margin:10px 0 0;padding-left:20px;font-size:13px;color:var(--text-mid);line-height:1.9;"></ol>
-    </div>
-
-    <div class="modal-footer">
-      <div></div>
-      <div class="modal-footer-right">
-        <button class="btn-secondary" onclick="closeViewModal()">Fechar</button>
-        <button class="btn-submit-review" id="viewEditBtn">✏️ Editar Receita</button>
-      </div>
-    </div>
+    </form>
   </div>
 </div>
 
@@ -895,55 +892,168 @@
 <script>
 let currentPanel = 1;
 const totalPanels = 4;
+let currentFilter = 'todos';
+let filterTimer = null;
+let previewTimer = null;
+let imagemPreviewObjectUrl = null;
+const modoEdicao = <%= modoEdicao %>;
+const imagemPadrao = '<%= ctx %>/assets/img/receita-sem-imagem.svg';
+const contextPath = '<%= ctx %>';
 
 function openModal() {
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+  if (!document.querySelector('#ingList .ing-row')) addIngrediente();
+  if (!document.querySelector('#stepsList .passo-block')) addPasso();
 }
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('open');
   document.body.style.overflow = '';
 }
 function handleOverlayClick(event) { if (event.target.id === 'modalOverlay') closeModal(); }
-function closeViewModal() {
-  document.getElementById('viewModalOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-function handleViewOverlayClick(event) { if (event.target.id === 'viewModalOverlay') closeViewModal(); }
 function applyFilters() {
   const term = (document.getElementById('searchInput')?.value || '').toLowerCase();
   const cards = document.querySelectorAll('#recipesGrid .recipe-card');
   let visible = 0;
   cards.forEach(card => {
-    const show = (card.dataset.name || '').toLowerCase().includes(term);
+    const matchesText = (card.dataset.name || '').toLowerCase().includes(term);
+    const matchesStatus = currentFilter === 'todos' || card.dataset.status === currentFilter;
+    const show = matchesText && matchesStatus;
     card.style.display = show ? '' : 'none';
     if (show) visible++;
   });
   const info = document.getElementById('resultsInfo');
   if (info) info.textContent = visible + ' receita(s)';
 }
-function changePanel(direction) {
-  const next = currentPanel + direction;
-  if (next < 1 || next > totalPanels) return;
+function scheduleFilters() {
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(applyFilters, 180);
+}
+function setFilter(button) {
+  currentFilter = button.dataset.filter || 'todos';
+  document.querySelectorAll('.filter-chips .chip').forEach(chip => chip.classList.remove('active'));
+  button.classList.add('active');
+  applyFilters();
+}
+function showPanel(panelNumber) {
+  if (panelNumber < 1 || panelNumber > totalPanels) return;
   document.getElementById('panel-' + currentPanel)?.classList.remove('active');
-  currentPanel = next;
+  currentPanel = panelNumber;
   document.getElementById('panel-' + currentPanel)?.classList.add('active');
   document.getElementById('btnBack').style.display = currentPanel > 1 ? 'flex' : 'none';
   document.getElementById('stepCounter').textContent = 'Etapa ' + currentPanel + ' de ' + totalPanels;
+  document.querySelectorAll('.form-steps .step-item').forEach((item, index) => {
+    item.classList.toggle('active', index + 1 === currentPanel);
+    item.classList.toggle('done', index + 1 < currentPanel);
+  });
+  const btnNext = document.getElementById('btnNext');
+  btnNext.textContent = currentPanel === totalPanels ? 'Enviar para revisão' : 'Próximo →';
+  if (currentPanel === totalPanels) updateReviewSummary();
+}
+function changePanel(direction) {
+  const next = currentPanel + direction;
+  if (next < 1 || next > totalPanels) return;
+  showPanel(next);
+}
+function validarFormulario() {
+  const form = document.getElementById('receitaForm');
+  if (form.checkValidity()) return true;
+  const invalid = form.querySelector(':invalid');
+  const panel = invalid?.closest('.form-panel');
+  if (panel) showPanel(Number(panel.id.replace('panel-', '')));
+  invalid?.reportValidity();
+  showToast('Revise os campos obrigatórios antes de continuar.');
+  return false;
+}
+function handleNext() {
+  if (currentPanel < totalPanels) {
+    const panel = document.getElementById('panel-' + currentPanel);
+    const invalid = panel?.querySelector(':invalid');
+    if (invalid) {
+      invalid.reportValidity();
+      return;
+    }
+    changePanel(1);
+    return;
+  }
+  if (!validarFormulario()) return;
+  const formAction = document.getElementById('formAction');
+  formAction.value = modoEdicao ? "atualizarEnviarRevisao" : "enviarRevisao";
+  setSubmitting(true, 'Enviando…');
+  document.getElementById('receitaForm').requestSubmit();
 }
 function addIngrediente() {
   const row = document.createElement('div');
   row.className = 'ing-row';
-  row.innerHTML = '<input class="form-input" name="ingredienteNome" placeholder="Ingrediente">' +
-    '<input class="form-input" name="ingredienteQuantidade" placeholder="Quantidade">' +
+  row.innerHTML = '<input class="form-input" name="ingredienteNome" placeholder="Ingrediente" required>' +
+    '<input class="form-input" type="number" min="0.01" step="0.01" name="ingredienteQuantidade" placeholder="Quantidade" required>' +
+    '<select class="form-select" name="ingredienteUnidade" required><option value="">Unidade</option>' +
+    '<option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option>' +
+    '<option value="l">l</option><option value="unidade">unidade</option><option value="xícara">xícara</option>' +
+    '<option value="colher de sopa">colher de sopa</option><option value="colher de chá">colher de chá</option>' +
+    '<option value="pitada">pitada</option><option value="a gosto">a gosto</option></select>' +
     '<button type="button" class="ing-remove" onclick="this.parentElement.remove()">✕</button>';
   document.getElementById('ingList')?.appendChild(row);
 }
 function addPasso() {
   const row = document.createElement('div');
   row.className = 'passo-block open';
-  row.innerHTML = '<div class="passo-body"><textarea class="form-textarea" name="passo" placeholder="Descreva o passo"></textarea></div>';
+  row.innerHTML = '<div class="passo-header"><span class="passo-num-badge"></span>' +
+    '<input class="passo-title-input" name="passoTitulo" placeholder="Título do passo (opcional)">' +
+    '<button type="button" class="passo-remove-btn" onclick="removerPasso(this)">Remover</button></div>' +
+    '<div class="passo-body"><textarea class="form-textarea" name="passoDescricao" placeholder="Descreva o passo" required></textarea></div>';
   document.getElementById('stepsList')?.appendChild(row);
+  renumerarPassos();
+}
+function removerPasso(button) {
+  button.closest('.passo-block')?.remove();
+  renumerarPassos();
+}
+function renumerarPassos() {
+  document.querySelectorAll('#stepsList .passo-block').forEach((item, index) => {
+    item.querySelector('.passo-num-badge').textContent = index + 1;
+  });
+}
+function previewImagemArquivo(event) {
+  const arquivo = event.target.files?.[0];
+  if (!arquivo) return;
+  if (arquivo.size && arquivo.size > 5 * 1024 * 1024) {
+    event.target.value = '';
+    showToast('Escolha uma imagem de até 5 MB para a pré-visualização.');
+    return;
+  }
+  if (imagemPreviewObjectUrl) URL.revokeObjectURL(imagemPreviewObjectUrl);
+  imagemPreviewObjectUrl = URL.createObjectURL(arquivo);
+  const preview = document.getElementById('imagemPreview');
+  preview.onerror = null;
+  preview.src = imagemPreviewObjectUrl;
+  preview.style.display = 'block';
+  document.getElementById('uploadIcon').style.display = 'none';
+}
+function previewImagemUrl() {
+  const url = document.getElementById('f-imagem').value.trim();
+  const preview = document.getElementById('imagemPreview');
+  const arquivoSelecionado = document.getElementById('imagemArquivo').files?.[0];
+  if (arquivoSelecionado) return;
+  if (!url) {
+    if (!imagemPreviewObjectUrl) {
+      preview.removeAttribute('src');
+      preview.style.display = 'none';
+      document.getElementById('uploadIcon').style.display = '';
+    }
+    return;
+  }
+  preview.onerror = () => {
+    preview.onerror = null;
+    preview.src = imagemPadrao;
+  };
+  preview.src = url.startsWith('/uploads/receitas/') ? contextPath + url : url;
+  preview.style.display = 'block';
+  document.getElementById('uploadIcon').style.display = 'none';
+}
+function schedulePreviewImagemUrl() {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(previewImagemUrl, 350);
 }
 function handleTagInput(event) {
   if (event.key !== 'Enter' && event.key !== ',') return;
@@ -956,13 +1066,45 @@ function handleTagInput(event) {
   event.target.parentElement.insertBefore(pill, event.target);
   event.target.value = '';
 }
-function saveAction() {
-  document.getElementById('receitaForm')?.requestSubmit();
+function updateReviewSummary() {
+  const categoria = document.getElementById('f-categoria');
+  const ingredientes = document.querySelectorAll('#ingList .ing-row').length;
+  const passos = document.querySelectorAll('#stepsList .passo-block').length;
+  const summary = document.getElementById('reviewSummary');
+  summary.textContent = [
+    'Título: ' + (document.getElementById('f-titulo').value || 'Não informado'),
+    'Categoria: ' + (categoria.options[categoria.selectedIndex]?.text || 'Não informada'),
+    'Tempo: ' + (document.getElementById('f-tempo').value || '0') + ' minutos',
+    'Ingredientes: ' + ingredientes,
+    'Passos: ' + passos
+  ].join(' · ');
+}
+function saveAction(status) {
+  if (!validarFormulario()) return;
+  const formAction = document.getElementById('formAction');
+  formAction.value = modoEdicao ? "atualizarRascunho" : "salvarRascunho";
+  setSubmitting(true, 'Salvando…');
+  document.getElementById('receitaForm').requestSubmit();
+}
+function setSubmitting(submitting, label) {
+  document.querySelectorAll('#receitaForm button').forEach(button => {
+    button.disabled = submitting;
+  });
+  const btnNext = document.getElementById('btnNext');
+  if (submitting && btnNext) btnNext.textContent = label;
+}
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2800);
 }
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape') { closeModal(); closeViewModal(); }
+  if (event.key === 'Escape') closeModal();
 });
 applyFilters();
+<% if (abrirFormularioReceita) { %>openModal();<% } %>
 </script>
 </body>
 </html>

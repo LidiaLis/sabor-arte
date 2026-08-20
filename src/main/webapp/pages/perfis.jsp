@@ -3,6 +3,7 @@
 <%@ page import="br.com.saborearte.model.Receita" %>
 <%@ page import="br.com.saborearte.model.Comentario" %>
 <%@ page import="br.com.saborearte.model.Categoria" %>
+<%@ page import="br.com.saborearte.utils.ImagemUrlUtil" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.time.LocalDateTime" %>
 <%@ page import="java.time.Duration" %>
@@ -517,7 +518,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--te
             <div class="card">
               <div class="card-head">
                 <div class="card-head-title"><span class="card-icon">📊</span> Minhas Receitas Publicadas</div>
-                <a href="<%= _ctx %>/ReceitaController" style="font-size:12px;color:var(--moss-light);text-decoration:none">Ver todas</a>
+                <a href="<%= _ctx %>/receitas" style="font-size:12px;color:var(--moss-light);text-decoration:none">Ver todas</a>
               </div>
               <div class="card-body" style="padding:16px">
                 <% if (receitasPublicadas != null && !receitasPublicadas.isEmpty()) { %>
@@ -527,7 +528,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--te
                          Receita r = receitasPublicadas.get(i);
                     %>
                       <div class="public-mini">
-                        <img src="<%= nz(r.getImagem_receita()) %>" alt="<%= nz(r.getTitulo_receita()) %>">
+                        <img src="<%= nz(ImagemUrlUtil.resolverParaAtributoHtml(_ctx, r.getImagem_receita())) %>" alt="<%= nz(r.getTitulo_receita()) %>">
                         <div class="public-mini-body">
                           <div class="public-mini-title"><%= nz(r.getTitulo_receita()) %></div>
                           <div class="public-mini-cat"><%= nz(r.getEmoji_categoria()) %> <%= nz(r.getNome_categoria()) %></div>
@@ -557,7 +558,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--te
                          Receita r = receitasFavoritas.get(i);
                     %>
                       <div class="public-mini">
-                        <img src="<%= nz(r.getImagem_receita()) %>" alt="<%= nz(r.getTitulo_receita()) %>">
+                        <img src="<%= nz(ImagemUrlUtil.resolverParaAtributoHtml(_ctx, r.getImagem_receita())) %>" alt="<%= nz(r.getTitulo_receita()) %>">
                         <div class="public-mini-body">
                           <div class="public-mini-title"><%= nz(r.getTitulo_receita()) %></div>
                           <div class="public-mini-cat"><%= nz(r.getEmoji_categoria()) %> <%= nz(r.getNome_categoria()) %></div>
@@ -577,7 +578,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--te
             <div class="card">
               <div class="card-head">
                 <div class="card-head-title"><span class="card-icon">🚩</span> Comentários Denunciados</div>
-                <a href="<%= _ctx %>/ComentarioController" style="font-size:12px;color:var(--moss-light);text-decoration:none">Ver tudo</a>
+                <a href="<%= _ctx %>/comentarios-moderacao" style="font-size:12px;color:var(--moss-light);text-decoration:none">Ver tudo</a>
               </div>
               <div class="card-body" style="padding-top:14px;padding-bottom:14px">
                 <% if (comentariosDenunciados != null && !comentariosDenunciados.isEmpty()) { %>

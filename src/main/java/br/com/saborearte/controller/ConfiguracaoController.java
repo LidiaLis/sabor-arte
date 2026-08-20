@@ -14,6 +14,7 @@ import br.com.saborearte.dao.UsuarioDAO;
 import br.com.saborearte.model.Usuario;
 import br.com.saborearte.model.Usuario.TemaUsuario;
 import br.com.saborearte.utils.Conexao;
+import br.com.saborearte.utils.LogUtil;
 
 @WebServlet("/ConfiguracaoController")
 public class ConfiguracaoController extends HttpServlet {
@@ -108,6 +109,8 @@ public class ConfiguracaoController extends HttpServlet {
                 logado.setTema(novoTema);
                 session.setAttribute("usuarioLogado", logado);
                 session.setAttribute("sucesso", "Preferências de aparência atualizadas!");
+                LogUtil.registrar(conexao, request, "alteracao", "Configuração",
+                        "Tema de aparência alterado para " + novoTema.name());
             } else {
                 session.setAttribute("erro", "Não foi possível salvar o tema. Tente novamente.");
             }
@@ -155,6 +158,8 @@ public class ConfiguracaoController extends HttpServlet {
 
         if (ok) {
             session.setAttribute("sucesso", "Senha alterada com sucesso! Use-a no próximo acesso.");
+            LogUtil.registrar(conexao, request, "alteracao", "Configuração",
+                    "Senha da conta alterada.");
         } else {
             session.setAttribute("erro", "Não foi possível alterar a senha. Tente novamente.");
         }

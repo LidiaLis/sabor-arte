@@ -3,6 +3,7 @@
 <%@ page import="br.com.saborearte.model.Receita" %>
 <%@ page import="br.com.saborearte.model.Categoria" %>
 <%@ page import="br.com.saborearte.model.Usuario" %>
+<%@ page import="br.com.saborearte.utils.ImagemUrlUtil" %>
 <%--
   ============================================================================
   home.jsp — tela Início, compartilhada entre PUBLICO (ninguem logado) e
@@ -200,6 +201,7 @@
   @media(max-width:768px){.sidebar{display:none;} .main{margin-left:0;} .content{padding:24px 20px;} .topbar{padding:0 20px;}}
   @media(max-width:480px){.topbar-search{display:none;}}
 </style>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/conteudo-design-system.css">
 </head>
 <body>
 
@@ -230,11 +232,11 @@
       <div class="recipes-grid">
         <% if (receitasDestaque != null && !receitasDestaque.isEmpty()) {
              for (Receita r : receitasDestaque) {
-               String imgReceita = resolveImgUrl(_ctx, r.getImagem_receita());
-               String fotoAutorReceita = resolveImgUrl(_ctx, r.getFoto_usuario());
+               String imgReceita = ImagemUrlUtil.resolverParaAtributoHtml(_ctx, r.getImagem_receita());
+               String fotoAutorReceita = ImagemUrlUtil.resolverParaAtributoHtml(_ctx, r.getFoto_usuario());
           %>
 
-        <a href="<%= _ctx %>/ReceitaController?action=detalhe&amp;id=<%= r.getId_receita() %>" class="recipe-card">
+        <a href="<%= _ctx %>/ReceitaController?action=detalhar&amp;idReceita=<%= r.getId_receita() %>" class="recipe-card sa-content-card">
           <div class="recipe-img-wrap">
             <% if (imgReceita != null) { %>
               <img src="<%= imgReceita %>" alt="<%= r.getTitulo_receita() %>">
@@ -300,7 +302,7 @@
         <div id="listaAutores">
         <% if (autoresDestaque != null && !autoresDestaque.isEmpty()) {
              for (Usuario a : autoresDestaque) {
-               String fotoAutor = resolveImgUrl(_ctx, a.getFoto_usuario());
+               String fotoAutor = ImagemUrlUtil.resolverParaAtributoHtml(_ctx, a.getFoto_usuario());
           %>
         <div class="author-item">
           <% if (fotoAutor != null) { %>

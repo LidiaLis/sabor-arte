@@ -15,6 +15,7 @@ import br.com.saborearte.model.Usuario;
 import br.com.saborearte.model.Usuario.StatusUsuario;
 import br.com.saborearte.model.Usuario.TipoUsuario;
 import br.com.saborearte.utils.Conexao;
+import br.com.saborearte.utils.LogUtil;
 
 @WebServlet("/LoginController")
 public class LoginController extends HttpServlet {
@@ -56,18 +57,15 @@ public class LoginController extends HttpServlet {
                 session.invalidate();
                 session = request.getSession(true);
                 session.setAttribute("usuarioLogado", usuario);
+                LogUtil.registrar(conn, request, "login", "Sistema", "Login realizado com sucesso.");
 
                 // 4. Redireciona conforme o perfil
                 TipoUsuario tipo = usuario.getTipo_usuario();
 
-                if (tipo == TipoUsuario.ADMIN){
-                   response.sendRedirect(request.getContextPath() + "/DashboardController");
-                } else if (tipo == TipoUsuario.EDITOR) {
+                if (tipo == TipoUsuario.ADMIN
+                        || tipo == TipoUsuario.EDITOR
+                        || tipo == TipoUsuario.AUTOR) {
                     response.sendRedirect(request.getContextPath() + "/DashboardController");
-
-                } else if (tipo == TipoUsuario.AUTOR) {
-                    response.sendRedirect(request.getContextPath() + "/DashboardController");
-
                 } else if (tipo == TipoUsuario.VISITANTE) {
                     response.sendRedirect(request.getContextPath() + "/HomeController");
 

@@ -16,6 +16,7 @@ import br.com.saborearte.model.Usuario;
 import br.com.saborearte.model.Usuario.StatusUsuario;
 import br.com.saborearte.model.Usuario.TipoUsuario;
 import br.com.saborearte.utils.Conexao;
+import br.com.saborearte.utils.LogUtil;
 
 @WebServlet("/UsuarioController")
 public class UsuarioController extends HttpServlet {
@@ -176,8 +177,6 @@ private void cadastrarAdmin(HttpServletRequest request, HttpServletResponse resp
     String senha = request.getParameter("senha");
     String role  = request.getParameter("role");
 
-    System.out.println("nome=[" + nome + "] email=[" + email + "] senha=[" + senha + "] role=[" + role + "]");
-
     if (nome == null || nome.trim().isEmpty() ||
         email == null || email.trim().isEmpty() ||
         senha == null || senha.trim().isEmpty()) {
@@ -196,7 +195,6 @@ private void cadastrarAdmin(HttpServletRequest request, HttpServletResponse resp
     }
 
     if (senha.length() < 8) {
-        System.out.println(">>> FALHOU: senha curta, tamanho=" + senha.length());
         session.setAttribute("erro", "A senha deve ter no mínimo 8 caracteres.");
         response.sendRedirect(request.getContextPath() + "/UsuarioController");
         return;
@@ -227,6 +225,8 @@ private void cadastrarAdmin(HttpServletRequest request, HttpServletResponse resp
 
     usuarioDAO.cadastrarUsuario(novo);
     System.out.println(">>> cadastrarUsuario executado sem exceção.");
+    LogUtil.registrar(conexao, request, "criacao", "Usuário",
+            "Usuário criado pelo administrador: " + novo.getNome_usuario());
 
     session.setAttribute("sucesso", "Usuário criado com sucesso!");
     response.sendRedirect(request.getContextPath() + "/UsuarioController");
@@ -302,6 +302,8 @@ private void atualizar(HttpServletRequest request, HttpServletResponse response)
     }
 
     request.getSession().setAttribute("sucesso", "Usuário atualizado com sucesso!");
+    LogUtil.registrar(conexao, request, "edicao", "Usuário",
+            "Cadastro de usuário atualizado: #" + id);
     response.sendRedirect(request.getContextPath() + "/UsuarioController");
 }
     
@@ -352,6 +354,8 @@ private void atualizar(HttpServletRequest request, HttpServletResponse response)
         }
         
         session.setAttribute("sucesso", "Foto atualizada com sucesso!");
+        LogUtil.registrar(conexao, request, "edicao", "Usuário",
+                "Foto de usuário atualizada: #" + id);
         response.sendRedirect(request.getContextPath() + "/UsuarioController");
     }
     
@@ -402,6 +406,8 @@ StatusUsuario.valueOf(
 );
 
 usuarioDAO.atualizarUsuario(usuario);
+LogUtil.registrar(conexao, request, "alteracao", "Usuário",
+        "Status do usuário #" + id + " alterado para " + novoStatus);
 
 session.setAttribute(
 "sucesso",
