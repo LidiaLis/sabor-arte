@@ -2,8 +2,10 @@
 <%@ page import="br.com.saborearte.model.Receita" %>
 <%@ page import="br.com.saborearte.model.Categoria" %>
 <%@ page import="br.com.saborearte.model.Usuario" %>
+<%@ page import="br.com.saborearte.utils.ImagemUrlUtil" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Collections" %>
+<%@ page import="java.util.Map" %>
 <%!
   private String h(Object value) {
     if (value == null) return "";
@@ -44,6 +46,8 @@
   String csrfToken = request.getAttribute("csrfToken") == null
       ? "" : String.valueOf(request.getAttribute("csrfToken"));
   String buscaUrl = java.net.URLEncoder.encode(busca, java.nio.charset.StandardCharsets.UTF_8);
+  Map<Integer, Boolean> favoritasPorReceita = (Map<Integer, Boolean>) request.getAttribute("favoritasPorReceita");
+  if (favoritasPorReceita == null) favoritasPorReceita = Collections.emptyMap();
 %>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -337,6 +341,7 @@ a.sidebar-user:active {
   @media (max-width: 768px)  { .sidebar { display: none; } .main { margin-left: 0; } .content { padding: 24px 20px; } .topbar { padding: 0 20px; } .pagination { flex-direction: column; gap: 10px; align-items: flex-start; } }
   @media (max-width: 580px)  { .recipes-grid { grid-template-columns: 1fr; } }
 </style>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/conteudo-design-system.css">
 </head>
 <body>
 
@@ -399,9 +404,9 @@ a.sidebar-user:active {
     <!-- GRID -->
     <div class="recipes-grid" id="recipesGrid">
       <% for (Receita receita : receitas) { %>
-        <article class="recipe-card" data-name="<%= h(receita.getTitulo_receita()) %>" data-cat="<%= h(receita.getNome_categoria()) %>">
+        <article class="recipe-card sa-content-card" data-name="<%= h(receita.getTitulo_receita()) %>" data-cat="<%= h(receita.getNome_categoria()) %>">
           <div class="recipe-img-wrap">
-            <img loading="lazy" decoding="async" src="<%= receita.getImagem_receita() == null || receita.getImagem_receita().isBlank() ? ctx + "/assets/img/receita-sem-imagem.svg" : h(receita.getImagem_receita()) %>" onerror="this.onerror=null;this.src='<%= ctx %>/assets/img/receita-sem-imagem.svg'" alt="<%= h(receita.getTitulo_receita()) %>">
+            <img loading="lazy" decoding="async" src="<%= receita.getImagem_receita() == null || receita.getImagem_receita().isBlank() ? ctx + "/assets/img/receita-sem-imagem.svg" : h(ImagemUrlUtil.resolver(ctx, receita.getImagem_receita())) %>" onerror="this.onerror=null;this.src='<%= ctx %>/assets/img/receita-sem-imagem.svg'" alt="<%= h(receita.getTitulo_receita()) %>">
           </div>
           <div class="recipe-body">
             <div class="recipe-cat"><%= h(receita.getEmoji_categoria()) %> <%= h(receita.getNome_categoria()) %></div>
@@ -417,7 +422,8 @@ a.sidebar-user:active {
               <form method="post" action="<%= ctx %>/FavoritoController">
                 <input type="hidden" name="action" value="toggle">
                 <input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>">
-                <button class="footer-btn" type="submit">☆ Favoritar</button>
+                <% boolean favoritada = Boolean.TRUE.equals(favoritasPorReceita.get(receita.getId_receita())); %>
+                <button class="footer-btn toggle-favorito <%= favoritada ? "favorited" : "" %>" type="submit"><%= favoritada ? "★ Favoritada" : "☆ Favoritar" %></button>
               </form>
             <% } %>
             <% if ("ADMIN".equals(tipoUsuario)) { %>

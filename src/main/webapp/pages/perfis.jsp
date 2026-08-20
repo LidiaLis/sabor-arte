@@ -3,6 +3,7 @@
 <%@ page import="br.com.saborearte.model.Receita" %>
 <%@ page import="br.com.saborearte.model.Comentario" %>
 <%@ page import="br.com.saborearte.model.Categoria" %>
+<%@ page import="br.com.saborearte.utils.ImagemUrlUtil" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.time.LocalDateTime" %>
 <%@ page import="java.time.Duration" %>
@@ -527,7 +528,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--te
                          Receita r = receitasPublicadas.get(i);
                     %>
                       <div class="public-mini">
-                        <img src="<%= nz(r.getImagem_receita()) %>" alt="<%= nz(r.getTitulo_receita()) %>">
+                        <img src="<%= nz(ImagemUrlUtil.resolverParaAtributoHtml(_ctx, r.getImagem_receita())) %>" alt="<%= nz(r.getTitulo_receita()) %>">
                         <div class="public-mini-body">
                           <div class="public-mini-title"><%= nz(r.getTitulo_receita()) %></div>
                           <div class="public-mini-cat"><%= nz(r.getEmoji_categoria()) %> <%= nz(r.getNome_categoria()) %></div>
@@ -557,7 +558,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--te
                          Receita r = receitasFavoritas.get(i);
                     %>
                       <div class="public-mini">
-                        <img src="<%= nz(r.getImagem_receita()) %>" alt="<%= nz(r.getTitulo_receita()) %>">
+                        <img src="<%= nz(ImagemUrlUtil.resolverParaAtributoHtml(_ctx, r.getImagem_receita())) %>" alt="<%= nz(r.getTitulo_receita()) %>">
                         <div class="public-mini-body">
                           <div class="public-mini-title"><%= nz(r.getTitulo_receita()) %></div>
                           <div class="public-mini-cat"><%= nz(r.getEmoji_categoria()) %> <%= nz(r.getNome_categoria()) %></div>

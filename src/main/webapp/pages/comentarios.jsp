@@ -245,6 +245,7 @@
   @media(max-width:768px){.sidebar{transform:translateX(-100%);transition:transform 0.3s;} .sidebar.open{transform:translateX(0);} .main{margin-left:0;} .content{padding:24px 20px;} .topbar{padding:0 20px;} .menu-toggle{display:block;}}
   @media(max-width:480px){.stats-row{grid-template-columns:1fr;}}
 </style>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/conteudo-design-system.css">
 </head>
 <body>
 
@@ -312,31 +313,28 @@
       </div>
     </div>
 
-    <div class="content-layout">
-
-      <!-- FILTER PANEL (lateral) -->
-      <div class="filter-panel">
-        <div class="filter-panel-head">🔍 Filtros</div>
-        <form class="filter-bar" method="get" action="<%= ctx %>/ComentarioController?view=moderacao">
+      <!-- FILTER TOOLBAR -->
+      <section class="sa-filter-panel">
+        <div class="sa-filter-heading">🔍 Filtros da moderação</div>
+        <form class="sa-filter-toolbar" method="get" action="<%= ctx %>/ComentarioController?view=moderacao">
           <input type="hidden" name="view" value="moderacao">
-          <div class="filter-field"><span class="filter-label">Pesquisar</span><div class="search-wrap"><span>🔍</span><input type="text" name="filtro" value="<%= h(filtro) %>" placeholder="Comentário, usuário ou receita"></div></div>
-          <div class="filter-field"><span class="filter-label">Status</span><select class="filter-select" name="statusFiltro">
+          <div class="sa-field"><label for="filtroModeracao">Pesquisar</label><input id="filtroModeracao" type="text" name="filtro" value="<%= h(filtro) %>" placeholder="Comentário, usuário ou receita"></div>
+          <div class="sa-field"><label for="statusModeracao">Status</label><select id="statusModeracao" name="statusFiltro">
             <option value="">Todos</option>
             <option value="PENDENTE" <%= "PENDENTE".equals(statusFiltro) ? "selected" : "" %>>Pendente</option>
             <option value="APROVADO" <%= "APROVADO".equals(statusFiltro) ? "selected" : "" %>>Mantido</option>
             <option value="REMOVIDO" <%= "REMOVIDO".equals(statusFiltro) ? "selected" : "" %>>Removido</option>
             <option value="REJEITADO" <%= "REJEITADO".equals(statusFiltro) ? "selected" : "" %>>Rejeitado</option>
           </select></div>
-          <div class="filter-field"><span class="filter-label">Data</span><input type="date" class="filter-input" name="dataFiltro" value="<%= h(dataFiltro) %>"></div>
+          <div class="sa-field"><label for="dataModeracao">Data</label><input id="dataModeracao" type="date" name="dataFiltro" value="<%= h(dataFiltro) %>"></div>
           <input type="hidden" name="size" value="<%= pageSize %>">
-          <button class="btn btn-primary" type="submit">Aplicar filtros</button>
-          <a class="btn-clear-filters" href="<%= ctx %>/ComentarioController?view=moderacao">✕ Limpar filtros</a>
+          <div class="sa-filter-actions"><button class="sa-button sa-button-primary" type="submit">Aplicar filtros</button><a class="sa-button" href="<%= ctx %>/ComentarioController?view=moderacao">✕ Limpar</a></div>
         </form>
-      </div>
+      </section>
 
       <!-- TABLE -->
       <div class="right-panel">
-        <div class="table-card">
+        <div class="table-card sa-content-card">
           <div class="table-card-head">
             <div class="table-card-title">💬 Moderação de comentários</div>
             <div class="table-card-meta"><%= total %> comentário(s) encontrado(s)</div>
@@ -380,7 +378,6 @@
           </div>
         </div>
       </div>
-    </div>
 
   </div>
 </main>

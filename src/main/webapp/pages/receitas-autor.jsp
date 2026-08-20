@@ -4,6 +4,7 @@
 <%@ page import="br.com.saborearte.model.Usuario" %>
 <%@ page import="br.com.saborearte.model.ReceitaIngrediente" %>
 <%@ page import="br.com.saborearte.model.Passo" %>
+<%@ page import="br.com.saborearte.utils.ImagemUrlUtil" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Collections" %>
 <%!
@@ -645,6 +646,7 @@
   .feedback.error { color: #8d3535; background: #fff0f0; border: 1px solid #e8b0b0; }
   .feedback.success { color: #315f3b; background: #edf7ef; border: 1px solid #b9d9c0; }
 </style>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/conteudo-design-system.css">
 </head>
 <body>
 
@@ -703,8 +705,8 @@
       <% for (Receita receita : receitas) { %>
         <% boolean editavel = receita.getStatus_receita() == Receita.StatusReceita.rascunho
             || receita.getStatus_receita() == Receita.StatusReceita.rejeitada; %>
-        <article class="recipe-card" data-id="<%= receita.getId_receita() %>" data-status="<%= h(receita.getStatus_receita()).toLowerCase() %>" data-name="<%= h(receita.getTitulo_receita()) %>">
-          <div class="recipe-img-wrap"><img loading="lazy" decoding="async" src="<%= receita.getImagem_receita() == null || receita.getImagem_receita().isBlank() ? ctx + "/assets/img/receita-sem-imagem.svg" : h(receita.getImagem_receita()) %>" onerror="this.onerror=null;this.src='<%= ctx %>/assets/img/receita-sem-imagem.svg'" alt="<%= h(receita.getTitulo_receita()) %>"></div>
+      <article class="recipe-card sa-content-card" data-id="<%= receita.getId_receita() %>" data-status="<%= h(receita.getStatus_receita()).toLowerCase() %>" data-name="<%= h(receita.getTitulo_receita()) %>">
+          <div class="recipe-img-wrap"><img loading="lazy" decoding="async" src="<%= receita.getImagem_receita() == null || receita.getImagem_receita().isBlank() ? ctx + "/assets/img/receita-sem-imagem.svg" : h(ImagemUrlUtil.resolver(ctx, receita.getImagem_receita())) %>" onerror="this.onerror=null;this.src='<%= ctx %>/assets/img/receita-sem-imagem.svg'" alt="<%= h(receita.getTitulo_receita()) %>"></div>
           <div class="recipe-body"><div class="recipe-cat"><%= h(receita.getEmoji_categoria()) %> <%= h(receita.getNome_categoria()) %></div><div class="recipe-name"><%= h(receita.getTitulo_receita()) %></div></div>
           <div class="recipe-footer">
             <a class="footer-btn" href="<%= ctx %>/ReceitaController?action=detalhar&amp;idReceita=<%= receita.getId_receita() %>">👁 Ver</a>
@@ -727,7 +729,7 @@
 <!-- ===================== MODAL NOVA RECEITA ===================== -->
 <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
   <div class="modal" id="modal">
-    <form id="receitaForm" method="post" action="<%= ctx %>/ReceitaController" style="display:contents">
+    <form id="receitaForm" method="post" enctype="multipart/form-data" action="<%= ctx %>/ReceitaController" style="display:contents">
     <input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>">
     <input type="hidden" name="action" id="formAction" value="salvarRascunho">
     <% if (modoEdicao) { %><input type="hidden" name="idReceita" value="<%= receitaEdicao.getId_receita() %>"><% } %>
@@ -853,16 +855,16 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">URL da Imagem</label>
-            <input class="form-input" type="url" placeholder="https://…" id="f-imagem" name="imagemUrl" value="<%= modoEdicao ? h(receitaEdicao.getImagem_receita()) : "" %>" oninput="schedulePreviewImagemUrl()">
-            <span class="form-hint">Cole o link que será salvo com a receita ou escolha um arquivo para pré-visualizar.</span>
+            <input class="form-input" type="text" inputmode="url" placeholder="https://…" id="f-imagem" name="imagemUrl" value="<%= modoEdicao ? h(receitaEdicao.getImagem_receita()) : "" %>" oninput="schedulePreviewImagemUrl()">
+            <span class="form-hint">Opcional: cole um link ou escolha abaixo uma imagem do computador. O arquivo escolhido tem prioridade.</span>
           </div>
         </div>
-        <input type="file" id="imagemArquivo" accept="image/jpeg,image/png,image/webp" hidden onchange="previewImagemArquivo(event)">
+        <input type="file" id="imagemArquivo" name="imagemArquivo" accept="image/jpeg,image/png,image/webp" hidden onchange="previewImagemArquivo(event)">
         <label class="upload-zone" for="imagemArquivo">
-          <img id="imagemPreview" src="<%= modoEdicao && receitaEdicao.getImagem_receita() != null && !receitaEdicao.getImagem_receita().isBlank() ? h(receitaEdicao.getImagem_receita()) : ctx + "/assets/img/receita-sem-imagem.svg" %>" onerror="this.onerror=null;this.src='<%= ctx %>/assets/img/receita-sem-imagem.svg'" alt="Pré-visualização da capa" style="<%= modoEdicao ? "display:block;" : "display:none;" %>max-width:100%;max-height:220px;margin:0 auto 12px;border-radius:6px;object-fit:contain">
+          <img id="imagemPreview" src="<%= modoEdicao && receitaEdicao.getImagem_receita() != null && !receitaEdicao.getImagem_receita().isBlank() ? h(ImagemUrlUtil.resolver(ctx, receitaEdicao.getImagem_receita())) : ctx + "/assets/img/receita-sem-imagem.svg" %>" onerror="this.onerror=null;this.src='<%= ctx %>/assets/img/receita-sem-imagem.svg'" alt="Pré-visualização da capa" style="<%= modoEdicao ? "display:block;" : "display:none;" %>max-width:100%;max-height:220px;margin:0 auto 12px;border-radius:6px;object-fit:contain">
           <div class="upload-icon" id="uploadIcon" style="<%= modoEdicao ? "display:none" : "" %>">📸</div>
           <div class="upload-text">Clique para escolher uma imagem</div>
-          <div class="upload-sub">Pré-visualização local — somente a URL informada acima será salva</div>
+          <div class="upload-sub">JPG, PNG ou WebP, até 5 MB e 25 megapixels — a imagem será salva com a receita</div>
         </label>
         <div class="form-section-title" style="margin-top:24px">✅ Resumo da Receita</div>
         <div id="reviewSummary" style="background:var(--cream);border-radius:6px;padding:16px;font-size:13px;color:var(--text-mid);line-height:1.8;">
@@ -896,6 +898,7 @@ let previewTimer = null;
 let imagemPreviewObjectUrl = null;
 const modoEdicao = <%= modoEdicao %>;
 const imagemPadrao = '<%= ctx %>/assets/img/receita-sem-imagem.svg';
+const contextPath = '<%= ctx %>';
 
 function openModal() {
   document.getElementById('modalOverlay').classList.add('open');
@@ -1030,6 +1033,8 @@ function previewImagemArquivo(event) {
 function previewImagemUrl() {
   const url = document.getElementById('f-imagem').value.trim();
   const preview = document.getElementById('imagemPreview');
+  const arquivoSelecionado = document.getElementById('imagemArquivo').files?.[0];
+  if (arquivoSelecionado) return;
   if (!url) {
     if (!imagemPreviewObjectUrl) {
       preview.removeAttribute('src');
@@ -1042,7 +1047,7 @@ function previewImagemUrl() {
     preview.onerror = null;
     preview.src = imagemPadrao;
   };
-  preview.src = url;
+  preview.src = url.startsWith('/uploads/receitas/') ? contextPath + url : url;
   preview.style.display = 'block';
   document.getElementById('uploadIcon').style.display = 'none';
 }

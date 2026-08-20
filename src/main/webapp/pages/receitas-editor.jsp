@@ -67,6 +67,7 @@
   .pages{display:flex;gap:4px}.page{min-width:30px;padding:7px;border:1px solid var(--cream-dark);text-align:center;text-decoration:none;color:var(--moss);font-size:11px}.page.active{background:var(--moss);color:white}
   @media(max-width:1000px){.main{margin-left:0}.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}@media(max-width:580px){.content{padding:24px 14px}.stats{grid-template-columns:1fr}}
 </style>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/conteudo-design-system.css">
 </head>
 <body>
 <% request.setAttribute("currentPage", "receitas"); %>
@@ -81,25 +82,23 @@
     <% if (request.getAttribute("erro") != null) { %><div class="flash error"><%= h(request.getAttribute("erro")) %></div><% } %>
 
     <section class="stats">
-      <div class="stat pending"><div class="stat-icon">📝</div><div><div class="stat-value"><%= intAttr(request,"totalAguardando") %></div><div class="stat-label">Aguardando revisão</div></div></div>
-      <div class="stat"><div class="stat-icon">✅</div><div><div class="stat-value"><%= intAttr(request,"totalRevisadasHoje") %></div><div class="stat-label">Revisadas hoje</div></div></div>
-      <div class="stat green"><div class="stat-icon">🚀</div><div><div class="stat-value"><%= intAttr(request,"totalPublicadasHoje") %></div><div class="stat-label">Publicadas hoje</div></div></div>
-      <div class="stat gold"><div class="stat-icon">📅</div><div><div class="stat-value"><%= intAttr(request,"totalAgendadas") %></div><div class="stat-label">Agendadas</div></div></div>
+      <div class="stat pending"><div class="stat-icon">📝</div><div><div class="stat-value sa-stat-number"><%= intAttr(request,"totalAguardando") %></div><div class="stat-label">Aguardando revisão</div></div></div>
+      <div class="stat"><div class="stat-icon">✅</div><div><div class="stat-value sa-stat-number"><%= intAttr(request,"totalRevisadasHoje") %></div><div class="stat-label">Revisadas hoje</div></div></div>
+      <div class="stat green"><div class="stat-icon">🚀</div><div><div class="stat-value sa-stat-number"><%= intAttr(request,"totalPublicadasHoje") %></div><div class="stat-label">Publicadas hoje</div></div></div>
+      <div class="stat gold"><div class="stat-icon">📅</div><div><div class="stat-value sa-stat-number"><%= intAttr(request,"totalAgendadas") %></div><div class="stat-label">Agendadas</div></div></div>
     </section>
 
-    <div class="layout">
-      <aside class="panel">
-        <div class="panel-title">Filtros</div>
-        <form class="filter" method="get" action="<%= ctx %>/ReceitaController">
-          <div><label for="busca">Pesquisar</label><input class="input" id="busca" name="busca" value="<%= h(busca) %>" placeholder="Título ou autor"></div>
-          <div><label for="categoria">Categoria</label><select class="select" id="categoria" name="idCategoria"><option value="">Todas</option><% for(Categoria categoria:categorias){ %><option value="<%= categoria.getId_categoria() %>" <%= idCategoria != null && idCategoria == categoria.getId_categoria() ? "selected" : "" %>><%= h(categoria.getNome_categoria()) %></option><% } %></select></div>
+    <section class="sa-filter-panel">
+        <div class="sa-filter-heading">🔍 Filtros da fila editorial</div>
+        <form class="sa-filter-toolbar sa-filter-toolbar-compact" method="get" action="<%= ctx %>/ReceitaController">
+          <div class="sa-field"><label for="busca">Pesquisar</label><input id="busca" name="busca" value="<%= h(busca) %>" placeholder="Título ou autor"></div>
+          <div class="sa-field"><label for="categoria">Categoria</label><select id="categoria" name="idCategoria"><option value="">Todas</option><% for(Categoria categoria:categorias){ %><option value="<%= categoria.getId_categoria() %>" <%= idCategoria != null && idCategoria == categoria.getId_categoria() ? "selected" : "" %>><%= h(categoria.getNome_categoria()) %></option><% } %></select></div>
           <input type="hidden" name="size" value="<%= size %>">
-          <button class="btn primary" type="submit">Aplicar filtros</button>
-          <a class="btn" href="<%= ctx %>/ReceitaController">Limpar filtros</a>
+          <div class="sa-filter-actions"><button class="sa-button sa-button-primary" type="submit">Aplicar filtros</button><a class="sa-button" href="<%= ctx %>/ReceitaController">✕ Limpar</a></div>
         </form>
-      </aside>
+    </section>
 
-      <section class="table-card">
+      <section class="table-card sa-content-card">
         <div class="table-head"><span>Receitas em revisão</span><span class="count"><%= total %></span></div>
         <div class="table-scroll">
           <table>
@@ -112,7 +111,7 @@
                 <td><%= h(receita.getNome_categoria()) %></td>
                 <td><%= h(receita.getData_criacao_receita()) %></td>
                 <td><%= h(tempos.get(receita.getId_receita())) %></td>
-                <td>Aguardando aprovação</td>
+                <td><span class="sa-status-pill sa-status-pending">Aguardando aprovação</span></td>
                 <td><div class="actions">
                   <a class="btn" href="<%= ctx %>/ReceitaController?action=detalhar&amp;idReceita=<%= receita.getId_receita() %>">👁 Ver</a>
                   <form method="post" action="<%= ctx %>/ReceitaController"><input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>"><input type="hidden" name="action" value="aprovar"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button class="btn approve" type="submit">✓ Aprovar</button></form>
@@ -129,7 +128,6 @@
           <nav class="pages"><% for(int p=1;p<=totalPages;p++){ %><a class="page <%= p==pageAtual ? "active" : "" %>" href="<%= ctx %>/ReceitaController?page=<%= p %>&amp;size=<%= size %>&amp;busca=<%= buscaUrl %><%= idCategoria == null ? "" : "&amp;idCategoria=" + idCategoria %>"><%= p %></a><% } %></nav>
         </footer>
       </section>
-    </div>
   </div>
 </main>
 </body>

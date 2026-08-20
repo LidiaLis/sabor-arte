@@ -4,6 +4,7 @@
 <%@ page import="br.com.saborearte.model.Passo" %>
 <%@ page import="br.com.saborearte.model.Comentario" %>
 <%@ page import="br.com.saborearte.model.Usuario" %>
+<%@ page import="br.com.saborearte.utils.ImagemUrlUtil" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Collections" %>
 <%--
@@ -44,6 +45,8 @@
   boolean podeModerar = Boolean.TRUE.equals(request.getAttribute("podeModerar"));
   boolean podeAlterarAtividade = Boolean.TRUE.equals(request.getAttribute("podeAlterarAtividade"));
   boolean podeComentar = Boolean.TRUE.equals(request.getAttribute("podeComentar"));
+  boolean temAcoes = receita != null && ((usuarioAutenticado && !podeModerar)
+      || podeEditar || podeModerar || podeAlterarAtividade);
   String csrfToken = request.getAttribute("csrfToken") == null ? "" : String.valueOf(request.getAttribute("csrfToken"));
 %>
 <!DOCTYPE html>
@@ -566,6 +569,13 @@
   .comment-text { font-size: 13px; line-height: 1.65; color: var(--text-mid); font-weight: 300; }
 
   /* Comment form */
+  .btn-fav {
+    width: 100%; border: 1px solid var(--gold); border-radius: 5px;
+    background: var(--warm-white); color: var(--gold); padding: 12px 16px;
+    font: 600 13px 'DM Sans', sans-serif; cursor: pointer;
+    transition: background .18s, color .18s, transform .18s;
+  }
+  .btn-fav:hover { background: var(--gold); color: #fff; transform: translateY(-1px); }
   .comment-form {
     background: var(--warm-white);
     border: 1px solid var(--cream-dark);
@@ -641,6 +651,7 @@ a.sidebar-user:active {
   @media (max-width: 768px)  { .sidebar { display: none; } .main { margin-left: 0; } .recipe-body-wrap { padding: 24px 20px; } .topbar { padding: 0 20px; } .hero-content { padding: 20px; } .hero-title { font-size: 26px; } .comments-section { padding: 24px 20px; } }
   @media (max-width: 580px)  { .ing-list { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } }
 </style>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/conteudo-design-system.css">
 </head>
 <body>
 <!--
@@ -693,7 +704,7 @@ a.sidebar-user:active {
 
   <!-- HERO -->
   <div class="recipe-hero">
-    <% if (receita != null) { %><img src="<%= receita.getImagem_receita() == null || receita.getImagem_receita().isBlank() ? ctx + "/assets/img/receita-sem-imagem.svg" : h(receita.getImagem_receita()) %>" onerror="this.onerror=null;this.src='<%= ctx %>/assets/img/receita-sem-imagem.svg'" alt="<%= h(receita.getTitulo_receita()) %>"><% } %>
+    <% if (receita != null) { %><img src="<%= receita.getImagem_receita() == null || receita.getImagem_receita().isBlank() ? ctx + "/assets/img/receita-sem-imagem.svg" : h(ImagemUrlUtil.resolver(ctx, receita.getImagem_receita())) %>" onerror="this.onerror=null;this.src='<%= ctx %>/assets/img/receita-sem-imagem.svg'" alt="<%= h(receita.getTitulo_receita()) %>"><% } %>
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <div class="hero-cat"><%= receita == null ? "" : h(receita.getEmoji_categoria()) + " " + h(receita.getNome_categoria()) %></div>
@@ -708,7 +719,7 @@ a.sidebar-user:active {
   </div>
 
   <!-- BODY -->
-  <div class="recipe-body-wrap">
+  <div class="recipe-body-wrap <%= temAcoes ? "" : "sa-detail-single" %>">
 
     <!-- LEFT COL -->
     <div class="left-col">
@@ -747,20 +758,22 @@ a.sidebar-user:active {
 
     </div><!-- /left-col -->
 
+    <% if (temAcoes) { %>
     <!-- RIGHT COL -->
-    <div class="right-col">
-      <% if (usuarioAutenticado && !podeModerar && receita != null) { %><form method="post" action="<%= ctx %>/FavoritoController"><input type="hidden" name="action" value="toggle"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button type="submit" class="btn-fav" id="favBtn"><%= favorita ? "❤️ Favoritada" : "🤍 Favoritar" %></button></form><% } %>
+    <div class="right-col sa-detail-actions">
+      <% if (usuarioAutenticado && !podeModerar && receita != null) { %><form class="sa-action-form" method="post" action="<%= ctx %>/FavoritoController"><input type="hidden" name="action" value="toggle"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button type="submit" class="btn-fav sa-button" id="favBtn"><%= favorita ? "❤️ Favoritada" : "🤍 Favoritar" %></button></form><% } %>
       <% if (podeEditar) { %>
-      <form method="get" action="<%= ctx %>/ReceitaController"><input type="hidden" name="action" value="editar"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button type="submit" class="btn-comment">✏ Editar receita</button></form>
+      <form class="sa-action-form" method="get" action="<%= ctx %>/ReceitaController"><input type="hidden" name="action" value="editar"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button type="submit" class="btn-comment sa-button">✏ Editar receita</button></form>
       <% } %>
       <% if (podeModerar) { %>
-      <form method="post" action="<%= ctx %>/ReceitaController"><input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>"><input type="hidden" name="action" value="aprovar"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button type="submit" class="btn-comment">✓ Aprovar</button></form>
-      <form method="post" action="<%= ctx %>/ReceitaController"><input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>"><input type="hidden" name="action" value="rejeitar"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><textarea name="motivo" placeholder="Motivo da rejeição" required></textarea><button type="submit" class="btn-comment">✕ Rejeitar</button></form>
+      <form class="sa-action-form" method="post" action="<%= ctx %>/ReceitaController"><input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>"><input type="hidden" name="action" value="aprovar"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button type="submit" class="btn-comment sa-button sa-button-success">✓ Aprovar e publicar</button></form>
+      <form class="sa-reject-form" method="post" action="<%= ctx %>/ReceitaController"><input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>"><input type="hidden" name="action" value="rejeitar"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><label class="sa-field-label" for="motivoRejeicao">Motivo da rejeição</label><textarea id="motivoRejeicao" name="motivo" maxlength="500" placeholder="Explique ao autor o que precisa ser corrigido" required></textarea><button type="submit" class="btn-comment sa-button sa-button-danger">✕ Rejeitar receita</button></form>
       <% } %>
       <% if (podeAlterarAtividade) { %>
-      <form method="post" action="<%= ctx %>/ReceitaController"><input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>"><input type="hidden" name="action" value="alterarAtividade"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><input type="hidden" name="statusAtividade" value="<%= receita.getStatus_atividade() == Receita.StatusAtividade.ativo ? "inativo" : "ativo" %>"><button type="submit" class="btn-comment"><%= receita.getStatus_atividade() == Receita.StatusAtividade.ativo ? "Inativar" : "Ativar" %> receita</button></form>
+      <form class="sa-action-form" method="post" action="<%= ctx %>/ReceitaController"><input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>"><input type="hidden" name="action" value="alterarAtividade"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><input type="hidden" name="statusAtividade" value="<%= receita.getStatus_atividade() == Receita.StatusAtividade.ativo ? "inativo" : "ativo" %>"><button type="submit" class="btn-comment sa-button"><%= receita.getStatus_atividade() == Receita.StatusAtividade.ativo ? "Inativar" : "Ativar" %> receita</button></form>
       <% } %>
     </div><!-- /right-col -->
+    <% } %>
 
   </div><!-- /recipe-body-wrap -->
 

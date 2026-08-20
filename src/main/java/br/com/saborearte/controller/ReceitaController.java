@@ -17,11 +17,13 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
 
 import br.com.saborearte.dao.CategoriaDAO;
 import br.com.saborearte.dao.ComentarioDAO;
@@ -42,6 +44,7 @@ import br.com.saborearte.model.Receita.StatusReceita;
 import br.com.saborearte.model.Usuario;
 import br.com.saborearte.model.Usuario.StatusUsuario;
 import br.com.saborearte.model.Usuario.TipoUsuario;
+import br.com.saborearte.service.ImagemReceitaStorage;
 import br.com.saborearte.utils.Conexao;
 
 /**
@@ -52,6 +55,10 @@ import br.com.saborearte.utils.Conexao;
  * mantém Connection ou DAO em campos compartilhados entre requisições.
  */
 @WebServlet(urlPatterns={"/ReceitaController","/receitas"})
+@MultipartConfig(
+        fileSizeThreshold = 1024 * 1024,
+        maxFileSize = ImagemReceitaStorage.TAMANHO_MAXIMO,
+        maxRequestSize = 6L * 1024L * 1024L)
 public class ReceitaController extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -124,6 +131,14 @@ public class ReceitaController extends HttpServlet {
 
         prepararAtributosLista(request, receitas, daos.categoria.listarCategoriasAtivas(),
                 page, size, total, busca, idCategoria, null, StatusAtividade.ativo.name());
+        Map<Integer, Boolean> favoritasPorReceita = new LinkedHashMap<>();
+        if (usuarioLogado != null && usuarioLogado.getStatus_usuario() == StatusUsuario.ATIVO) {
+            for (Receita receita : receitas) {
+                favoritasPorReceita.put(receita.getId_receita(),
+                        daos.favorito.isFavorito(usuarioLogado.getId_usuario(), receita.getId_receita()));
+            }
+        }
+        request.setAttribute("favoritasPorReceita", favoritasPorReceita);
         request.setAttribute("perfil", usuarioLogado == null ? "PUBLICO" : "VISITANTE");
         request.getRequestDispatcher(JSP_LISTA).forward(request, response);
     }
@@ -242,7 +257,8 @@ public class ReceitaController extends HttpServlet {
         request.setAttribute("podeEditar", proprietario && podeEditar(receita));
         request.setAttribute("podeModerar", moderador
                 && receita.getStatus_receita() == StatusReceita.aguardando_aprovacao);
-        request.setAttribute("podeComentar", autenticadoAtivo && publicaEAtiva);
+        request.setAttribute("podeComentar", autenticadoAtivo
+                && usuarioLogado.getTipo_usuario() == TipoUsuario.VISITANTE && publicaEAtiva);
         request.setAttribute("podeAlterarAtividade", usuarioLogado != null
                 && (usuarioLogado.getTipo_usuario() == TipoUsuario.ADMIN || proprietario));
         request.getRequestDispatcher(JSP_DETALHE).forward(request, response);
@@ -274,6 +290,16 @@ public class ReceitaController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            processarPost(request, response);
+        } catch (IllegalStateException e) {
+            definirFlash(request, "erro", "A imagem deve ter no máximo 5 MB.");
+            response.sendRedirect(request.getContextPath() + ROTA_CANONICA);
+        }
+    }
+
+    private void processarPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
@@ -432,10 +458,28 @@ public class ReceitaController extends HttpServlet {
         receita.setDescricao_receita(valorOuVazio(request.getParameter("descricao")));
         receita.setTempo_preparo_receita(tempoPreparo);
         receita.setRendimento_receita(rendimento);
-        receita.setImagem_receita(valorOuVazio(request.getParameter("imagemUrl")));
+        receita.setImagem_receita(processarImagem(request,
+                valorOuVazio(request.getParameter("imagemUrl"))));
         receita.setStatus_receita(status);
         receita.setStatus_atividade(StatusAtividade.ativo);
         return receita;
+    }
+
+    private String processarImagem(HttpServletRequest request, String imagemUrl) {
+        try {
+            Part arquivo = request.getPart("imagemArquivo");
+            if (arquivo == null || arquivo.getSize() == 0) return imagemUrl;
+            try (java.io.InputStream conteudo = arquivo.getInputStream()) {
+                return new ImagemReceitaStorage().salvar(
+                        conteudo, arquivo.getContentType(), arquivo.getSize());
+            }
+        } catch (IllegalStateException e) {
+            throw new IllegalArgumentException("A imagem deve ter no máximo 5 MB.", e);
+        } catch (ServletException e) {
+            throw new IllegalArgumentException("Não foi possível interpretar a imagem enviada.", e);
+        } catch (IOException e) {
+            throw new IllegalStateException("Não foi possível salvar a imagem enviada.", e);
+        }
     }
 
     private ItensFormulario lerItens(HttpServletRequest request) {

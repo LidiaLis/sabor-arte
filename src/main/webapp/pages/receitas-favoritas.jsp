@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="br.com.saborearte.model.Receita" %>
+<%@ page import="br.com.saborearte.utils.ImagemUrlUtil" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.LinkedHashMap" %>
 <%@ page import="java.util.Map" %>
@@ -131,6 +132,7 @@
   @media (max-width:768px)  { .main { margin-left:0; } .content { padding:24px 20px; } .topbar { padding:0 20px; } .pagination { flex-direction:column; gap:10px; align-items:flex-start; } }
   @media (max-width:580px)  { .recipes-grid { grid-template-columns:1fr; } }
 </style>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/conteudo-design-system.css">
 </head>
 <body>
 
@@ -182,7 +184,7 @@
            for (int i = 0; i < favoritas.size(); i++) {
              Receita r = favoritas.get(i);
              String img = r.getImagem_receita();
-             String imgSrc = (img != null && !img.trim().isEmpty()) ? _ctx + img : "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=600&q=80";
+             String imgSrc = (img != null && !img.trim().isEmpty()) ? ImagemUrlUtil.resolver(_ctx, img) : "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=600&q=80";
              String catNome = r.getNome_categoria() != null ? r.getNome_categoria() : "";
              String catEmoji = r.getEmoji_categoria() != null ? r.getEmoji_categoria() : "";
              String autorNome = r.getNome_usuario() != null ? r.getNome_usuario() : "";
@@ -193,7 +195,7 @@
              }
              String corAutor = coresAutor[i % coresAutor.length];
       %>
-        <div class="recipe-card" data-id="<%= r.getId_receita() %>"
+      <div class="recipe-card sa-content-card" data-id="<%= r.getId_receita() %>"
              data-name="<%= esc(r.getTitulo_receita() != null ? r.getTitulo_receita().toLowerCase() : "") %>"
              data-cat="<%= esc(catNome) %>">
           <div class="recipe-img-wrap">
@@ -215,7 +217,7 @@
             </div>
           </div>
           <div class="recipe-footer">
-            <a class="footer-btn" href="<%= _ctx %>/pages/receita-detalhe-publico.jsp?id=<%= r.getId_receita() %>">👁 Ver</a>
+          <a class="footer-btn" href="<%= _ctx %>/ReceitaController?action=detalhar&amp;idReceita=<%= r.getId_receita() %>">👁 Ver</a>
             <button class="footer-btn toggle-desfavoritar" onclick="desfavoritar(this, <%= r.getId_receita() %>)">★ Desfavoritar</button>
           </div>
         </div>

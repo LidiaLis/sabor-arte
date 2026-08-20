@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="title desc">
+  <title id="title">Receita sem imagem</title>
+  <desc id="desc">Ilustração neutra de um prato com talheres.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f5f0e8"/>
+      <stop offset="1" stop-color="#dfe6d5"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <circle cx="400" cy="225" r="115" fill="#faf8f4" stroke="#a3b18a" stroke-width="12"/>
+  <circle cx="400" cy="225" r="72" fill="none" stroke="#c8d5b9" stroke-width="8"/>
+  <path d="M245 130v190M225 130v72c0 22 40 22 40 0v-72M555 130v190M535 130c0 52 40 52 40 0" fill="none" stroke="#4a5e3a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="400" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" fill="#4a5240">Sabor &amp; Arte</text>
+</svg>

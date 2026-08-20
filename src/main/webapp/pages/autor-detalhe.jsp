@@ -2,6 +2,7 @@
 <%@ page import="br.com.saborearte.model.Usuario" %>
 <%@ page import="br.com.saborearte.model.Receita" %>
 <%@ page import="br.com.saborearte.model.Categoria" %>
+<%@ page import="br.com.saborearte.utils.ImagemUrlUtil" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.LinkedHashMap" %>
 <%@ page import="java.util.Map" %>
@@ -336,7 +337,7 @@
         <div class="recipes-grid" id="recipesGrid">
           <% for (Receita r : receitas) {
                String img = r.getImagem_receita();
-               String imgSrc = (img != null && !img.trim().isEmpty()) ? _ctx + img : "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=400&q=80";
+               String imgSrc = (img != null && !img.trim().isEmpty()) ? ImagemUrlUtil.resolverParaAtributoHtml(_ctx, img) : "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=400&q=80";
                String catNome = r.getNome_categoria() != null ? r.getNome_categoria() : "";
                String catEmoji = r.getEmoji_categoria() != null ? r.getEmoji_categoria() : "";
           %>
