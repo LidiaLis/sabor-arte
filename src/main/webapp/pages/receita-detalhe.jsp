@@ -4,6 +4,7 @@
 <%@ page import="br.com.saborearte.model.Passo" %>
 <%@ page import="br.com.saborearte.model.Comentario" %>
 <%@ page import="br.com.saborearte.model.Usuario" %>
+<%@ page import="br.com.saborearte.model.Usuario.TipoUsuario" %>
 <%@ page import="br.com.saborearte.utils.ImagemUrlUtil" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Collections" %>
@@ -27,6 +28,21 @@
     StringBuilder s = new StringBuilder();
     for (int i = 1; i <= 5; i++) s.append(i <= nota ? "★" : "☆");
     return s.toString();
+  }
+  /*
+   * Calcula a média a partir dos comentários já carregados nesta requisição.
+   * Isso evita depender de um campo "nota_media" na receita que pode ficar
+   * desatualizado (ex.: não recalculado no banco após um novo comentário).
+   * Se não houver comentários, cai no valor vindo da própria receita.
+   */
+  private double mediaAvaliacao(List<Comentario> comentarios, double notaMediaReceita) {
+    if (comentarios == null || comentarios.isEmpty()) return notaMediaReceita;
+    int soma = 0;
+    int total = 0;
+    for (Comentario c : comentarios) {
+      if (c.getAvaliacao_comentario() > 0) { soma += c.getAvaliacao_comentario(); total++; }
+    }
+    return total == 0 ? notaMediaReceita : (double) soma / total;
   }
 %>
 <%
@@ -74,6 +90,8 @@
     --gold-light:   #dfc094;
     --gold-pale:    #f5ead6;
     --sidebar-w:    260px;
+    --danger:       #9b4444;
+    --danger-bg:    #fdf0f0;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -264,6 +282,28 @@
     from { opacity: 0; transform: translateY(18px); }
     to   { opacity: 1; transform: translateY(0); }
   }
+
+  /* ===== MODAL DE AVISO (mesmo padrão de usuarios.jsp) ===== */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal-overlay{position:fixed;inset:0;background:rgba(30,39,24,.55);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:1000;padding:24px;animation:fadeIn .18s ease;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:var(--warm-white);border-radius:2px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(30,39,24,.28),0 4px 16px rgba(30,39,24,.1);animation:slideUp .22s ease;border:1px solid var(--cream-dark);}
+  .modal-header{padding:22px 26px 18px;border-bottom:1px solid var(--cream-dark);display:flex;align-items:center;justify-content:space-between;}
+  .modal-header-left{display:flex;align-items:center;gap:14px;}
+  .modal-header-icon{width:42px;height:42px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .modal-header-icon.deactivate-icon{background:rgba(155,68,68,.1);}
+  .modal-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:500;color:var(--text-dark);line-height:1.2;}
+  .modal-subtitle{font-size:12px;color:var(--text-light);font-weight:300;margin-top:3px;}
+  .modal-close{width:32px;height:32px;border:1.5px solid var(--cream-dark);background:none;border-radius:2px;cursor:pointer;font-size:16px;color:var(--text-light);display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
+  .modal-close:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-bg);}
+  .modal-body{padding:22px 26px;}
+  .modal-footer{padding:16px 26px 22px;border-top:1px solid var(--cream-dark);display:flex;align-items:center;justify-content:flex-end;gap:10px;}
+  .btn-modal-cancel{padding:9px 18px;background:none;border:1.5px solid var(--cream-dark);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-mid);cursor:pointer;transition:all .15s;}
+  .btn-modal-cancel:hover{border-color:var(--text-mid);}
+  .btn-modal-danger{display:flex;align-items:center;gap:7px;padding:9px 20px;background:var(--danger);border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#fff;cursor:pointer;transition:background .15s;}
+  .btn-modal-danger:hover{background:#7a3030;}
+  .confirm-sentence{font-size:13px;color:var(--text-mid);line-height:1.6;font-weight:300;}
+  .confirm-sentence strong{font-weight:600;color:var(--text-dark);}
 
   .hero-cat {
     display: inline-flex; align-items: center; gap: 6px;
@@ -568,6 +608,28 @@
   .comment-stars { font-size: 12px; color: var(--gold); letter-spacing: -1px; }
   .comment-text { font-size: 13px; line-height: 1.65; color: var(--text-mid); font-weight: 300; }
 
+  .comment-top-right { display: flex; align-items: center; gap: 10px; }
+  .comment-menu { position: relative; }
+  .comment-menu-btn {
+    border: none; background: none; cursor: pointer;
+    font-size: 16px; line-height: 1; color: var(--text-light);
+    padding: 2px 6px; border-radius: 4px; transition: background 0.15s, color 0.15s;
+  }
+  .comment-menu-btn:hover { background: var(--cream-dark); color: var(--text-mid); }
+  .comment-menu-dropdown {
+    display: none; position: absolute; top: 26px; right: 0; z-index: 5;
+    background: var(--warm-white); border: 1px solid var(--cream-dark);
+    border-radius: 6px; box-shadow: 0 8px 24px rgba(30,39,24,0.16);
+    min-width: 140px; overflow: hidden;
+  }
+  .comment-menu.open .comment-menu-dropdown { display: block; }
+  .comment-menu-delete {
+    width: 100%; border: none; background: none; cursor: pointer;
+    text-align: left; padding: 10px 14px; font-size: 12px; font-weight: 500;
+    color: #c44; font-family: 'DM Sans', sans-serif; transition: background 0.15s;
+  }
+  .comment-menu-delete:hover { background: #fee; }
+
   /* Comment form */
   .btn-fav {
     width: 100%; border: 1px solid var(--gold); border-radius: 5px;
@@ -713,7 +775,8 @@ a.sidebar-user:active {
         <div class="hero-author"><div class="author-ava"><%= h(receita.getNome_usuario()).isEmpty() ? "?" : h(receita.getNome_usuario()).substring(0,1).toUpperCase() %></div><div class="author-info"><div class="author-lbl">Receita por</div><div class="author-nm"><%= h(receita.getNome_usuario()) %></div></div></div>
         <span class="hero-pill">⏱ <%= receita.getTempo_preparo_receita() %> min preparo</span>
         <span class="hero-pill">👥 <%= h(receita.getRendimento_receita()) %></span>
-        <div class="hero-stars"><%= estrelas((int)Math.round(receita.getNota_media())) %></div>
+        <% double mediaAtual = mediaAvaliacao(comentarios, receita.getNota_media()); %>
+        <div class="hero-stars"><%= estrelas((int)Math.round(mediaAtual)) %> <span style="font-size:12px;color:rgba(255,255,255,0.75);font-weight:500">(<%= String.format("%.1f", mediaAtual) %>)</span></div>
       </div><% } %>
     </div>
   </div>
@@ -761,7 +824,9 @@ a.sidebar-user:active {
     <% if (temAcoes) { %>
     <!-- RIGHT COL -->
     <div class="right-col sa-detail-actions">
-      <% if (usuarioAutenticado && !podeModerar && receita != null) { %><form class="sa-action-form" method="post" action="<%= ctx %>/FavoritoController"><input type="hidden" name="action" value="toggle"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button type="submit" class="btn-fav sa-button" id="favBtn"><%= favorita ? "❤️ Favoritada" : "🤍 Favoritar" %></button></form><% } %>
+      <%-- Favoritar é exclusivo do perfil "visitante" (confirmado em TipoUsuario). --%>
+      <% boolean isVisitante = usuarioAutenticado && usuario.getTipo_usuario() == TipoUsuario.VISITANTE; %>
+      <% if (isVisitante && receita != null) { %><form class="sa-action-form" method="post" action="<%= ctx %>/FavoritoController"><input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>"><input type="hidden" name="action" value="toggle"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button type="submit" class="btn-fav sa-button" id="favBtn"><%= favorita ? "❤️ Favoritada" : "🤍 Favoritar" %></button></form><% } %>
       <% if (podeEditar) { %>
       <form class="sa-action-form" method="get" action="<%= ctx %>/ReceitaController"><input type="hidden" name="action" value="editar"><input type="hidden" name="idReceita" value="<%= receita.getId_receita() %>"><button type="submit" class="btn-comment sa-button">✏ Editar receita</button></form>
       <% } %>
@@ -786,7 +851,9 @@ a.sidebar-user:active {
     </div>
 
     <div id="commentsList">
-      <% for (Comentario comentario : comentarios) { %><div class="comment-item"><div class="comment-ava"><%= h(comentario.getNome_usuario()).isEmpty() ? "?" : h(comentario.getNome_usuario()).substring(0,1).toUpperCase() %></div><div class="comment-bubble"><div class="comment-top"><div><div class="comment-name"><%= h(comentario.getNome_usuario()) %></div><div class="comment-stars"><%= estrelas(comentario.getAvaliacao_comentario()) %></div></div><div class="comment-date"><%= h(comentario.getData_criacao_comentario()) %></div></div><div class="comment-text"><%= h(comentario.getTexto_comentario()) %></div></div></div><% } %>
+      <% for (Comentario comentario : comentarios) {
+           boolean comentarioProprio = usuarioAutenticado && usuario.getId_usuario() == comentario.getUsuario();
+      %><div class="comment-item"><div class="comment-ava"><%= h(comentario.getNome_usuario()).isEmpty() ? "?" : h(comentario.getNome_usuario()).substring(0,1).toUpperCase() %></div><div class="comment-bubble"><div class="comment-top"><div><div class="comment-name"><%= h(comentario.getNome_usuario()) %></div><div class="comment-stars"><%= estrelas(comentario.getAvaliacao_comentario()) %></div></div><div class="comment-top-right"><div class="comment-date"><%= h(comentario.getData_criacao_comentario()) %></div><% if (comentarioProprio) { %><div class="comment-menu"><button type="button" class="comment-menu-btn" onclick="toggleCommentMenu(this)" aria-label="Opções do comentário">⋮</button><div class="comment-menu-dropdown"><button type="button" class="comment-menu-delete" onclick="openDeleteCommentModal(<%= comentario.getId_comentario() %>, <%= receita == null ? 0 : receita.getId_receita() %>)">🗑 Excluir comentário</button></div></div><% } %></div></div><div class="comment-text"><%= h(comentario.getTexto_comentario()) %></div></div></div><% } %>
       <% if (comentarios.isEmpty()) { %><div class="comment-item"><div class="comment-bubble"><div class="comment-text">Nenhum comentário publicado.</div></div></div><% } %>
     </div><!-- /commentsList -->
 
@@ -808,14 +875,54 @@ a.sidebar-user:active {
       </div>
       <div class="form-group" style="margin-bottom:16px">
         <label>Comentário</label>
-        <input type="hidden" name="action" value="comentar"><input type="hidden" name="idReceita" value="<%= receita == null ? 0 : receita.getId_receita() %>"><input type="hidden" id="avaliacaoComentario" name="avaliacao" value="1"><textarea id="commentText" name="conteudo" rows="4" placeholder="Conte como ficou, dicas que deram certo, variações…" required></textarea>
+        <input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>"><input type="hidden" name="action" value="comentar"><input type="hidden" name="idReceita" value="<%= receita == null ? 0 : receita.getId_receita() %>"><input type="hidden" id="avaliacaoComentario" name="avaliacao" value="1"><textarea id="commentText" name="conteudo" rows="4" placeholder="Conte como ficou, dicas que deram certo, variações…" required></textarea>
       </div>
       <button type="submit" class="btn-comment" id="btnPublicarComentario">💬 Publicar comentário</button></form><% } %>
   </div>
 
 </main>
 
+<!-- MODAL: excluir comentário (substitui o confirm() nativo do navegador) -->
+<div class="modal-overlay" id="modalExcluirComentario" onclick="outsideCloseModal(event,'modalExcluirComentario')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <div class="modal-header-icon deactivate-icon">🗑</div>
+        <div>
+          <div class="modal-title">Excluir comentário</div>
+          <div class="modal-subtitle">Esta ação não pode ser desfeita</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalExcluirComentario')">✕</button>
+    </div>
+    <form method="post" action="<%= ctx %>/ComentarioController">
+      <input type="hidden" name="csrfToken" value="<%= h(csrfToken) %>">
+      <input type="hidden" name="action" value="excluirProprio">
+      <input type="hidden" name="idComentario" id="delComentarioId">
+      <input type="hidden" name="idReceita" id="delComentarioReceitaId">
+      <div class="modal-body">
+        <p class="confirm-sentence">Tem certeza de que deseja excluir este comentário? <strong>Essa ação não pode ser desfeita.</strong></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-modal-cancel" onclick="closeModal('modalExcluirComentario')">Cancelar</button>
+        <button type="submit" class="btn-modal-danger">🗑 Excluir comentário</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
+/* ── Modal genérico (mesmo padrão de usuarios.jsp) ── */
+function openModal(id)       { document.getElementById(id).classList.add('open'); }
+function closeModal(id)      { document.getElementById(id).classList.remove('open'); }
+function outsideCloseModal(e, id) { if (e.target.id === id) closeModal(id); }
+
+function openDeleteCommentModal(idComentario, idReceita) {
+  document.getElementById('delComentarioId').value = idComentario;
+  document.getElementById('delComentarioReceitaId').value = idReceita;
+  openModal('modalExcluirComentario');
+}
+
 function toggleIng(item) {
   item.classList.toggle('checked');
   const check = item.querySelector('.ing-check');
@@ -826,6 +933,17 @@ function setStars(value) {
   if (input) input.value = value;
   document.querySelectorAll('#starRating span').forEach((star, index) => star.classList.toggle('active', index < value));
 }
+function toggleCommentMenu(button) {
+  const menu = button.closest('.comment-menu');
+  const jaAberto = menu.classList.contains('open');
+  document.querySelectorAll('.comment-menu.open').forEach(m => m.classList.remove('open'));
+  if (!jaAberto) menu.classList.add('open');
+}
+document.addEventListener('click', event => {
+  if (!event.target.closest('.comment-menu')) {
+    document.querySelectorAll('.comment-menu.open').forEach(m => m.classList.remove('open'));
+  }
+});
 </script>
 </body>
 </html>

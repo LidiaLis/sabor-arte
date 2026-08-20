@@ -93,12 +93,14 @@ public class ComentarioDAO {
     public boolean cadastrarEmReceitaPublicadaAtiva(Comentario comentario) throws SQLException {
         String sql = "INSERT INTO comentario(receita,usuario,texto_comentario,data_criacao_comentario,"
                 + "status_comentario,avaliacao_comentario) "
-                + "SELECT r.id_receita,u.id_usuario,?,NOW(),'PENDENTE',? FROM receita r "
+                + "SELECT r.id_receita,u.id_usuario,?,NOW(),?,? FROM receita r "
                 + "JOIN usuario u ON u.id_usuario=? AND u.status_usuario='ATIVO' AND u.tipo_usuario='VISITANTE' "
                 + "WHERE r.id_receita=? AND r.status_receita='publicada' AND r.status_atividade='ativo'";
         try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-            ps.setString(1, comentario.getTexto_comentario()); ps.setInt(2, comentario.getAvaliacao_comentario());
-            ps.setInt(3, comentario.getUsuario()); ps.setInt(4, comentario.getReceita());
+            ps.setString(1, comentario.getTexto_comentario());
+            ps.setString(2, comentario.getStatus_comentario().name());
+            ps.setInt(3, comentario.getAvaliacao_comentario());
+            ps.setInt(4, comentario.getUsuario()); ps.setInt(5, comentario.getReceita());
             return ps.executeUpdate() == 1;
         }
     }
@@ -116,12 +118,16 @@ public class ComentarioDAO {
         return lista;
     }
 
+    /** Regra de negócio: o autor só enxerga comentários ativos (APROVADO) ou em análise
+     * por denúncia (PENDENTE). Comentários REJEITADO/REMOVIDO pela moderação saem da caixa do autor. */
+    private static final String STATUS_VISIVEL_AUTOR = " AND c.status_comentario IN ('APROVADO','PENDENTE')";
+
     public List<Comentario> listarComentariosPorAutor(int autorId, String busca, String statusResposta,
             int limite, int offset) throws SQLException {
         FiltroAutor filtro = new FiltroAutor(busca, statusResposta);
         String sql = "SELECT c.*,u.nome_usuario,u.foto_usuario,r.titulo_receita FROM comentario c "
                 + "JOIN usuario u ON u.id_usuario=c.usuario JOIN receita r ON r.id_receita=c.receita "
-                + "WHERE r.usuario=?" + filtro.sql + " ORDER BY c.data_criacao_comentario DESC LIMIT ? OFFSET ?";
+                + "WHERE r.usuario=?" + STATUS_VISIVEL_AUTOR + filtro.sql + " ORDER BY c.data_criacao_comentario DESC LIMIT ? OFFSET ?";
         List<Comentario> lista = new ArrayList<>();
         try (PreparedStatement ps = conexao.prepareStatement(sql)) {
             int i = filtro.preparar(ps, 1, autorId);
@@ -134,7 +140,7 @@ public class ComentarioDAO {
     public int contarComentariosPorAutor(int autorId, String busca, String statusResposta) throws SQLException {
         FiltroAutor filtro = new FiltroAutor(busca, statusResposta);
         String sql = "SELECT COUNT(*) FROM comentario c JOIN usuario u ON u.id_usuario=c.usuario "
-                + "JOIN receita r ON r.id_receita=c.receita WHERE r.usuario=?" + filtro.sql;
+                + "JOIN receita r ON r.id_receita=c.receita WHERE r.usuario=?" + STATUS_VISIVEL_AUTOR + filtro.sql;
         try (PreparedStatement ps = conexao.prepareStatement(sql)) {
             filtro.preparar(ps, 1, autorId);
             try (ResultSet rs = ps.executeQuery()) { return rs.next() ? rs.getInt(1) : 0; }
@@ -146,7 +152,7 @@ public class ComentarioDAO {
                 ? "c.resposta_comentario IS NOT NULL AND TRIM(c.resposta_comentario)<>''"
                 : "c.resposta_comentario IS NULL OR TRIM(c.resposta_comentario)=''";
         String sql = "SELECT COUNT(*) FROM comentario c JOIN receita r ON r.id_receita=c.receita "
-                + "WHERE r.usuario=? AND (" + condicao + ")";
+                + "WHERE r.usuario=?" + STATUS_VISIVEL_AUTOR + " AND (" + condicao + ")";
         try (PreparedStatement ps = conexao.prepareStatement(sql)) {
             ps.setInt(1, autorId); try (ResultSet rs = ps.executeQuery()) { return rs.next() ? rs.getInt(1) : 0; }
         }
@@ -154,7 +160,8 @@ public class ComentarioDAO {
 
     public double calcularAvaliacaoMediaPorAutor(int autorId) throws SQLException {
         String sql = "SELECT COALESCE(AVG(c.avaliacao_comentario),0) FROM comentario c "
-                + "JOIN receita r ON r.id_receita=c.receita WHERE r.usuario=? AND c.avaliacao_comentario BETWEEN 1 AND 5";
+                + "JOIN receita r ON r.id_receita=c.receita WHERE r.usuario=?" + STATUS_VISIVEL_AUTOR
+                + " AND c.avaliacao_comentario BETWEEN 1 AND 5";
         try (PreparedStatement ps = conexao.prepareStatement(sql)) {
             ps.setInt(1, autorId); try (ResultSet rs = ps.executeQuery()) { return rs.next() ? rs.getDouble(1) : 0; }
         }
@@ -178,6 +185,16 @@ public class ComentarioDAO {
                 + "WHERE c.id_comentario=? AND r.usuario=? AND c.status_comentario<>'REMOVIDO'";
         try (PreparedStatement ps = conexao.prepareStatement(sql)) {
             ps.setInt(1, idComentario); ps.setInt(2, autorId); return ps.executeUpdate() == 1;
+        }
+    }
+
+    /** Permite que o próprio autor do comentário o remova; nunca afeta comentário de outro usuário. */
+    public boolean excluirComentarioProprio(int idComentario, int usuarioId) throws SQLException {
+        String sql = "UPDATE comentario SET status_comentario='REMOVIDO',data_modera_comentario=NOW() "
+                + "WHERE id_comentario=? AND usuario=? AND status_comentario<>'REMOVIDO'";
+        try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+            ps.setInt(1, idComentario); ps.setInt(2, usuarioId);
+            return ps.executeUpdate() == 1;
         }
     }
 

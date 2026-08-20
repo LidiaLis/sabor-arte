@@ -14,7 +14,7 @@ public class Conexao {
     // Configurações do banco de dados - AJUSTE CONFORME SEU AMBIENTE
     private static final String URL = "jdbc:mysql://localhost:3306/blog_culinario";
     private static final String USER = "root";
-    private static final String PASSWORD = "Juninsql@1";
+    private static final String PASSWORD = "501105";
     private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
     
     // Carrega o driver JDBC

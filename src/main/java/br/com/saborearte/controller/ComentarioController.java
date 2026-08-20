@@ -143,7 +143,7 @@ public class ComentarioController extends HttpServlet {
     }
 
     private String[] perfisDaAcao(String action) {
-        if ("comentar".equals(action)) return new String[] {TipoUsuario.VISITANTE.name()};
+        if ("comentar".equals(action) || "excluirProprio".equals(action)) return new String[] {TipoUsuario.VISITANTE.name()};
         if ("responder".equals(action) || "denunciar".equals(action)) return new String[] {TipoUsuario.AUTOR.name()};
         if ("manter".equals(action) || "aprovar".equals(action) || "rejeitar".equals(action)
                 || "remover".equals(action) || "inativarUsuario".equals(action))
@@ -159,14 +159,22 @@ public class ComentarioController extends HttpServlet {
             int avaliacao = inteiroObrigatorio(request.getParameter("avaliacao"), "Avaliação inválida.");
             if (avaliacao < 1 || avaliacao > 5) throw new IllegalArgumentException("A avaliação deve estar entre 1 e 5.");
             Comentario c = new Comentario(); c.setReceita(idReceita); c.setUsuario(usuario.getId_usuario());
-            c.setTexto_comentario(conteudo); c.setAvaliacao_comentario(avaliacao); c.setStatus_comentario(StatusComentario.PENDENTE);
+            c.setTexto_comentario(conteudo); c.setAvaliacao_comentario(avaliacao); c.setStatus_comentario(StatusComentario.APROVADO);
             if (!dao.cadastrarEmReceitaPublicadaAtiva(c))
                 throw new IllegalArgumentException("Comentários são permitidos somente em receitas publicadas e ativas.");
-            return new ResultadoMutacao("Comentário enviado para moderação.",
+            return new ResultadoMutacao("Comentário publicado.",
                     "/ReceitaController?action=detalhar&idReceita=" + idReceita,
                     "COMENTAR", "COMENTARIO", "Comentário criado na receita #" + idReceita);
         }
         int idComentario = inteiroObrigatorio(request.getParameter("idComentario"), "Comentário inválido.");
+        if ("excluirProprio".equals(action)) {
+            int idReceita = inteiroObrigatorio(request.getParameter("idReceita"), "Receita inválida.");
+            if (!dao.excluirComentarioProprio(idComentario, usuario.getId_usuario()))
+                throw new IllegalArgumentException("Comentário inexistente ou não pertence a você.");
+            return new ResultadoMutacao("Comentário excluído.",
+                    "/ReceitaController?action=detalhar&idReceita=" + idReceita,
+                    "MODERAR_COMENTARIO", "COMENTARIO", "Comentário #" + idComentario + " excluído pelo autor do comentário");
+        }
         if ("responder".equals(action)) {
             String resposta = textoObrigatorio(request.getParameter("resposta"), "A resposta não pode ficar vazia.", 2000);
             if (!dao.responderComentarioDoAutor(idComentario, usuario.getId_usuario(), resposta))
@@ -218,7 +226,7 @@ public class ComentarioController extends HttpServlet {
     }
 
     private void redirecionarFalha(HttpServletRequest request, HttpServletResponse response, String action) throws IOException {
-        if ("comentar".equals(action)) {
+        if ("comentar".equals(action) || "excluirProprio".equals(action)) {
             int id = limitar(request.getParameter("idReceita"), 0, 0, Integer.MAX_VALUE);
             response.sendRedirect(request.getContextPath() + (id > 0
                     ? "/ReceitaController?action=detalhar&idReceita=" + id : "/ReceitaController"));
