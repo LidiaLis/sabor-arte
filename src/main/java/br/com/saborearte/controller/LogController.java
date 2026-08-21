@@ -24,6 +24,8 @@ import javax.servlet.http.HttpSession;
 public class LogController extends HttpServlet {
     private static final long serialVersionUID=1L;
     private static final int TAMANHO_PADRAO=20,TAMANHO_MAXIMO=100;
+    /** Teto de segurança: máximo de registros carregados de uma vez para a tela (paginação é client-side). */
+    private static final int LIMITE_TOTAL_LOGS=2000;
     private static final Set<String> ACOES=Set.of("CRIAR_RASCUNHO","ENVIAR_REVISAO","APROVAR_RECEITA","REJEITAR_RECEITA","ALTERAR_ATIVIDADE","COMENTAR","RESPONDER_COMENTARIO","MODERAR_COMENTARIO","LOGIN");
     private static final Set<String> ENTIDADES=Set.of("RECEITA","COMENTARIO","USUARIO","RELATORIO","SESSAO");
     private static final Set<String> EXPORTACOES=Set.of("pdf","excel","print");
@@ -43,11 +45,14 @@ public class LogController extends HttpServlet {
             try(Connection conexao=Conexao.getConnection()){
                 LogDAO dao=new LogDAO(conexao);
                 int total=dao.contarComFiltros(f.busca,f.acaoLog,f.entidade,f.inicio,f.fim);
-                int totalPages=Math.max(1,(int)Math.ceil(total/(double)f.size));
-                int page=Math.min(f.page,totalPages);
-                List<Log> logs=dao.listarComFiltros(f.busca,f.acaoLog,f.entidade,f.inicio,f.fim,(page-1)*f.size,f.size);
+                // A paginação (8 por página) agora é feita em client-side pelo log-admin.jsp,
+                // então aqui trazemos TODOS os registros que batem com o filtro, sem LIMIT/OFFSET.
+                // Aplicamos apenas um teto de segurança (LIMITE_TOTAL_LOGS) para não estourar
+                // memória caso a tabela de auditoria fique muito grande.
+                int totalCarregado=Math.min(total,LIMITE_TOTAL_LOGS);
+                List<Log> logs=totalCarregado==0?Collections.emptyList():dao.listarComFiltros(f.busca,f.acaoLog,f.entidade,f.inicio,f.fim,0,totalCarregado);
                 request.setAttribute("logs",logs);request.setAttribute("totalLogs",Integer.valueOf(total));
-                request.setAttribute("page",Integer.valueOf(page));request.setAttribute("totalPages",Integer.valueOf(totalPages));
+                request.setAttribute("page",Integer.valueOf(1));request.setAttribute("totalPages",Integer.valueOf(1));
                 if(f.exportTipo!=null){List<Log> logsExportacao=total==0?Collections.emptyList():dao.listarComFiltros(f.busca,f.acaoLog,f.entidade,f.inicio,f.fim,0,total);request.setAttribute("logsExportacao",logsExportacao);}
             }
             request.getRequestDispatcher("/pages/log-admin.jsp").forward(request,response);

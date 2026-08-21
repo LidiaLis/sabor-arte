@@ -1,9 +1,56 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.List,java.util.Collections,java.net.URLEncoder,java.nio.charset.StandardCharsets,br.com.saborearte.model.Log" %>
+<%@ page import="java.util.List,java.util.Collections,java.net.URLEncoder,java.nio.charset.StandardCharsets,java.text.SimpleDateFormat,java.util.Date,br.com.saborearte.model.Log" %>
 <%!
 private String h(Object v){if(v==null)return "";return String.valueOf(v).replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace("\"","&quot;").replace("'","&#39;");}
 private String enc(Object v){return URLEncoder.encode(v==null?"":String.valueOf(v),StandardCharsets.UTF_8);}
+
+/* Iniciais para o avatar do usuário (ex.: "Ana Silva" -> "AS") */
+private String iniciais(String nome){
+  if(nome==null||nome.trim().isEmpty())return "?";
+  String[] partes=nome.trim().split("\\s+");
+  StringBuilder sb=new StringBuilder();
+  sb.append(Character.toUpperCase(partes[0].charAt(0)));
+  if(partes.length>1)sb.append(Character.toUpperCase(partes[partes.length-1].charAt(0)));
+  return sb.toString();
+}
+
+/* Classe de cor do avatar, coerente com o perfil do usuário */
+private String avatarClasse(String tipoUsuario){
+  String t=tipoUsuario==null?"":tipoUsuario.toLowerCase();
+  if("admin".equals(t))return "av-green";
+  if("editor".equals(t))return "av-pink";
+  if("autor".equals(t))return "av-gold";
+  return "av-blue";
+}
+
+/* Classe do "pill" de ação, coerente com o padrão visual (criacao/edicao/exclusao/login/aprovado) */
+private String pillAcao(String acao){
+  String a=acao==null?"":acao.toUpperCase();
+  if(a.contains("APROVAR"))return "aprovado";
+  if(a.contains("REJEITAR")||a.contains("EXCLUIR")||a.contains("REMOVER"))return "exclusao";
+  if(a.contains("LOGIN"))return "login";
+  if(a.contains("CRIAR"))return "criacao";
+  return "edicao";
+}
+
+/* Separa "data hora" (quando vierem juntos no mesmo campo) para exibição em duas linhas */
+private String[] dataHora(String dataLog){
+  if(dataLog==null)return new String[]{"",""};
+  String s=dataLog.trim();
+  int idx=s.indexOf(' ');
+  if(idx<0)return new String[]{s,""};
+  return new String[]{s.substring(0,idx),s.substring(idx+1)};
+}
 %>
+<%--
+    SERVLET RESPONSÁVEL: LogController
+    A partir de agora a PAGINAÇÃO é feita em client-side (mesmo padrão usado
+    em usuarios.jsp: 8 registros por página, navegação sem reload).
+    Por isso o servlet deve trazer em "logs" TODOS os registros que batem
+    com os filtros aplicados (busca/acaoLog/entidade/periodo/dataInicio/dataFim),
+    sem fatiar por página/offset — a divisão em páginas de 8 é feita pelo JS
+    no final do arquivo.
+--%>
 <%
 String ctx=request.getContextPath();
 List<Log> logs=(List<Log>)request.getAttribute("logs");if(logs==null)logs=Collections.emptyList();

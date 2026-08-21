@@ -43,9 +43,11 @@
   int totalReceitas = receitas.size();
   int totalPublicadas = 0;
   int totalRascunhos = 0;
+  int totalAguardandoPublicacao = 0;
   for (Receita item : receitas) {
     if (item.getStatus_receita() == Receita.StatusReceita.publicada) totalPublicadas++;
     if (item.getStatus_receita() == Receita.StatusReceita.rascunho) totalRascunhos++;
+    if (item.getStatus_receita() == Receita.StatusReceita.aguardando_aprovacao) totalAguardandoPublicacao++; // TODO: confirme o nome exato desta constante no enum StatusReceita
   }
 %>
 <!DOCTYPE html>
@@ -252,6 +254,7 @@
   .chip.active { background: var(--moss); border-color: var(--moss); color: #fff; }
   .chip.active.publicado { background: var(--published); border-color: var(--published); }
   .chip.active.rascunho  { background: var(--draft);     border-color: var(--draft); }
+  .chip.active.pendente  { background: var(--pending);   border-color: var(--pending); }
   .chip.active.arquivado { background: var(--archived);  border-color: var(--archived); }
   .chip-count {
     font-family: 'Nunito', sans-serif; font-size: 10px; font-weight: 800;
@@ -307,14 +310,6 @@
     font-family: 'Nunito', sans-serif; font-size: 11px; font-weight: 700;
     padding: 3px 9px; border-radius: 20px;
   }
-  .img-fav {
-    position: absolute; top: 10px; right: 10px; z-index: 2;
-    width: 28px; height: 28px; border-radius: 50%;
-    background: rgba(255,255,255,0.88);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; cursor: pointer; transition: transform 0.2s;
-  }
-  .img-fav:hover { transform: scale(1.15); }
   .recipe-body { padding: 14px 16px 10px; }
   .recipe-cat { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--moss-light); font-weight: 600; margin-bottom: 5px; }
   .recipe-name { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 700; color: var(--text-dark); line-height: 1.35; margin-bottom: 10px; }
@@ -337,6 +332,7 @@
     font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500;
     color: var(--text-mid); cursor: pointer; transition: all 0.15s;
     display: flex; align-items: center; justify-content: center; gap: 4px;
+    text-decoration: none;
   }
   .footer-btn:hover { border-color: var(--moss); color: var(--moss); background: rgba(74,94,58,0.05); }
   .footer-btn.submit { border-color: var(--pending); color: var(--pending); }
@@ -688,6 +684,7 @@
         <button class="chip active" data-filter="todos" onclick="setFilter(this)">🍴 Todas <span class="chip-count"><%= totalReceitas %></span></button>
         <button class="chip publicado" data-filter="publicada" onclick="setFilter(this)">✅ Publicadas <span class="chip-count"><%= totalPublicadas %></span></button>
         <button class="chip rascunho" data-filter="rascunho" onclick="setFilter(this)">📝 Rascunhos <span class="chip-count"><%= totalRascunhos %></span></button>
+        <button class="chip pendente" data-filter="pendente" onclick="setFilter(this)">⏳ Aguardando publicação <span class="chip-count"><%= totalAguardandoPublicacao %></span></button>
       </div>
       <div class="filter-right">
         <select class="sort-select" onchange="applyFilters()">
@@ -790,13 +787,18 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Rendimento (porções) <span>*</span></label>
-            <input class="form-input" type="text" placeholder="Ex: 8 porções" maxlength="50" id="f-rendimento" name="rendimento" value="<%= modoEdicao ? h(receitaEdicao.getRendimento_receita()) : "" %>" required>
+            <input class="form-input" type="number" placeholder="Ex: 8" min="1" max="200" step="1" id="f-rendimento" name="rendimento" value="<%= modoEdicao ? h(receitaEdicao.getRendimento_receita()) : "" %>" required>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Tags / Palavras-chave</label>
             <div class="tags-input-wrap" id="tagsWrap" onclick="document.getElementById('tagInput').focus()">
+              <% List<String> tagsEdicao = (List<String>) request.getAttribute("tagsEdicao");
+                 if (tagsEdicao == null) tagsEdicao = Collections.emptyList();
+                 for (String tagEdicao : tagsEdicao) { %>
+              <span class="tag-pill"><%= h(tagEdicao) %><input type="hidden" name="tags" value="<%= h(tagEdicao) %>"><span class="tag-remove" onclick="event.stopPropagation();this.parentElement.remove()">✕</span></span>
+              <% } %>
               <input class="tags-real-input" id="tagInput" type="text" placeholder="Digite e pressione Enter ou vírgula…" onkeydown="handleTagInput(event)">
             </div>
             <span class="form-hint">Ex: Vegano, Sem Glúten, Fácil, Italiano…</span>
@@ -819,8 +821,8 @@
             <input class="form-input" name="ingredienteNome" placeholder="Ingrediente" value="<%= h(item.getNome_ingrediente()) %>" required>
             <input class="form-input" type="number" min="0.01" step="0.01" name="ingredienteQuantidade" placeholder="Quantidade" value="<%= item.getQuantidade_receita_ingrediente() %>" required>
             <select class="form-select" name="ingredienteUnidade" required>
-              <option value="">Unidade</option>
-              <% String[] unidadesEdicao = {"g","kg","ml","l","unidade","xícara","colher de sopa","colher de chá","pitada","a gosto"};
+              <option value="">Selecione</option>
+              <% String[] unidadesEdicao = {"g","kg","ml","l","xícara","unidade","colher de sopa","colher de chá","pitada","a gosto"};
                  for (String unidade : unidadesEdicao) { %>
               <option value="<%= h(unidade) %>" <%= unidade.equals(item.getUnidade_medida_receita_ingrediente()) ? "selected" : "" %>><%= h(unidade) %></option>
               <% } %>
@@ -987,7 +989,7 @@ function addIngrediente() {
   row.className = 'ing-row';
   row.innerHTML = '<input class="form-input" name="ingredienteNome" placeholder="Ingrediente" required>' +
     '<input class="form-input" type="number" min="0.01" step="0.01" name="ingredienteQuantidade" placeholder="Quantidade" required>' +
-    '<select class="form-select" name="ingredienteUnidade" required><option value="">Unidade</option>' +
+    '<select class="form-select" name="ingredienteUnidade" required><option value="">unidade</option>' +
     '<option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option>' +
     '<option value="l">l</option><option value="unidade">unidade</option><option value="xícara">xícara</option>' +
     '<option value="colher de sopa">colher de sopa</option><option value="colher de chá">colher de chá</option>' +
@@ -1060,9 +1062,30 @@ function handleTagInput(event) {
   event.preventDefault();
   const value = event.target.value.trim().replace(/,$/, '');
   if (!value) return;
+  const jaExiste = Array.from(document.querySelectorAll('#tagsWrap input[name="tags"]'))
+    .some(input => input.value.toLowerCase() === value.toLowerCase());
+  if (jaExiste) {
+    event.target.value = '';
+    return;
+  }
   const pill = document.createElement('span');
   pill.className = 'tag-pill';
-  pill.textContent = value;
+
+  const label = document.createTextNode(value);
+  pill.appendChild(label);
+
+  const hiddenInput = document.createElement('input');
+  hiddenInput.type = 'hidden';
+  hiddenInput.name = 'tags';
+  hiddenInput.value = value;
+  pill.appendChild(hiddenInput);
+
+  const removeBtn = document.createElement('span');
+  removeBtn.className = 'tag-remove';
+  removeBtn.textContent = '✕';
+  removeBtn.onclick = function(e) { e.stopPropagation(); pill.remove(); };
+  pill.appendChild(removeBtn);
+
   event.target.parentElement.insertBefore(pill, event.target);
   event.target.value = '';
 }
